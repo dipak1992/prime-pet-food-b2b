@@ -1,24 +1,27 @@
 import { NextResponse } from "next/server";
-import { requireApprovedBuyer } from "@/lib/auth/guards";
+import { requireAdmin } from "@/lib/auth/guards";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  const profile = await requireApprovedBuyer();
-
-  if (!profile.customerId) {
-    return NextResponse.json({ error: "Customer profile not found." }, { status: 400 });
-  }
+  await requireAdmin();
 
   const orders = await prisma.order.findMany({
-    where: { customerId: profile.customerId },
     orderBy: { createdAt: "desc" },
-    take: 50,
-    include: { items: true, invoice: true },
+    take: 100,
+    include: {
+      customer: {
+        include: { user: { select: { email: true } } },
+      },
+      items: true,
+    },
   });
 
   return NextResponse.json({
     orders: orders.map((order) => ({
       ...order,
+      subtotal: Number(order.subtotal),
+      shippingTotal: Number(order.shippingTotal),
+      taxTotal: Number(order.taxTotal),
       grandTotal: Number(order.grandTotal),
       items: order.items.map((item) => ({
         ...item,
