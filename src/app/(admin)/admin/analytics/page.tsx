@@ -4,6 +4,36 @@ import { SectionCard } from "@/components/ui/SectionCard";
 
 export const dynamic = "force-dynamic";
 
+type StatusCountRow = {
+  status: string;
+  _count: { _all: number };
+};
+
+type PaymentCountRow = {
+  paymentStatus: string;
+  _count: { _all: number };
+};
+
+type TopCustomerRow = {
+  customerId: string;
+  _sum: { grandTotal: unknown };
+  _count: { _all: number };
+};
+
+type CustomerMapRow = {
+  id: string;
+  businessName: string;
+};
+
+type SyncJobRow = {
+  id: string;
+  status: string;
+  recordsRead: number;
+  recordsUpserted: number;
+  createdAt: Date;
+  errorMessage: string | null;
+};
+
 function startOfDay(date: Date) {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
@@ -37,13 +67,13 @@ export default async function AdminAnalyticsPage() {
         where: { createdAt: { gte: thirtyDaysAgo }, paymentStatus: "PAID" },
         _sum: { grandTotal: true },
       })
-      .then((res) => Number(res._sum.grandTotal || 0)),
+      .then((res: { _sum: { grandTotal: unknown } }) => Number(res._sum.grandTotal || 0)),
     prisma.order
       .aggregate({
         where: { paymentStatus: "PAID" },
         _sum: { grandTotal: true },
       })
-      .then((res) => Number(res._sum.grandTotal || 0)),
+      .then((res: { _sum: { grandTotal: unknown } }) => Number(res._sum.grandTotal || 0)),
     prisma.order.groupBy({
       by: ["status"],
       _count: { _all: true },
@@ -76,17 +106,23 @@ export default async function AdminAnalyticsPage() {
     }),
   ]);
 
-  const customerIds = topCustomers.map((c) => c.customerId);
+  const typedStatusCounts = statusCounts as StatusCountRow[];
+  const typedPaymentCounts = paymentCounts as PaymentCountRow[];
+  const typedTopCustomers = topCustomers as TopCustomerRow[];
+  const typedRecentSyncJobs = recentSyncJobs as SyncJobRow[];
+
+  const customerIds = typedTopCustomers.map((c) => c.customerId);
   const customerMap = customerIds.length
     ? await prisma.customer.findMany({
         where: { id: { in: customerIds } },
         select: { id: true, businessName: true },
       })
     : [];
+  const typedCustomerMap = customerMap as CustomerMapRow[];
 
-  const customerNameById = new Map(customerMap.map((c) => [c.id, c.businessName]));
+  const customerNameById = new Map(typedCustomerMap.map((c) => [c.id, c.businessName]));
 
-  const recentFailures = recentSyncJobs.filter((j) => j.status === "FAILED").length;
+  const recentFailures = typedRecentSyncJobs.filter((j) => j.status === "FAILED").length;
 
   return (
     <div className="space-y-6">
@@ -121,19 +157,19 @@ export default async function AdminAnalyticsPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         <SectionCard title="Order Status Mix">
           <div className="space-y-2 text-sm">
-            {statusCounts.map((row) => (
+            {typedStatusCounts.map((row) => (
               <div key={row.status} className="flex items-center justify-between rounded border border-[#e7e4dc] bg-[#fcfbf9] p-2">
                 <span className="font-medium text-[#111827]">{row.status}</span>
                 <span className="font-semibold text-[#1d4b43]">{row._count._all}</span>
               </div>
             ))}
-            {statusCounts.length === 0 && <p className="text-[#4b5563]">No data yet.</p>}
+            {typedStatusCounts.length === 0 && <p className="text-[#4b5563]">No data yet.</p>}
           </div>
         </SectionCard>
 
         <SectionCard title="Payment Status Mix">
           <div className="space-y-2 text-sm">
-            {paymentCounts.map((row) => (
+            {typedPaymentCounts.map((row) => (
               <div
                 key={row.paymentStatus}
                 className="flex items-center justify-between rounded border border-[#e7e4dc] bg-[#fcfbf9] p-2"
@@ -142,7 +178,7 @@ export default async function AdminAnalyticsPage() {
                 <span className="font-semibold text-[#1d4b43]">{row._count._all}</span>
               </div>
             ))}
-            {paymentCounts.length === 0 && <p className="text-[#4b5563]">No data yet.</p>}
+            {typedPaymentCounts.length === 0 && <p className="text-[#4b5563]">No data yet.</p>}
           </div>
         </SectionCard>
 
@@ -150,7 +186,7 @@ export default async function AdminAnalyticsPage() {
           <div className="space-y-2 text-sm">
             <div className="rounded border border-[#e7e4dc] bg-[#fcfbf9] p-2">
               <p className="text-xs uppercase text-[#4b5563]">Last 10 jobs</p>
-              <p className="text-lg font-semibold text-[#111827]">{recentSyncJobs.length}</p>
+              <p className="text-lg font-semibold text-[#111827]">{typedRecentSyncJobs.length}</p>
             </div>
             <div className="rounded border border-[#e7e4dc] bg-[#fcfbf9] p-2">
               <p className="text-xs uppercase text-[#4b5563]">Failures (last 10)</p>
@@ -166,7 +202,7 @@ export default async function AdminAnalyticsPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <SectionCard title="Top Customers (Last 30 Days)">
           <div className="space-y-2 text-sm">
-            {topCustomers.map((row) => (
+            {typedTopCustomers.map((row) => (
               <div
                 key={row.customerId}
                 className="flex items-center justify-between rounded border border-[#e7e4dc] bg-[#fcfbf9] p-3"
@@ -180,7 +216,7 @@ export default async function AdminAnalyticsPage() {
                 <p className="font-semibold text-[#1d4b43]">${Number(row._sum.grandTotal || 0).toFixed(2)}</p>
               </div>
             ))}
-            {topCustomers.length === 0 && <p className="text-[#4b5563]">No customer order data in this window.</p>}
+            {typedTopCustomers.length === 0 && <p className="text-[#4b5563]">No customer order data in this window.</p>}
           </div>
         </SectionCard>
 
