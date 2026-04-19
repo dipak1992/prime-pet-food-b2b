@@ -1,25 +1,16 @@
-import { auth } from "@clerk/nextjs/server";
-import { db } from "@/lib/db";
+import { requireApprovedBuyer } from "@/lib/auth/guards";
+import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const profile = await requireApprovedBuyer();
+    if (!profile.customerId) {
+      return NextResponse.json({ error: "Customer profile not found." }, { status: 400 });
     }
 
-    const customer = await db.customer.findUnique({
-      where: { clerkId: userId },
-      select: { id: true },
-    });
-
-    if (!customer) {
-      return NextResponse.json({ error: "Customer not found" }, { status: 404 });
-    }
-
-    const favorites = await db.favorite.findMany({
-      where: { customerId: customer.id },
+    const favorites = await prisma.favorite.findMany({
+      where: { customerId: profile.customerId },
       include: {
         product: {
           select: {
@@ -46,27 +37,18 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const profile = await requireApprovedBuyer();
+    if (!profile.customerId) {
+      return NextResponse.json({ error: "Customer profile not found." }, { status: 400 });
     }
 
     const { productId } = await req.json();
 
-    const customer = await db.customer.findUnique({
-      where: { clerkId: userId },
-      select: { id: true },
-    });
-
-    if (!customer) {
-      return NextResponse.json({ error: "Customer not found" }, { status: 404 });
-    }
-
     // Check if already favorited
-    const existing = await db.favorite.findUnique({
+    const existing = await prisma.favorite.findUnique({
       where: {
         customerId_productId: {
-          customerId: customer.id,
+          customerId: profile.customerId,
           productId,
         },
       },
@@ -76,9 +58,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Already favorited" }, { status: 400 });
     }
 
-    await db.favorite.create({
+    await prisma.favorite.create({
       data: {
-        customerId: customer.id,
+        customerId: profile.customerId,
         productId,
       },
     });
@@ -92,26 +74,17 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const profile = await requireApprovedBuyer();
+    if (!profile.customerId) {
+      return NextResponse.json({ error: "Customer profile not found." }, { status: 400 });
     }
 
     const { productId } = await req.json();
 
-    const customer = await db.customer.findUnique({
-      where: { clerkId: userId },
-      select: { id: true },
-    });
-
-    if (!customer) {
-      return NextResponse.json({ error: "Customer not found" }, { status: 404 });
-    }
-
-    await db.favorite.delete({
+    await prisma.favorite.delete({
       where: {
         customerId_productId: {
-          customerId: customer.id,
+          customerId: profile.customerId,
           productId,
         },
       },

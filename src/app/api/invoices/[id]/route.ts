@@ -1,9 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { requireApprovedBuyer } from "@/lib/auth/guards";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const profile = await requireApprovedBuyer();
+  const { id } = await params;
 
   if (!profile.customerId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -11,13 +15,19 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
   const invoice = await prisma.invoice.findFirst({
     where: {
-      id: params.id,
+      id,
       order: { customerId: profile.customerId },
     },
     include: {
       order: {
         include: {
-          customer: true,
+          customer: {
+            include: {
+              user: {
+                select: { email: true },
+              },
+            },
+          },
           items: true,
         },
       },

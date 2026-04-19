@@ -1,50 +1,31 @@
-import { auth } from "@clerk/nextjs/server";
-import { db } from "@/lib/db";
+import { requireApprovedBuyer } from "@/lib/auth/guards";
+import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const profile = await requireApprovedBuyer();
+    if (!profile.customerId) {
+      return NextResponse.json({ error: "Customer profile not found." }, { status: 400 });
     }
 
-    const customer = await db.customer.findUnique({
-      where: { clerkId: userId },
-      select: { id: true },
-    });
-
-    if (!customer) {
-      return NextResponse.json({ error: "Customer not found" }, { status: 404 });
-    }
-
-    const tickets = await db.supportRequest.findMany({
-      where: { customerId: customer.id },
-      include: {
-        responses: {
-          orderBy: { createdAt: "asc" },
-        },
-      },
+    const tickets = await prisma.supportRequest.findMany({
+      where: { customerId: profile.customerId },
       orderBy: { createdAt: "desc" },
     });
 
     return NextResponse.json({
       tickets: tickets.map((t) => ({
         id: t.id,
-        ticketNumber: t.ticketNumber,
+        ticketNumber: `TKT-${t.id.slice(0, 8).toUpperCase()}`,
         subject: t.subject,
-        category: t.category,
-        priority: t.priority,
+        category: t.type,
+        priority: "normal",
         status: t.status,
         message: t.message,
         createdAt: t.createdAt,
         updatedAt: t.updatedAt,
-        responses: t.responses.map((r) => ({
-          id: r.id,
-          message: r.message,
-          authorRole: r.authorRole,
-          createdAt: r.createdAt,
-        })),
+        responses: [],
       })),
     });
   } catch (error) {
@@ -55,41 +36,29 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const profile = await requireApprovedBuyer();
+    if (!profile.customerId) {
+      return NextResponse.json({ error: "Customer profile not found." }, { status: 400 });
     }
 
     const { subject, category, priority, message } = await req.json();
 
-    const customer = await db.customer.findUnique({
-      where: { clerkId: userId },
-      select: { id: true },
-    });
+    const normalizedCategory = String(category || "GENERAL").toUpperCase();
+    const type =
+      normalizedCategory === "SAMPLE_REQUEST" || normalizedCategory === "SAMPLE"
+        ? "SAMPLE_REQUEST"
+        : normalizedCategory === "CUSTOM_PRICING" || normalizedCategory === "PRICING"
+          ? "CUSTOM_PRICING"
+          : normalizedCategory === "SALES_REP" || normalizedCategory === "SALES"
+            ? "SALES_REP"
+            : "GENERAL";
 
-    if (!customer) {
-      return NextResponse.json({ error: "Customer not found" }, { status: 404 });
-    }
-
-    // Generate ticket number
-    const lastTicket = await db.supportRequest.findFirst({
-      where: { customerId: customer.id },
-      orderBy: { createdAt: "desc" },
-    });
-
-    const ticketNumber = lastTicket
-      ? `TKT-${(parseInt(lastTicket.ticketNumber.split("-")[1]) + 1).toString().padStart(4, "0")}`
-      : "TKT-0001";
-
-    const ticket = await db.supportRequest.create({
+    const ticket = await prisma.supportRequest.create({
       data: {
-        customerId: customer.id,
-        ticketNumber,
+        customerId: profile.customerId,
+        type,
         subject,
-        category,
-        priority,
         message,
-        status: "open",
       },
     });
 
@@ -97,7 +66,8 @@ export async function POST(req: NextRequest) {
       success: true,
       ticket: {
         id: ticket.id,
-        ticketNumber: ticket.ticketNumber,
+        ticketNumber: `TKT-${ticket.id.slice(0, 8).toUpperCase()}`,
+        priority: priority || "normal",
       },
     });
   } catch (error) {

@@ -1,15 +1,16 @@
-import { auth } from "@clerk/nextjs/server";
-import { db } from "@/lib/db";
+import { requireApprovedBuyer } from "@/lib/auth/guards";
+import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const profile = await requireApprovedBuyer();
+    if (!profile.customerId) {
+      return NextResponse.json({ error: "Customer profile not found." }, { status: 400 });
     }
 
-    const bundles = await db.bundle.findMany({
+    const bundles = await prisma.bundle.findMany({
+      where: { isActive: true },
       include: {
         items: {
           include: {
@@ -18,6 +19,7 @@ export async function GET() {
                 id: true,
                 title: true,
                 sku: true,
+                wholesalePrice: true,
               },
             },
           },
@@ -31,11 +33,17 @@ export async function GET() {
         id: b.id,
         name: b.name,
         description: b.description,
-        bundlePrice: b.bundlePrice,
+        bundlePrice: b.items.reduce(
+          (sum, item) => sum + Number(item.product.wholesalePrice) * item.quantity,
+          0
+        ),
         items: b.items.map((item) => ({
           productId: item.productId,
           quantity: item.quantity,
-          product: item.product,
+          product: {
+            ...item.product,
+            wholesalePrice: Number(item.product.wholesalePrice),
+          },
         })),
         createdAt: b.createdAt,
       })),

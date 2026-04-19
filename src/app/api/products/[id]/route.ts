@@ -1,16 +1,16 @@
-import { auth } from "@clerk/nextjs/server";
-import { db } from "@/lib/db";
+import { requireApprovedBuyer } from "@/lib/auth/guards";
+import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function GET(
-  req: Request,
+  _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
-    const { userId } = await auth();
+    const profile = await requireApprovedBuyer();
 
-    const product = await db.product.findUnique({
+    const product = await prisma.product.findUnique({
       where: { id },
     });
 
@@ -18,44 +18,41 @@ export async function GET(
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
+    if (!profile.customerId) {
+      return NextResponse.json({ error: "Customer profile not found." }, { status: 400 });
+    }
+
     let isFavorite = false;
     let customerMargin = 0;
-    let customPrice = null;
 
-    if (userId) {
-      const customer = await db.customer.findUnique({
-        where: { clerkId: userId },
-        select: { id: true },
-      });
+    // Check if favorited
+    const favorite = await prisma.favorite.findUnique({
+      where: {
+        customerId_productId: {
+          customerId: profile.customerId,
+          productId: id,
+        },
+      },
+    });
+    isFavorite = !!favorite;
 
-      if (customer) {
-        // Check if favorited
-        const favorite = await db.favorite.findUnique({
-          where: {
-            customerId_productId: {
-              customerId: customer.id,
-              productId: id,
-            },
-          },
-        });
-        isFavorite = !!favorite;
+    // Check for customer-specific wholesale override
+    const override = await prisma.customerPriceOverride.findUnique({
+      where: {
+        customerId_productId: {
+          customerId: profile.customerId,
+          productId: id,
+        },
+      },
+    });
 
-        // Check for custom pricing
-        const override = await db.customerPriceOverride.findUnique({
-          where: {
-            customerId_productId: {
-              customerId: customer.id,
-              productId: id,
-            },
-          },
-        });
+    const effectiveWholesale = override
+      ? Number(override.wholesalePrice)
+      : Number(product.wholesalePrice);
 
-        if (override) {
-          customPrice = override.customPrice;
-          const margin = ((Number(override.customPrice) - Number(product.wholesalePrice)) / Number(override.customPrice)) * 100;
-          customerMargin = Math.round(margin);
-        }
-      }
+    if (product.msrp) {
+      const margin = ((Number(product.msrp) - effectiveWholesale) / Number(product.msrp)) * 100;
+      customerMargin = Math.max(0, Math.round(margin));
     }
 
     return NextResponse.json({
@@ -65,10 +62,9 @@ export async function GET(
         sku: product.sku,
         moq: product.moq,
         casePack: product.casePack,
-        wholesalePrice: Number(product.wholesalePrice),
+        wholesalePrice: effectiveWholesale,
         msrp: product.msrp ? Number(product.msrp) : null,
         customerMargin,
-        customPrice,
       },
       isFavorite,
     });

@@ -46,7 +46,16 @@ export async function POST(req: NextRequest) {
         status: "ACTIVE",
       },
       include: {
-        items: true,
+        items: {
+          include: {
+            product: {
+              select: {
+                title: true,
+                sku: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -81,18 +90,20 @@ export async function POST(req: NextRequest) {
       data: {
         customerId: profile.customerId,
         orderNumber,
-        status: "PENDING_CONFIRMATION",
+        status: "PENDING",
         items: {
           create: cart.items.map((item) => ({
             productId: item.productId,
+            productTitleSnapshot: item.product.title,
+            skuSnapshot: item.product.sku,
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             totalPrice: Number(item.unitPrice) * item.quantity,
           })),
         },
         subtotal: subtotal,
-        shippingCost: shippingCost,
-        tax: tax,
+        shippingTotal: shippingCost,
+        taxTotal: tax,
         grandTotal: grandTotal,
         notes: notes || null,
       },
@@ -112,7 +123,6 @@ export async function POST(req: NextRequest) {
     await prisma.invoice.create({
       data: {
         orderId: order.id,
-        customerId: profile.customerId,
         invoiceNumber,
         amount: grandTotal,
         status: "SENT",

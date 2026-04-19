@@ -8,7 +8,7 @@ import { NextResponse } from "next/server";
  * 1. Go to https://console.upstash.com/qstash
  * 2. Create new Schedule with:
  *    - URL: https://your-domain.com/api/cron/sync-products
- *    - Cron: 0 */6 * * * (every 6 hours)
+ *    - Cron: every 6 hours (example: 0 star-slash-6 * * *)
  *    - Authorization Header: Add CRON_SECRET from .env
  */
 
