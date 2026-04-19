@@ -1,36 +1,102 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Prime Pet Wholesale Portal
 
-## Getting Started
+Starter codebase scaffold for a gated B2B wholesale portal for Prime Pet Food.
 
-First, run the development server:
+## Stack
+
+- Next.js 16 (App Router) + TypeScript
+- Tailwind CSS v4
+- Prisma + PostgreSQL
+- Supabase Auth (magic link)
+- Route handlers for buyer/admin APIs
+
+## Quick start
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Copy env and fill real values:
+
+```bash
+cp .env.example .env
+```
+
+3. Generate Prisma client and run migration:
+
+```bash
+npx prisma generate
+npx prisma migrate dev --name init
+```
+
+4. Run dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Initial pages
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Public:
+- `/` wholesale landing
+- `/apply` wholesale application form
+- `/login` magic link login
 
-## Learn More
+Buyer (approved users):
+- `/dashboard`
+- `/products`
+- `/orders`
+- `/invoices`
+- `/account`
+- `/support`
+- `/downloads`
 
-To learn more about Next.js, take a look at the following resources:
+Admin:
+- `/admin`
+- `/admin/applications`
+- `/admin/orders`
+- `/admin/customers`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Initial API routes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `POST /api/wholesale-applications`
+- `GET /api/me`
+- `GET /api/products`
+- `GET /api/orders`
+- `GET /api/admin/applications`
+- `POST /api/admin/applications/:id/approve`
+- `POST /api/admin/applications/:id/reject`
 
-## Deploy on Vercel
+## Project structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```txt
+src/
+  app/
+    (public)/apply
+    (auth)/login
+    (portal)/dashboard products orders invoices account support downloads
+    (admin)/admin applications orders customers
+    api/
+  components/
+    layout/
+    ui/
+  lib/
+    auth/
+    supabase/
+    validations/
+    prisma.ts
+prisma/
+  schema.prisma
+database/
+  schema.sql
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Notes
+
+- Middleware currently enforces authentication on protected routes.
+- Role and approval checks are enforced in server-side guards.
+- Product sync integration points are prepared via env vars and database schema; sync job implementation is the next step.
