@@ -2,13 +2,17 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 const protectedPrefixes = [
-  "/portal",
+  "/dashboard",
   "/products",
   "/orders",
   "/invoices",
   "/account",
   "/support",
   "/downloads",
+  "/cart",
+  "/checkout",
+  "/favorites",
+  "/bundles",
   "/admin",
 ];
 

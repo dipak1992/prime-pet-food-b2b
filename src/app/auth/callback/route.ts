@@ -86,7 +86,7 @@ export async function GET(request: Request) {
 
   // Redirect buyers based on approval status
   if (profile.status === "APPROVED") {
-    return NextResponse.redirect(`${origin}/portal`);
+    return NextResponse.redirect(`${origin}/dashboard`);
   }
 
   if (profile.status === "REJECTED") {

@@ -8,6 +8,7 @@ import {
   validatePackConstraints,
 } from "@/lib/services/cart";
 import { checkoutInputSchema } from "@/lib/validations/cart";
+import { stripe, toStripeCents } from "@/lib/stripe";
 
 function createOrderNumber(): string {
   const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
@@ -128,8 +129,83 @@ export async function POST(request: Request) {
       },
     });
 
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + 30);
+
+    const invoice = await tx.invoice.create({
+      data: {
+        orderId: createdOrder.id,
+        invoiceNumber: `INV-${createdOrder.orderNumber.replace(/^W-/, "")}`,
+        amount: createdOrder.grandTotal,
+        status: "DRAFT",
+        dueDate,
+      },
+    });
+
+    await tx.paymentTransaction.create({
+      data: {
+        invoiceId: invoice.id,
+        provider: "stripe",
+        amount: createdOrder.grandTotal,
+        status: "PENDING",
+      },
+    });
+
     return createdOrder;
   });
+
+  let checkoutUrl: string | null = null;
+  if (stripe) {
+    const origin = new URL(request.url).origin;
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      success_url: `${origin}/orders/${order.id}?payment=success`,
+      cancel_url: `${origin}/checkout?payment=cancelled`,
+      customer_email: profile.email,
+      metadata: {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+      },
+      line_items: [
+        ...cart.items.map((item) => ({
+          quantity: item.quantity,
+          price_data: {
+            currency: "usd",
+            unit_amount: toStripeCents(Number(item.unitPrice)),
+            product_data: {
+              name: item.product.title,
+              metadata: {
+                sku: item.product.sku || "",
+              },
+            },
+          },
+        })),
+        ...(shippingTotal > 0
+          ? [
+              {
+                quantity: 1,
+                price_data: {
+                  currency: "usd",
+                  unit_amount: toStripeCents(shippingTotal),
+                  product_data: { name: "Shipping" },
+                },
+              },
+            ]
+          : []),
+        {
+          quantity: 1,
+          price_data: {
+            currency: "usd",
+            unit_amount: toStripeCents(taxTotal),
+            product_data: { name: "Estimated Tax" },
+          },
+        },
+      ],
+    });
+
+    checkoutUrl = session.url;
+  }
 
   return NextResponse.json({
     order: {
@@ -138,5 +214,6 @@ export async function POST(request: Request) {
       status: order.status,
       grandTotal: Number(order.grandTotal),
     },
+    checkoutUrl,
   });
 }

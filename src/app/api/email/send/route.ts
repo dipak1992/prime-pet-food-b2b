@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { emailTemplates, EmailPayload } from "@/lib/email";
+import { Resend } from "resend";
+import { emailTemplates, EmailPayload, renderEmailBody } from "@/lib/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,18 +22,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // TODO: Integrate with actual email service (Resend, SendGrid, etc.)
-    // For now, just log to console
-    console.log("📧 Email would be sent:", {
-      to: payload.to,
-      template: payload.template,
-      subject: template.subject,
-      variables: payload.variables,
+    if (!process.env.RESEND_API_KEY || !process.env.FROM_EMAIL) {
+      return NextResponse.json(
+        { error: "Email provider is not configured" },
+        { status: 500 }
+      );
+    }
+
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const body = renderEmailBody(payload);
+
+    const sendResult = await resend.emails.send({
+      from: process.env.FROM_EMAIL,
+      to: [payload.to],
+      subject: body.subject,
+      text: body.text,
+      html: body.html,
     });
+
+    if (sendResult.error) {
+      console.error("Resend send error", sendResult.error);
+      return NextResponse.json({ error: "Email delivery failed" }, { status: 502 });
+    }
 
     return NextResponse.json({
       success: true,
-      message: "Email queued (service not yet configured)",
+      message: "Email sent",
+      providerId: sendResult.data?.id,
     });
   } catch (error) {
     console.error("Email API error:", error);

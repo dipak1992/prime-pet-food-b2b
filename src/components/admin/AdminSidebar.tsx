@@ -32,7 +32,7 @@ export default function AdminSidebar() {
     const newState = !viewAsBuyer;
     setViewAsBuyer(newState);
     if (newState) {
-      router.push("/portal?viewAs=buyer");
+      router.push("/dashboard?viewAs=buyer");
     } else {
       router.back();
     }

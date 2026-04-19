@@ -11,10 +11,51 @@ export interface EmailPayload {
   variables: Record<string, any>;
 }
 
+export function renderEmailBody(payload: EmailPayload): { subject: string; text: string; html: string } {
+  if (payload.template === "application-approved") {
+    const businessName = payload.variables.businessName || "your business";
+    const loginUrl = payload.variables.loginUrl || process.env.NEXT_PUBLIC_APP_URL || "";
+    const subject = "Your Prime Pet wholesale account is approved";
+    const text = `Great news. Your wholesale application for ${businessName} has been approved. You can sign in here: ${loginUrl}`;
+    const html = `<p>Great news. Your wholesale application for <strong>${businessName}</strong> has been approved.</p><p><a href="${loginUrl}">Sign in to your wholesale portal</a></p>`;
+    return { subject, text, html };
+  }
+
+  if (payload.template === "application-rejected") {
+    const subject = "Update on your Prime Pet wholesale application";
+    const text = "Thank you for applying. We are unable to approve your wholesale account at this time. You can reply to this email for additional review.";
+    const html = "<p>Thank you for applying. We are unable to approve your wholesale account at this time.</p><p>You can reply to this email for additional review.</p>";
+    return { subject, text, html };
+  }
+
+  if (payload.template === "order-confirmed") {
+    const orderNumber = payload.variables.orderNumber || "";
+    const amount = payload.variables.amount || "";
+    const subject = `Order ${orderNumber} confirmed`;
+    const text = `Your payment was received and order ${orderNumber} is now confirmed. Total: $${amount}.`;
+    const html = `<p>Your payment was received and order <strong>${orderNumber}</strong> is now confirmed.</p><p>Total: <strong>$${amount}</strong></p>`;
+    return { subject, text, html };
+  }
+
+  if (payload.template === "invoice-ready") {
+    const invoiceNumber = payload.variables.invoiceNumber || "";
+    const invoiceUrl = payload.variables.invoiceUrl || "";
+    const subject = `Invoice ${invoiceNumber} is ready`;
+    const text = `Your invoice ${invoiceNumber} is ready. View it here: ${invoiceUrl}`;
+    const html = `<p>Your invoice <strong>${invoiceNumber}</strong> is ready.</p><p><a href="${invoiceUrl}">View invoice</a></p>`;
+    return { subject, text, html };
+  }
+
+  const subject = "Time to reorder your favorites";
+  const text = "Your fast-moving items may be running low. Reorder in your wholesale portal.";
+  const html = "<p>Your fast-moving items may be running low. Reorder in your wholesale portal.</p>";
+  return { subject, text, html };
+}
+
 export async function sendEmail(payload: EmailPayload) {
-  if (!process.env.EMAIL_SERVICE_API_KEY) {
-    console.warn("EMAIL_SERVICE_API_KEY not configured, email not sent");
-    return;
+  if (!process.env.RESEND_API_KEY || !process.env.FROM_EMAIL) {
+    console.warn("RESEND_API_KEY/FROM_EMAIL not configured, email not sent");
+    return { skipped: true };
   }
 
   try {

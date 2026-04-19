@@ -105,7 +105,11 @@ export default function CheckoutPage() {
       }
 
       const result = await res.json();
-      // Redirect to order confirmation or orders list
+      if (result.checkoutUrl) {
+        window.location.assign(result.checkoutUrl);
+        return;
+      }
+
       router.push(`/orders/${result.order.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error placing order");
@@ -374,7 +378,7 @@ export default function CheckoutPage() {
             {/* Payment Terms Note */}
             <div className="mt-4 p-3 rounded bg-[#f5f3f0] text-xs text-[#4b5563]">
               <p className="font-medium mb-1">Payment Terms</p>
-              <p>Net 30 invoice billing. No prepayment required.</p>
+              <p>Secure online payment is required to confirm your order.</p>
             </div>
           </div>
         </div>
