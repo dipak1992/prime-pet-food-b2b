@@ -32,7 +32,7 @@ export async function GET() {
     user: customer.user,
     addressCount: customer.addresses.length,
     orderCount: customer.orders.length,
-    totalSpent: customer.orders.reduce((sum, order) => sum + Number(order.grandTotal), 0) / 100,
+    totalSpent: customer.orders.reduce((sum, order) => sum + Number(order.grandTotal), 0),
   }));
 
   return NextResponse.json({ customers: customersWithStats });

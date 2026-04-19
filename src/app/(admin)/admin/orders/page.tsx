@@ -196,7 +196,7 @@ export default function AdminOrdersPage() {
                       {order.items.length} item{order.items.length !== 1 ? "s" : ""}
                     </td>
                     <td className="px-4 py-3 font-semibold text-[#111827]">
-                      ${(Number(order.grandTotal) / 100).toFixed(2)}
+                      ${Number(order.grandTotal).toFixed(2)}
                     </td>
                     <td className="px-4 py-3">
                       <span
