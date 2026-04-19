@@ -36,6 +36,25 @@ export async function GET(request: Request) {
   }
 
   const email = authUser.email.toLowerCase();
+
+  // Check if user already exists in system
+  let existingUser = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  // If user exists and is admin, redirect to admin portal
+  if (existingUser && existingUser.role === "ADMIN") {
+    await prisma.user.update({
+      where: { email },
+      data: {
+        authUserId: authUser.id,
+        lastLoginAt: new Date(),
+      },
+    });
+    return NextResponse.redirect(`${origin}/admin`);
+  }
+
+  // For buyers, check application status
   const latestApplication = await prisma.wholesaleApplication.findFirst({
     where: { email },
     orderBy: { createdAt: "desc" },
@@ -65,8 +84,9 @@ export async function GET(request: Request) {
     },
   });
 
+  // Redirect buyers based on approval status
   if (profile.status === "APPROVED") {
-    return NextResponse.redirect(`${origin}/dashboard`);
+    return NextResponse.redirect(`${origin}/portal`);
   }
 
   if (profile.status === "REJECTED") {

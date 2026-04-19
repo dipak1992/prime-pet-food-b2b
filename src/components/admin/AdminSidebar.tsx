@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
 const navItems = [
@@ -21,10 +21,22 @@ const navItems = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [viewAsBuyer, setViewAsBuyer] = useState(false);
 
   const isActive = (href: string) =>
     href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+
+  const handleViewAsBuyer = () => {
+    const newState = !viewAsBuyer;
+    setViewAsBuyer(newState);
+    if (newState) {
+      router.push("/portal?viewAs=buyer");
+    } else {
+      router.back();
+    }
+  };
 
   const navContent = (
     <nav className="flex flex-col gap-0.5 px-3 py-4">
@@ -43,6 +55,13 @@ export default function AdminSidebar() {
           {item.label}
         </Link>
       ))}
+      <button
+        onClick={handleViewAsBuyer}
+        className="mt-6 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-[#374151] hover:bg-blue-50 hover:text-blue-700"
+      >
+        <span className="text-base leading-none">👁️</span>
+        {viewAsBuyer ? "Exit Buyer View" : "View as Buyer"}
+      </button>
     </nav>
   );
 

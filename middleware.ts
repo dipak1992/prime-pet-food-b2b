@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 const protectedPrefixes = [
-  "/dashboard",
+  "/portal",
   "/products",
   "/orders",
   "/invoices",
@@ -16,6 +16,12 @@ export async function middleware(request: NextRequest) {
   const response = NextResponse.next({
     request,
   });
+
+  // Pass viewAs query param as header for server components
+  const viewAs = request.nextUrl.searchParams.get("viewAs");
+  if (viewAs) {
+    response.headers.set("x-view-as", viewAs);
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

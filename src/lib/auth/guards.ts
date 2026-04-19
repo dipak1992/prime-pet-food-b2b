@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -48,6 +49,13 @@ export async function requireAuth() {
 
 export async function requireApprovedBuyer() {
   const profile = await requireAuth();
+  const headersList = await headers();
+  const viewAs = headersList.get("x-view-as") || null;
+
+  // Admin can view as buyer via query param
+  if (profile.role === "ADMIN" && viewAs === "buyer") {
+    return profile;
+  }
 
   if (profile.role !== "BUYER") {
     redirect("/admin");
@@ -64,7 +72,7 @@ export async function requireAdmin() {
   const profile = await requireAuth();
 
   if (profile.role !== "ADMIN") {
-    redirect("/dashboard");
+    redirect("/login");
   }
 
   return profile;
