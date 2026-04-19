@@ -12,6 +12,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             Prime Pet Admin
           </Link>
           <nav className="flex items-center gap-4 text-sm font-medium text-[#374151]">
+            <Link href="/admin/analytics">Analytics</Link>
             <Link href="/admin/applications">Applications</Link>
             <Link href="/admin/orders">Orders</Link>
             <Link href="/admin/customers">Customers</Link>

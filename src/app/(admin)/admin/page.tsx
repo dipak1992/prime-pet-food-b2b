@@ -84,7 +84,7 @@ export default async function AdminHomePage() {
         </SectionCard>
         <SectionCard title="Revenue (Paid)">
           <div className="space-y-2">
-            <p className="text-4xl font-bold text-[#1d4b43]">${(Number(totalRevenue) / 100).toFixed(0)}</p>
+            <p className="text-4xl font-bold text-[#1d4b43]">${Number(totalRevenue).toFixed(2)}</p>
             <p className="text-xs text-[#4b5563]">all-time</p>
           </div>
         </SectionCard>
@@ -118,7 +118,7 @@ export default async function AdminHomePage() {
                     <p className="text-xs text-[#6b7280] mt-1">{formatDate(order.createdAt)}</p>
                   </div>
                   <div className="text-right font-semibold text-[#111827] text-sm mt-2">
-                    ${(Number(order.grandTotal) / 100).toFixed(2)}
+                    ${Number(order.grandTotal).toFixed(2)}
                   </div>
                 </div>
               ))}
@@ -165,17 +165,17 @@ export default async function AdminHomePage() {
             </div>
           )}
           <Link
-            href="/admin/products/sync"
+            href="/admin/sync-status"
             className="mt-3 inline-block text-xs font-semibold text-[#1d4b43] hover:underline"
           >
-            Trigger sync manually →
+            View sync status →
           </Link>
         </SectionCard>
       </div>
 
       {/* Quick Actions */}
       <SectionCard title="Quick Actions">
-        <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-5">
           <Link
             href="/admin/applications"
             className="rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-4 text-center text-sm font-semibold text-[#111827] hover:bg-[#f5f3f0] transition-colors"
@@ -195,10 +195,16 @@ export default async function AdminHomePage() {
             View Customers
           </Link>
           <Link
-            href="/admin/products/sync"
+            href="/admin/analytics"
+            className="rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-4 text-center text-sm font-semibold text-[#111827] hover:bg-[#f5f3f0] transition-colors"
+          >
+            Open Analytics
+          </Link>
+          <Link
+            href="/admin/sync-status"
             className="rounded-lg border border-[#1d4b43] bg-[#1d4b43] p-4 text-center text-sm font-semibold text-white hover:bg-[#163836] transition-colors"
           >
-            Sync Products
+            Trigger Sync
           </Link>
         </div>
       </SectionCard>
