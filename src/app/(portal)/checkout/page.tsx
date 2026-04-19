@@ -21,10 +21,20 @@ interface CartResponse {
     status: string;
     items: CartItem[];
     subtotal: number;
+    shippingTotal: number;
+    taxTotal: number;
+    grandTotal: number;
   };
 }
 
-const FREE_SHIPPING_THRESHOLD = 150;
+type AddressForm = {
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  zip: string;
+  country: string;
+};
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -33,6 +43,24 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string>("");
   const [notes, setNotes] = useState("");
+  const [poNumber, setPoNumber] = useState("");
+  const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
+  const [shippingAddress, setShippingAddress] = useState<AddressForm>({
+    line1: "",
+    line2: "",
+    city: "",
+    state: "",
+    zip: "",
+    country: "US",
+  });
+  const [billingAddress, setBillingAddress] = useState<AddressForm>({
+    line1: "",
+    line2: "",
+    city: "",
+    state: "",
+    zip: "",
+    country: "US",
+  });
 
   async function fetchCart() {
     try {
@@ -62,7 +90,13 @@ export default function CheckoutPage() {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes: notes || undefined }),
+        body: JSON.stringify({
+          shippingAddress,
+          billingSameAsShipping,
+          billingAddress: billingSameAsShipping ? undefined : billingAddress,
+          poNumber: poNumber || undefined,
+          notes: notes || undefined,
+        }),
       });
 
       if (!res.ok) {
@@ -104,10 +138,6 @@ export default function CheckoutPage() {
     );
   }
 
-  const shippingCost = cart.subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 24;
-  const tax = Math.round((cart.subtotal + shippingCost) * 0.1 * 100) / 100;
-  const total = cart.subtotal + shippingCost + tax;
-
   return (
     <SectionCard title="Checkout" description="Shipping, billing, terms, and order notes.">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -119,20 +149,132 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {/* Shipping Address Section */}
-          <div className="rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-4">
-            <h3 className="text-sm font-semibold text-[#111827] mb-4">Shipping Information</h3>
-            <div className="p-3 rounded bg-[#f5f3f0] text-sm text-[#4b5563]">
-              <p>Shipping to your registered business address.</p>
-              <p className="text-xs mt-2 text-[#6b7280]">
-                Contact support to change your shipping address.
-              </p>
-            </div>
-          </div>
-
-          {/* Order Notes */}
+          {/* Shipping + Billing + Notes */}
           <form onSubmit={handleCheckout} className="space-y-4">
+            <div className="rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-4 space-y-3">
+              <h3 className="text-sm font-semibold text-[#111827]">Shipping Address</h3>
+              <input
+                value={shippingAddress.line1}
+                onChange={(e) => setShippingAddress((prev) => ({ ...prev, line1: e.target.value }))}
+                placeholder="Address line 1"
+                className="w-full rounded border border-[#e7e4dc] p-2 text-sm"
+                required
+              />
+              <input
+                value={shippingAddress.line2}
+                onChange={(e) => setShippingAddress((prev) => ({ ...prev, line2: e.target.value }))}
+                placeholder="Address line 2 (optional)"
+                className="w-full rounded border border-[#e7e4dc] p-2 text-sm"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  value={shippingAddress.city}
+                  onChange={(e) => setShippingAddress((prev) => ({ ...prev, city: e.target.value }))}
+                  placeholder="City"
+                  className="w-full rounded border border-[#e7e4dc] p-2 text-sm"
+                  required
+                />
+                <input
+                  value={shippingAddress.state}
+                  onChange={(e) => setShippingAddress((prev) => ({ ...prev, state: e.target.value }))}
+                  placeholder="State"
+                  className="w-full rounded border border-[#e7e4dc] p-2 text-sm"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  value={shippingAddress.zip}
+                  onChange={(e) => setShippingAddress((prev) => ({ ...prev, zip: e.target.value }))}
+                  placeholder="ZIP"
+                  className="w-full rounded border border-[#e7e4dc] p-2 text-sm"
+                  required
+                />
+                <input
+                  value={shippingAddress.country}
+                  onChange={(e) => setShippingAddress((prev) => ({ ...prev, country: e.target.value }))}
+                  placeholder="Country"
+                  className="w-full rounded border border-[#e7e4dc] p-2 text-sm"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-4 space-y-3">
+              <label className="inline-flex items-center gap-2 text-sm font-medium text-[#111827]">
+                <input
+                  type="checkbox"
+                  checked={billingSameAsShipping}
+                  onChange={(e) => setBillingSameAsShipping(e.target.checked)}
+                />
+                Billing same as shipping
+              </label>
+
+              {!billingSameAsShipping && (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold text-[#111827]">Billing Address</h3>
+                  <input
+                    value={billingAddress.line1}
+                    onChange={(e) => setBillingAddress((prev) => ({ ...prev, line1: e.target.value }))}
+                    placeholder="Address line 1"
+                    className="w-full rounded border border-[#e7e4dc] p-2 text-sm"
+                    required
+                  />
+                  <input
+                    value={billingAddress.line2}
+                    onChange={(e) => setBillingAddress((prev) => ({ ...prev, line2: e.target.value }))}
+                    placeholder="Address line 2 (optional)"
+                    className="w-full rounded border border-[#e7e4dc] p-2 text-sm"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      value={billingAddress.city}
+                      onChange={(e) => setBillingAddress((prev) => ({ ...prev, city: e.target.value }))}
+                      placeholder="City"
+                      className="w-full rounded border border-[#e7e4dc] p-2 text-sm"
+                      required
+                    />
+                    <input
+                      value={billingAddress.state}
+                      onChange={(e) => setBillingAddress((prev) => ({ ...prev, state: e.target.value }))}
+                      placeholder="State"
+                      className="w-full rounded border border-[#e7e4dc] p-2 text-sm"
+                      required
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      value={billingAddress.zip}
+                      onChange={(e) => setBillingAddress((prev) => ({ ...prev, zip: e.target.value }))}
+                      placeholder="ZIP"
+                      className="w-full rounded border border-[#e7e4dc] p-2 text-sm"
+                      required
+                    />
+                    <input
+                      value={billingAddress.country}
+                      onChange={(e) => setBillingAddress((prev) => ({ ...prev, country: e.target.value }))}
+                      placeholder="Country"
+                      className="w-full rounded border border-[#e7e4dc] p-2 text-sm"
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-4">
+              <label htmlFor="po-number" className="block text-sm font-semibold text-[#111827] mb-2">
+                PO Number (Optional)
+              </label>
+              <input
+                id="po-number"
+                value={poNumber}
+                onChange={(e) => setPoNumber(e.target.value)}
+                maxLength={60}
+                className="w-full rounded border border-[#e7e4dc] p-2 text-sm mb-4"
+                placeholder="Enter purchase order number"
+              />
+
               <label htmlFor="notes" className="block text-sm font-semibold text-[#111827] mb-2">
                 Order Notes (Optional)
               </label>
@@ -217,15 +359,15 @@ export default function CheckoutPage() {
               </div>
               <div className="flex justify-between text-[#4b5563]">
                 <span>Shipping</span>
-                <span>{shippingCost === 0 ? "Free" : `$${shippingCost.toFixed(2)}`}</span>
+                <span>{cart.shippingTotal === 0 ? "Free" : `$${cart.shippingTotal.toFixed(2)}`}</span>
               </div>
               <div className="flex justify-between text-[#4b5563]">
                 <span>Tax (est.)</span>
-                <span>${tax.toFixed(2)}</span>
+                <span>${cart.taxTotal.toFixed(2)}</span>
               </div>
               <div className="border-t border-[#e7e4dc] pt-2 flex justify-between font-semibold text-[#111827]">
                 <span>Total</span>
-                <span>${total.toFixed(2)}</span>
+                <span>${cart.grandTotal.toFixed(2)}</span>
               </div>
             </div>
 

@@ -35,6 +35,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       const data = await res.json();
       setProduct(data.product);
       setIsFavorite(data.isFavorite);
+      setQuantity(data.product.moq);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error loading product");
     } finally {
@@ -62,7 +63,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   async function handleAddToCart() {
     if (!product) return;
     try {
-      const res = await fetch("/api/cart", {
+      const res = await fetch("/api/cart/items", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -71,7 +72,10 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to add to cart");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to add to cart");
+      }
       alert("Added to cart!");
     } catch (err) {
       alert(err instanceof Error ? err.message : "Error adding to cart");

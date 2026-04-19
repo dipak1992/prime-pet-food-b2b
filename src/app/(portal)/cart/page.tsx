@@ -23,10 +23,12 @@ interface CartResponse {
     notes: string | null;
     items: CartItem[];
     subtotal: number;
+    shippingTotal: number;
+    taxTotal: number;
+    grandTotal: number;
+    freeShippingThreshold: number;
   };
 }
-
-const FREE_SHIPPING_THRESHOLD = 150;
 
 export default function CartPage() {
   const [cart, setCart] = useState<CartResponse["cart"] | null>(null);
@@ -109,10 +111,7 @@ export default function CartPage() {
     );
   }
 
-  const shippingCost = cart.subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 24;
-  const tax = Math.round((cart.subtotal + shippingCost) * 0.1 * 100) / 100;
-  const total = cart.subtotal + shippingCost + tax;
-  const shippingProgress = (cart.subtotal / FREE_SHIPPING_THRESHOLD) * 100;
+  const shippingProgress = (cart.subtotal / cart.freeShippingThreshold) * 100;
 
   return (
     <SectionCard title="Cart" description="Case-pack-aware cart and quantity validation.">
@@ -128,7 +127,7 @@ export default function CartPage() {
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-[#111827]">Free Shipping Progress</span>
             <span className="text-sm text-[#4b5563]">
-              ${cart.subtotal.toFixed(2)} of $150.00
+              ${cart.subtotal.toFixed(2)} of ${cart.freeShippingThreshold.toFixed(2)}
             </span>
           </div>
           <div className="w-full bg-[#e7e4dc] rounded-full h-2">
@@ -137,9 +136,9 @@ export default function CartPage() {
               style={{ width: `${Math.min(shippingProgress, 100)}%` }}
             />
           </div>
-          {shippingCost > 0 && (
+          {cart.shippingTotal > 0 && (
             <p className="text-xs text-[#4b5563] mt-2">
-              Spend ${(FREE_SHIPPING_THRESHOLD - cart.subtotal).toFixed(2)} more for free shipping!
+              Spend ${(cart.freeShippingThreshold - cart.subtotal).toFixed(2)} more for free shipping!
             </p>
           )}
         </div>
@@ -209,15 +208,15 @@ export default function CartPage() {
             </div>
             <div className="flex justify-between text-[#4b5563]">
               <span>Shipping</span>
-              <span>{shippingCost === 0 ? "Free" : `$${shippingCost.toFixed(2)}`}</span>
+              <span>{cart.shippingTotal === 0 ? "Free" : `$${cart.shippingTotal.toFixed(2)}`}</span>
             </div>
             <div className="flex justify-between text-[#4b5563]">
               <span>Tax (est.)</span>
-              <span>${tax.toFixed(2)}</span>
+              <span>${cart.taxTotal.toFixed(2)}</span>
             </div>
             <div className="border-t border-[#e7e4dc] pt-2 flex justify-between font-semibold text-[#111827]">
               <span>Total</span>
-              <span>${total.toFixed(2)}</span>
+              <span>${cart.grandTotal.toFixed(2)}</span>
             </div>
           </div>
         </div>

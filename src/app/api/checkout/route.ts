@@ -15,6 +15,20 @@ function createOrderNumber(): string {
   return `W-${stamp}-${suffix}`;
 }
 
+function formatAddressBlock(label: string, address: {
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  zip: string;
+  country: string;
+}) {
+  const parts = [address.line1, address.line2, `${address.city}, ${address.state} ${address.zip}`, address.country]
+    .filter(Boolean)
+    .join(" | ");
+  return `${label}: ${parts}`;
+}
+
 export async function POST(request: Request) {
   const profile = await requireApprovedBuyer();
   if (!profile.customerId) {
@@ -26,6 +40,15 @@ export async function POST(request: Request) {
 
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input", details: parsed.error.flatten() }, { status: 400 });
+  }
+
+  const shippingAddress = parsed.data.shippingAddress;
+  const billingAddress = parsed.data.billingSameAsShipping
+    ? parsed.data.shippingAddress
+    : parsed.data.billingAddress;
+
+  if (!billingAddress) {
+    return NextResponse.json({ error: "Billing address is required." }, { status: 400 });
   }
 
   const cart = await getOrCreateActiveCart(profile.customerId);
@@ -55,6 +78,15 @@ export async function POST(request: Request) {
   const taxTotal = Number((subtotal * 0.08).toFixed(2));
   const grandTotal = Number((subtotal + shippingTotal + taxTotal).toFixed(2));
 
+  const notesParts = [
+    parsed.data.notes?.trim(),
+    parsed.data.poNumber?.trim() ? `PO: ${parsed.data.poNumber.trim()}` : undefined,
+    formatAddressBlock("Shipping", shippingAddress),
+    formatAddressBlock("Billing", billingAddress),
+  ].filter(Boolean);
+
+  const mergedNotes = notesParts.join("\n");
+
   const order = await prisma.$transaction(async (tx) => {
     const createdOrder = await tx.order.create({
       data: {
@@ -66,7 +98,7 @@ export async function POST(request: Request) {
         shippingTotal,
         taxTotal,
         grandTotal,
-        notes: parsed.data.notes || null,
+        notes: mergedNotes || null,
         placedByUserId: profile.userId,
         items: {
           create: cart.items.map((item) => ({
@@ -84,7 +116,7 @@ export async function POST(request: Request) {
 
     await tx.cart.update({
       where: { id: cart.id },
-      data: { status: "CHECKED_OUT", notes: parsed.data.notes || null },
+      data: { status: "CHECKED_OUT", notes: mergedNotes || null },
     });
 
     await tx.orderStatusHistory.create({

@@ -26,6 +26,8 @@ export default function ProductsPage() {
   const [error, setError] = useState<string>("");
   const [addingProductId, setAddingProductId] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
+  const [query, setQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"title" | "price_asc" | "price_desc">("title");
 
   async function fetchProducts() {
     try {
@@ -33,7 +35,7 @@ export default function ProductsPage() {
       const res = await fetch("/api/products");
       if (!res.ok) throw new Error("Failed to load products");
       const data: ProductsResponse = await res.json();
-      setProducts(data.products.sort((a, b) => a.title.localeCompare(b.title)));
+      setProducts(data.products);
       setError("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error loading products");
@@ -97,6 +99,22 @@ export default function ProductsPage() {
     );
   }
 
+  const filteredProducts = products
+    .filter((product) => {
+      const search = query.trim().toLowerCase();
+      if (!search) return true;
+      return (
+        product.title.toLowerCase().includes(search) ||
+        product.sku.toLowerCase().includes(search) ||
+        (product.description || "").toLowerCase().includes(search)
+      );
+    })
+    .sort((a, b) => {
+      if (sortBy === "price_asc") return a.wholesalePrice - b.wholesalePrice;
+      if (sortBy === "price_desc") return b.wholesalePrice - a.wholesalePrice;
+      return a.title.localeCompare(b.title);
+    });
+
   return (
     <SectionCard
       title="Wholesale catalog"
@@ -110,14 +128,35 @@ export default function ProductsPage() {
           </div>
         )}
 
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by title, SKU, or description"
+            className="md:col-span-2 rounded-lg border border-[#e7e4dc] bg-white px-3 py-2 text-sm text-[#111827]"
+          />
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as "title" | "price_asc" | "price_desc")}
+            className="rounded-lg border border-[#e7e4dc] bg-white px-3 py-2 text-sm text-[#111827]"
+          >
+            <option value="title">Sort: Name A-Z</option>
+            <option value="price_asc">Sort: Price low to high</option>
+            <option value="price_desc">Sort: Price high to low</option>
+          </select>
+        </div>
+
+        <p className="text-xs text-[#4b5563]">Showing {filteredProducts.length} products</p>
+
         {/* Products Grid */}
-        {products.length === 0 ? (
+        {filteredProducts.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-sm text-[#4b5563] mb-4">No products available.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
               <div
                 key={product.id}
                 className="rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-4 flex flex-col hover:border-[#1d4b43] hover:shadow-sm transition-all"
