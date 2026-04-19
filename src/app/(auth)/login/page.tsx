@@ -7,6 +7,14 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [status] = useState<string | null>(() => {
+    if (typeof window === "undefined") {
+      return null;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    return params.get("status");
+  });
 
   async function handleMagicLink(event: FormEvent) {
     event.preventDefault();
@@ -17,7 +25,7 @@ export default function LoginPage() {
     const { error: authError } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
 
@@ -37,6 +45,18 @@ export default function LoginPage() {
         <p className="mt-2 text-sm text-[#6b7280]">
           Use your approved wholesale account email to get a secure magic link.
         </p>
+
+        {status === "pending" ? (
+          <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+            Your account is pending approval. We will email you when your wholesale access is approved.
+          </p>
+        ) : null}
+
+        {status === "rejected" ? (
+          <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            Your application was not approved at this time. Contact support for details.
+          </p>
+        ) : null}
 
         <form onSubmit={handleMagicLink} className="mt-6 space-y-4">
           <label className="flex flex-col gap-1 text-sm text-[#374151]">

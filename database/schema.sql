@@ -79,6 +79,18 @@ CREATE TABLE products (
   UNIQUE (retail_source, retail_source_id)
 );
 
+CREATE TABLE product_sync_jobs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  source TEXT NOT NULL DEFAULT 'SHOPIFY',
+  status TEXT NOT NULL CHECK (status IN ('RUNNING','SUCCESS','FAILED')),
+  started_at TIMESTAMPTZ,
+  finished_at TIMESTAMPTZ,
+  records_read INT NOT NULL DEFAULT 0,
+  records_upserted INT NOT NULL DEFAULT 0,
+  error_message TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 CREATE TABLE orders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_number TEXT NOT NULL UNIQUE,

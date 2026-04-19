@@ -182,6 +182,18 @@ model Product {
   @@index([isActive])
 }
 
+model ProductSyncJob {
+  id              String   @id @default(uuid())
+  source          String   @default("SHOPIFY")
+  status          String
+  startedAt       DateTime?
+  finishedAt      DateTime?
+  recordsRead     Int      @default(0)
+  recordsUpserted Int      @default(0)
+  errorMessage    String?
+  createdAt       DateTime @default(now())
+}
+
 model CustomerPriceOverride {
   id             String   @id @default(uuid())
   customerId     String

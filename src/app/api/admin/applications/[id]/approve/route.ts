@@ -3,24 +3,53 @@ import { requireAdmin } from "@/lib/auth/guards";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
   const admin = await requireAdmin();
   const { id } = await context.params;
+  const payload = (await request.json().catch(() => ({}))) as { adminNotes?: string };
 
-  const application = await prisma.wholesaleApplication.update({
-    where: { id },
-    data: {
-      status: "APPROVED",
-      reviewedAt: new Date(),
-      reviewedById: admin.userId,
-    },
-  });
+  await prisma.$transaction(async (tx) => {
+    const application = await tx.wholesaleApplication.update({
+      where: { id },
+      data: {
+        status: "APPROVED",
+        reviewedAt: new Date(),
+        reviewedById: admin.userId,
+        adminNotes: payload.adminNotes || null,
+      },
+    });
 
-  await prisma.user.updateMany({
-    where: { email: application.email },
-    data: { status: "APPROVED" },
+    const user = await tx.user.upsert({
+      where: { email: application.email.toLowerCase() },
+      create: {
+        email: application.email.toLowerCase(),
+        name: application.contactName,
+        role: "BUYER",
+        status: "APPROVED",
+      },
+      update: {
+        status: "APPROVED",
+      },
+    });
+
+    await tx.customer.upsert({
+      where: { userId: user.id },
+      create: {
+        userId: user.id,
+        businessName: application.businessName,
+        businessType: application.businessType,
+        accountStatus: "APPROVED",
+        approvedAt: new Date(),
+      },
+      update: {
+        businessName: application.businessName,
+        businessType: application.businessType,
+        accountStatus: "APPROVED",
+        approvedAt: new Date(),
+      },
+    });
   });
 
   return NextResponse.json({ success: true });

@@ -10,14 +10,21 @@ export async function POST(
   const { id } = await context.params;
   const payload = (await request.json().catch(() => ({}))) as { adminNotes?: string };
 
-  await prisma.wholesaleApplication.update({
-    where: { id },
-    data: {
-      status: "REJECTED",
-      reviewedAt: new Date(),
-      reviewedById: admin.userId,
-      adminNotes: payload.adminNotes || null,
-    },
+  await prisma.$transaction(async (tx) => {
+    const application = await tx.wholesaleApplication.update({
+      where: { id },
+      data: {
+        status: "REJECTED",
+        reviewedAt: new Date(),
+        reviewedById: admin.userId,
+        adminNotes: payload.adminNotes || null,
+      },
+    });
+
+    await tx.user.updateMany({
+      where: { email: application.email.toLowerCase() },
+      data: { status: "REJECTED" },
+    });
   });
 
   return NextResponse.json({ success: true });
