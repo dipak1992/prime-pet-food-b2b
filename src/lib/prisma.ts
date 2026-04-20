@@ -13,9 +13,6 @@ const connectionString =
 if (!connectionString) {
   throw new Error(
     "No database connection string found. Set POSTGRES_PRISMA_URL or DATABASE_URL."
-  
-  throw new Error(
-    "No database connection string found. Set POSTGRES_PRISMA_URL or DATABASE_URL."
   );
 }
 
