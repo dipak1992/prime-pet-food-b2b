@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -52,6 +53,15 @@ export default function ApplyPage() {
   return (
     <div className="min-h-screen bg-[#f8f7f4] px-4 py-12 sm:px-6">
       <div className="mx-auto max-w-3xl rounded-3xl border border-[#e7e4dc] bg-white p-6 shadow-sm sm:p-10">
+        <div className="mb-6 flex justify-center">
+          <Image
+            src="/logo.jpg"
+            alt="Prime Pet Food Logo"
+            width={120}
+            height={120}
+            className="h-24 w-24 object-contain"
+          />
+        </div>
         <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#1d4b43]">Prime Pet Food Wholesale</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#111827] sm:text-4xl">
           Apply for a wholesale account

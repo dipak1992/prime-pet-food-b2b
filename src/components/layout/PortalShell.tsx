@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Package, LayoutDashboard, ShoppingCart, Receipt, UserCircle, LifeBuoy, Download, ShoppingBag } from "lucide-react";
 
 const links = [
@@ -17,9 +18,18 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-[#f8f7f4] text-[#1f2937]">
       <header className="border-b border-[#e7e4dc] bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <Link href="/dashboard" className="text-lg font-semibold tracking-tight text-[#1d4b43]">
-            Prime Pet Wholesale
-          </Link>
+          <div className="flex items-center gap-3">
+            <Image
+              src="/logo.jpg"
+              alt="Prime Pet Food Logo"
+              width={40}
+              height={40}
+              className="h-10 w-10 object-contain"
+            />
+            <Link href="/dashboard" className="text-lg font-semibold tracking-tight text-[#1d4b43]">
+              Prime Pet Wholesale
+            </Link>
+          </div>
           <Link href="/products" className="rounded-full bg-[#1d4b43] px-4 py-2 text-sm font-medium text-white">
             Quick Order
           </Link>

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Image from "next/image";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
@@ -40,6 +41,15 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-[#f8f7f4] px-4 py-12 sm:px-6">
       <div className="mx-auto max-w-md rounded-3xl border border-[#e7e4dc] bg-white p-6 shadow-sm sm:p-8">
+        <div className="mb-6 flex justify-center">
+          <Image
+            src="/logo.jpg"
+            alt="Prime Pet Food Logo"
+            width={100}
+            height={100}
+            className="h-20 w-20 object-contain"
+          />
+        </div>
         <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#1d4b43]">Prime Pet Food Wholesale</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#111827]">Log in</h1>
         <p className="mt-2 text-sm text-[#6b7280]">

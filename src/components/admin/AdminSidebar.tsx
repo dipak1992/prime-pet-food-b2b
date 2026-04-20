@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -80,6 +81,15 @@ export default function AdminSidebar() {
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex w-56 flex-col border-r border-[#e7e4dc] bg-white shrink-0">
         <div className="border-b border-[#e7e4dc] px-5 py-4">
+          <div className="mb-3 flex justify-center">
+            <Image
+              src="/logo.jpg"
+              alt="Prime Pet Food Logo"
+              width={50}
+              height={50}
+              className="h-12 w-12 object-contain"
+            />
+          </div>
           <Link href="/admin" className="text-base font-bold text-[#1d4b43]">
             Prime Pet
           </Link>
