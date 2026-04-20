@@ -36,6 +36,9 @@ export default function ResetPasswordPage() {
     const supabase = createSupabaseBrowserClient();
     const { error: updateError } = await supabase.auth.updateUser({
       password,
+      data: {
+        must_change_password: false,
+      },
     });
 
     setIsLoading(false);

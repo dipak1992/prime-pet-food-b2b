@@ -9,6 +9,7 @@ export type SessionProfile = {
   role: "ADMIN" | "BUYER";
   status: "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
   customerId?: string;
+  mustChangePassword: boolean;
 };
 
 function redirectBuyerByStatus(status: SessionProfile["status"]) {
@@ -69,6 +70,7 @@ export async function getSessionProfile(): Promise<SessionProfile | null> {
     role: dbUser.role,
     status: dbUser.status,
     customerId: dbUser.customer?.id,
+    mustChangePassword: Boolean(user.user_metadata?.must_change_password),
   };
 }
 
@@ -84,6 +86,10 @@ export async function requireApprovedBuyer() {
   const profile = await requireAuth();
   const headersList = await headers();
   const viewAs = headersList.get("x-view-as") || null;
+
+  if (profile.mustChangePassword) {
+    redirect("/reset-password");
+  }
 
   // Admin can view as buyer via query param
   if (profile.role === "ADMIN" && viewAs === "buyer") {
@@ -103,6 +109,10 @@ export async function requireApprovedBuyer() {
 
 export async function requireAdmin() {
   const profile = await requireAuth();
+
+  if (profile.mustChangePassword) {
+    redirect("/reset-password");
+  }
 
   if (profile.role !== "ADMIN") {
     redirectBuyerByStatus(profile.status);

@@ -15,9 +15,14 @@ export function renderEmailBody(payload: EmailPayload): { subject: string; text:
   if (payload.template === "application-approved") {
     const businessName = payload.variables.businessName || "your business";
     const loginUrl = payload.variables.loginUrl || process.env.NEXT_PUBLIC_APP_URL || "";
+    const setPasswordUrl = payload.variables.setPasswordUrl || "";
     const subject = "Your Prime Pet wholesale account is approved";
-    const text = `Great news. Your wholesale application for ${businessName} has been approved. You can sign in here: ${loginUrl}`;
-    const html = `<p>Great news. Your wholesale application for <strong>${businessName}</strong> has been approved.</p><p><a href="${loginUrl}">Sign in to your wholesale portal</a></p>`;
+    const text = setPasswordUrl
+      ? `Great news. Your wholesale application for ${businessName} has been approved. Set your password here: ${setPasswordUrl}`
+      : `Great news. Your wholesale application for ${businessName} has been approved. You can sign in here: ${loginUrl}`;
+    const html = setPasswordUrl
+      ? `<p>Great news. Your wholesale application for <strong>${businessName}</strong> has been approved.</p><p><a href="${setPasswordUrl}">Set your password</a></p><p>After setting your password, you can sign in here: <a href="${loginUrl}">Wholesale login</a></p>`
+      : `<p>Great news. Your wholesale application for <strong>${businessName}</strong> has been approved.</p><p><a href="${loginUrl}">Sign in to your wholesale portal</a></p>`;
     return { subject, text, html };
   }
 
