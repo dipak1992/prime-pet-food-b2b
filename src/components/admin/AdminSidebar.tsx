@@ -83,7 +83,7 @@ export default function AdminSidebar() {
         <div className="border-b border-[#e7e4dc] px-5 py-4">
           <div className="mb-3 flex justify-center">
             <Image
-              src="/logo.jpg"
+              src="/logoedited.jpg"
               alt="Prime Pet Food Logo"
               width={50}
               height={50}

@@ -16,7 +16,7 @@ export default function Home() {
       
       <main className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-6 py-16">
         <Image
-          src="/logo.jpg"
+          src="/logoedited.jpg"
           alt="Prime Pet Food Logo"
           width={120}
           height={120}

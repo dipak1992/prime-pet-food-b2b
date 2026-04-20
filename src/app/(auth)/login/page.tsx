@@ -43,7 +43,7 @@ export default function LoginPage() {
       <div className="mx-auto max-w-md rounded-3xl border border-[#e7e4dc] bg-white p-6 shadow-sm sm:p-8">
         <div className="mb-6 flex justify-center">
           <Image
-            src="/logo.jpg"
+            src="/logoedited.jpg"
             alt="Prime Pet Food Logo"
             width={100}
             height={100}

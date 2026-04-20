@@ -55,7 +55,7 @@ export default function ApplyPage() {
       <div className="mx-auto max-w-3xl rounded-3xl border border-[#e7e4dc] bg-white p-6 shadow-sm sm:p-10">
         <div className="mb-6 flex justify-center">
           <Image
-            src="/logo.jpg"
+            src="/logoedited.jpg"
             alt="Prime Pet Food Logo"
             width={120}
             height={120}
