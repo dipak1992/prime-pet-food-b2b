@@ -24,6 +24,7 @@ export default function AdminSidebar() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [viewAsBuyer, setViewAsBuyer] = useState(false);
+  const leadAppUrl = "https://prime-pet-food-lead.vercel.app";
 
   const isActive = (href: string) =>
     href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
@@ -55,6 +56,15 @@ export default function AdminSidebar() {
           {item.label}
         </Link>
       ))}
+      <a
+        href={leadAppUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-4 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-[#374151] hover:bg-[#e7e4dc] hover:text-[#111827]"
+      >
+        <span className="text-base leading-none">↗</span>
+        Open Lead App
+      </a>
       <button
         onClick={handleViewAsBuyer}
         className="mt-6 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-[#374151] hover:bg-blue-50 hover:text-blue-700"
