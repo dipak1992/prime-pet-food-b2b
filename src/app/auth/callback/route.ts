@@ -90,8 +90,12 @@ export async function GET(request: Request) {
   }
 
   if (profile.status === "REJECTED") {
-    return NextResponse.redirect(`${origin}/login?status=rejected`);
+    return NextResponse.redirect(`${origin}/access-rejected`);
   }
 
-  return NextResponse.redirect(`${origin}/login?status=pending`);
+  if (profile.status === "SUSPENDED") {
+    return NextResponse.redirect(`${origin}/access-suspended`);
+  }
+
+  return NextResponse.redirect(`${origin}/access-pending`);
 }
