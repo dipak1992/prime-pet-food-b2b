@@ -7,10 +7,10 @@ declare global {
   var __pgPool: Pool | undefined;
 }
 
-const connectionString = process.env.DATABASE_URL;
+const connectionString = process.env.SUPABASE_DB_URL;
 
 if (!connectionString) {
-  throw new Error("DATABASE_URL is required to initialize Prisma.");
+  throw new Error("SUPABASE_DB_URL is required to initialize Prisma.");
 }
 
 const pool = global.__pgPool ?? new Pool({ connectionString });
