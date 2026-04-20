@@ -11,6 +11,22 @@ export type SessionProfile = {
   customerId?: string;
 };
 
+function redirectBuyerByStatus(status: SessionProfile["status"]) {
+  if (status === "APPROVED") {
+    redirect("/dashboard");
+  }
+
+  if (status === "REJECTED") {
+    redirect("/access-rejected");
+  }
+
+  if (status === "SUSPENDED") {
+    redirect("/access-suspended");
+  }
+
+  redirect("/access-pending");
+}
+
 export async function getSessionProfile(): Promise<SessionProfile | null> {
   const supabase = await createSupabaseServerClient();
   const {
@@ -21,10 +37,27 @@ export async function getSessionProfile(): Promise<SessionProfile | null> {
     return null;
   }
 
-  const dbUser = await prisma.user.findUnique({
+  let dbUser = await prisma.user.findUnique({
     where: { authUserId: user.id },
     include: { customer: true },
   });
+
+  // Fallback for accounts created before authUserId was persisted.
+  if (!dbUser && user.email) {
+    const email = user.email.toLowerCase();
+    dbUser = await prisma.user.findUnique({
+      where: { email },
+      include: { customer: true },
+    });
+
+    if (dbUser && !dbUser.authUserId) {
+      dbUser = await prisma.user.update({
+        where: { id: dbUser.id },
+        data: { authUserId: user.id },
+        include: { customer: true },
+      });
+    }
+  }
 
   if (!dbUser) {
     return null;
@@ -62,7 +95,7 @@ export async function requireApprovedBuyer() {
   }
 
   if (profile.status !== "APPROVED") {
-    redirect("/login?status=pending");
+    redirectBuyerByStatus(profile.status);
   }
 
   return profile;
@@ -72,7 +105,7 @@ export async function requireAdmin() {
   const profile = await requireAuth();
 
   if (profile.role !== "ADMIN") {
-    redirect("/login");
+    redirectBuyerByStatus(profile.status);
   }
 
   return profile;

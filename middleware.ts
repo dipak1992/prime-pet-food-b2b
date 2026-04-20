@@ -14,18 +14,34 @@ const protectedPrefixes = [
   "/favorites",
   "/bundles",
   "/admin",
+  "/api/admin",
+  "/api/account",
+  "/api/cart",
+  "/api/checkout",
+  "/api/favorites",
+  "/api/invoices",
+  "/api/orders",
+  "/api/support",
 ];
 
+function isProtectedPath(pathname: string): boolean {
+  return protectedPrefixes.some((prefix) => pathname.startsWith(prefix));
+}
+
 export async function middleware(request: NextRequest) {
-  const response = NextResponse.next({
-    request,
-  });
+  const requestHeaders = new Headers(request.headers);
 
   // Pass viewAs query param as header for server components
   const viewAs = request.nextUrl.searchParams.get("viewAs");
   if (viewAs) {
-    response.headers.set("x-view-as", viewAs);
+    requestHeaders.set("x-view-as", viewAs);
   }
+
+  const response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -48,7 +64,7 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isProtected = protectedPrefixes.some((prefix) => request.nextUrl.pathname.startsWith(prefix));
+  const isProtected = isProtectedPath(request.nextUrl.pathname);
 
   if (!user && isProtected) {
     const redirectUrl = request.nextUrl.clone();
