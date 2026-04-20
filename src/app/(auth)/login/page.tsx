@@ -2,10 +2,13 @@
 
 import { FormEvent, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [status] = useState<string | null>(() => {
@@ -17,27 +20,26 @@ export default function LoginPage() {
     return params.get("status");
   });
 
-  async function handleMagicLink(event: FormEvent) {
+  async function handleLogin(event: FormEvent) {
     event.preventDefault();
     setError(null);
-    setMessage(null);
     setIsLoading(true);
 
-    const response = await fetch("/api/auth/magic-link", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, mode: "buyer" }),
+    const supabase = createSupabaseBrowserClient();
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
 
     setIsLoading(false);
 
-    if (!response.ok) {
-      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-      setError(payload?.error || "Could not send magic link. Please try again.");
+    if (authError) {
+      setError(authError.message || "Login failed. Please check your credentials.");
       return;
     }
 
-    setMessage("Magic link sent. It will expire in 60 seconds.");
+    router.push("/dashboard");
+    router.refresh();
   }
 
   return (
@@ -55,9 +57,8 @@ export default function LoginPage() {
         <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#1d4b43]">Prime Pet Food Wholesale</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#111827]">Log in</h1>
         <p className="mt-2 text-sm text-[#6b7280]">
-          Use your approved wholesale account email to get a secure magic link.
+          Use your approved wholesale account email and password.
         </p>
-        <p className="mt-2 text-xs text-[#9b1c1c]">Magic link expires in 60 seconds.</p>
 
         {status === "pending" ? (
           <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
@@ -71,13 +72,7 @@ export default function LoginPage() {
           </p>
         ) : null}
 
-        {status === "expired" ? (
-          <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            Your magic link expired after 60 seconds. Please request a new link.
-          </p>
-        ) : null}
-
-        <form onSubmit={handleMagicLink} className="mt-6 space-y-4">
+        <form onSubmit={handleLogin} className="mt-6 space-y-4">
           <label className="flex flex-col gap-1 text-sm text-[#374151]">
             Email
             <input
@@ -89,16 +84,26 @@ export default function LoginPage() {
             />
           </label>
 
+          <label className="flex flex-col gap-1 text-sm text-[#374151]">
+            Password
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              className="rounded-xl border border-[#d6d3cc] px-3 py-2 outline-none ring-[#1d4b43] focus:ring-2"
+            />
+          </label>
+
           <button
             type="submit"
             disabled={isLoading}
             className="inline-flex w-full items-center justify-center rounded-xl bg-[#1d4b43] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
           >
-            {isLoading ? "Sending..." : "Send magic link"}
+            {isLoading ? "Signing in..." : "Sign in"}
           </button>
         </form>
 
-        {message ? <p className="mt-4 text-sm text-green-700">{message}</p> : null}
         {error ? <p className="mt-4 text-sm text-red-700">{error}</p> : null}
       </div>
     </div>
