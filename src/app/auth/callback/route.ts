@@ -2,6 +2,16 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+const ADMIN_EMAILS = new Set(["admin@theprimepetfood.com", "admin@theperimeprtfood.com"]);
+
+function getSafeNextPath(input: string | null): string {
+  if (!input || !input.startsWith("/") || input.startsWith("//")) {
+    return "/admin";
+  }
+
+  return input;
+}
+
 function getSafeName(email: string, fallback?: string | null): string {
   if (fallback && fallback.trim().length > 1) {
     return fallback.trim();
@@ -14,6 +24,7 @@ function getSafeName(email: string, fallback?: string | null): string {
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
+  const next = getSafeNextPath(url.searchParams.get("next"));
   const origin = url.origin;
 
   if (!code) {
@@ -37,8 +48,30 @@ export async function GET(request: Request) {
 
   const email = authUser.email.toLowerCase();
 
+  if (ADMIN_EMAILS.has(email)) {
+    await prisma.user.upsert({
+      where: { email },
+      create: {
+        authUserId: authUser.id,
+        email,
+        name: getSafeName(email, authUser.user_metadata?.full_name),
+        role: "ADMIN",
+        status: "APPROVED",
+        lastLoginAt: new Date(),
+      },
+      update: {
+        authUserId: authUser.id,
+        role: "ADMIN",
+        status: "APPROVED",
+        lastLoginAt: new Date(),
+      },
+    });
+
+    return NextResponse.redirect(`${origin}${next}`);
+  }
+
   // Check if user already exists in system
-  let existingUser = await prisma.user.findUnique({
+  const existingUser = await prisma.user.findUnique({
     where: { email },
   });
 

@@ -5,7 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-const ADMIN_EMAIL = "admin@theprimepetfood.com";
+const ADMIN_EMAILS = new Set(["admin@theprimepetfood.com", "admin@theperimeprtfood.com"]);
+const DISPLAY_ADMIN_EMAIL = "admin@theprimepetfood.com";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -20,8 +21,8 @@ export default function AdminLoginPage() {
     setIsLoading(true);
 
     // Validate that email is admin email
-    if (email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-      setError(`Only ${ADMIN_EMAIL} can access the admin portal.`);
+    if (!ADMIN_EMAILS.has(email.toLowerCase())) {
+      setError(`Only ${DISPLAY_ADMIN_EMAIL} can access the admin portal.`);
       setIsLoading(false);
       return;
     }
@@ -30,7 +31,7 @@ export default function AdminLoginPage() {
     const { error: authError } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/admin`,
       },
     });
 
@@ -83,7 +84,7 @@ export default function AdminLoginPage() {
               required
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="admin@theprimepetfood.com"
+              placeholder={DISPLAY_ADMIN_EMAIL}
               className="rounded-xl border border-[#d6d3cc] px-3 py-2 outline-none ring-[#1d4b43] focus:ring-2"
               disabled={isLoading}
             />
