@@ -4,6 +4,16 @@ import Image from "next/image";
 export default function Home() {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_10%_10%,#f9f2df_0%,#f8f7f4_45%,#eef6f3_100%)]">
+      {/* Admin login button - hidden by default, visible on hover */}
+      <div className="fixed top-4 right-4 z-50 opacity-0 hover:opacity-100 transition-opacity duration-300">
+        <Link
+          href="/admin/login"
+          className="inline-flex items-center justify-center rounded-lg bg-[#1d4b43] px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#0f2820]"
+        >
+          Admin Login
+        </Link>
+      </div>
+      
       <main className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-6 py-16">
         <Image
           src="/logo.jpg"
