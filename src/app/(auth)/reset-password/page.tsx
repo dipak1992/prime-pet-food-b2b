@@ -10,6 +10,8 @@ export default function ResetPasswordPage() {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -72,7 +74,7 @@ export default function ResetPasswordPage() {
           <label className="flex flex-col gap-1 text-sm text-[#374151]">
             New password
             <input
-              type="password"
+              type={showNewPassword ? "text" : "password"}
               required
               value={password}
               onChange={(event) => setPassword(event.target.value)}
@@ -81,10 +83,18 @@ export default function ResetPasswordPage() {
             />
           </label>
 
+          <button
+            type="button"
+            onClick={() => setShowNewPassword((prev) => !prev)}
+            className="text-left text-xs font-medium text-[#1d4b43] hover:underline"
+          >
+            {showNewPassword ? "Hide new password" : "Show new password"}
+          </button>
+
           <label className="flex flex-col gap-1 text-sm text-[#374151]">
             Confirm new password
             <input
-              type="password"
+              type={showConfirmPassword ? "text" : "password"}
               required
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
@@ -92,6 +102,14 @@ export default function ResetPasswordPage() {
               disabled={isLoading}
             />
           </label>
+
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword((prev) => !prev)}
+            className="text-left text-xs font-medium text-[#1d4b43] hover:underline"
+          >
+            {showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+          </button>
 
           <button
             type="submit"

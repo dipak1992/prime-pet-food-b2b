@@ -13,6 +13,7 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -86,7 +87,7 @@ export default function AdminLoginPage() {
           <label className="flex flex-col gap-1 text-sm text-[#374151]">
             Password
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               required
               value={password}
               onChange={(event) => setPassword(event.target.value)}
@@ -94,6 +95,14 @@ export default function AdminLoginPage() {
               disabled={isLoading}
             />
           </label>
+
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="text-left text-xs font-medium text-[#1d4b43] hover:underline"
+          >
+            {showPassword ? "Hide password" : "Show password"}
+          </button>
 
           <button
             type="submit"
