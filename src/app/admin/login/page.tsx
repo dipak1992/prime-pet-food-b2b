@@ -3,7 +3,6 @@
 import { FormEvent, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const ADMIN_EMAILS = new Set(["admin@theprimepetfood.com", "admin@theperimeprtfood.com"]);
 const DISPLAY_ADMIN_EMAIL = "admin@theprimepetfood.com";
@@ -27,22 +26,21 @@ export default function AdminLoginPage() {
       return;
     }
 
-    const supabase = createSupabaseBrowserClient();
-    const { error: authError } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/admin`,
-      },
+    const response = await fetch("/api/auth/magic-link", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, mode: "admin" }),
     });
 
     setIsLoading(false);
 
-    if (authError) {
-      setError(authError.message);
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+      setError(payload?.error || "Could not send magic link. Please try again.");
       return;
     }
 
-    setMessage("Magic link sent to your admin email. Check your inbox.");
+    setMessage("Magic link sent to your admin email. It will expire in 60 seconds.");
     setEmail("");
   }
 
@@ -63,6 +61,7 @@ export default function AdminLoginPage() {
         <p className="mt-3 text-sm text-[#6b7280]">
           Enter your admin email to receive a secure magic link.
         </p>
+        <p className="mt-2 text-xs text-[#9b1c1c]">Magic link expires in 60 seconds.</p>
 
         {message && (
           <div className="mt-4 rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">

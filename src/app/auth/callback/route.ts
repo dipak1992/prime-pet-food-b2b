@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const ADMIN_EMAILS = new Set(["admin@theprimepetfood.com", "admin@theperimeprtfood.com"]);
+const MAX_MAGIC_LINK_AGE_MS = 60_000;
 
 function getSafeNextPath(input: string | null): string {
   if (!input || !input.startsWith("/") || input.startsWith("//")) {
@@ -25,7 +26,15 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const next = getSafeNextPath(url.searchParams.get("next"));
+  const issuedAtParam = url.searchParams.get("issuedAt");
   const origin = url.origin;
+
+  const issuedAt = issuedAtParam ? Number(issuedAtParam) : NaN;
+  const isExpired = Number.isNaN(issuedAt) || Date.now() - issuedAt > MAX_MAGIC_LINK_AGE_MS;
+
+  if (isExpired) {
+    return NextResponse.redirect(`${origin}/login?status=expired`);
+  }
 
   if (!code) {
     return NextResponse.redirect(`${origin}/login`);

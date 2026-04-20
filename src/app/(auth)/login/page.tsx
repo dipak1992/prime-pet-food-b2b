@@ -2,12 +2,12 @@
 
 import { FormEvent, useState } from "react";
 import Image from "next/image";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [status] = useState<string | null>(() => {
     if (typeof window === "undefined") {
       return null;
@@ -21,21 +21,23 @@ export default function LoginPage() {
     event.preventDefault();
     setError(null);
     setMessage(null);
+    setIsLoading(true);
 
-    const supabase = createSupabaseBrowserClient();
-    const { error: authError } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
+    const response = await fetch("/api/auth/magic-link", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, mode: "buyer" }),
     });
 
-    if (authError) {
-      setError(authError.message);
+    setIsLoading(false);
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+      setError(payload?.error || "Could not send magic link. Please try again.");
       return;
     }
 
-    setMessage("Magic link sent. Check your inbox.");
+    setMessage("Magic link sent. It will expire in 60 seconds.");
   }
 
   return (
@@ -55,6 +57,7 @@ export default function LoginPage() {
         <p className="mt-2 text-sm text-[#6b7280]">
           Use your approved wholesale account email to get a secure magic link.
         </p>
+        <p className="mt-2 text-xs text-[#9b1c1c]">Magic link expires in 60 seconds.</p>
 
         {status === "pending" ? (
           <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
@@ -65,6 +68,12 @@ export default function LoginPage() {
         {status === "rejected" ? (
           <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             Your application was not approved at this time. Contact support for details.
+          </p>
+        ) : null}
+
+        {status === "expired" ? (
+          <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            Your magic link expired after 60 seconds. Please request a new link.
           </p>
         ) : null}
 
@@ -82,9 +91,10 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="inline-flex w-full items-center justify-center rounded-xl bg-[#1d4b43] px-5 py-2.5 text-sm font-semibold text-white"
+            disabled={isLoading}
+            className="inline-flex w-full items-center justify-center rounded-xl bg-[#1d4b43] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
           >
-            Send magic link
+            {isLoading ? "Sending..." : "Send magic link"}
           </button>
         </form>
 
