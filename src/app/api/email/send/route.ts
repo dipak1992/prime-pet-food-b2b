@@ -2,6 +2,27 @@ import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { emailTemplates, EmailPayload, renderEmailBody } from "@/lib/email";
 
+const DEFAULT_FROM_EMAIL = "Prime Pet Food Wholesale Team <wholesale@theprimepetfood.com>";
+
+function getSenderEmail(raw: string | undefined): string {
+  if (!raw) {
+    return DEFAULT_FROM_EMAIL;
+  }
+
+  const trimmed = raw.trim();
+  const angleEmailMatch = trimmed.match(/<([^\s<>@]+@[^\s<>@]+\.[^\s<>@]+)>/);
+  if (angleEmailMatch) {
+    return trimmed;
+  }
+
+  const plainEmailMatch = trimmed.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+  if (plainEmailMatch?.[1]) {
+    return `Prime Pet Food Wholesale Team <${plainEmailMatch[1]}>`;
+  }
+
+  return DEFAULT_FROM_EMAIL;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const payload: EmailPayload = await request.json();
@@ -22,7 +43,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.RESEND_API_KEY || !process.env.FROM_EMAIL) {
+    if (!process.env.RESEND_API_KEY) {
       return NextResponse.json(
         { error: "Email provider is not configured" },
         { status: 500 }
@@ -33,7 +54,7 @@ export async function POST(request: NextRequest) {
     const body = renderEmailBody(payload);
 
     const sendResult = await resend.emails.send({
-      from: process.env.FROM_EMAIL,
+      from: getSenderEmail(process.env.FROM_EMAIL),
       to: [payload.to],
       subject: body.subject,
       text: body.text,

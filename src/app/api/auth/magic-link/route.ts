@@ -3,11 +3,31 @@ import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
 const ADMIN_EMAILS = new Set(["admin@theprimepetfood.com", "admin@theperimeprtfood.com"]);
+const DEFAULT_FROM_EMAIL = "Prime Pet Food Wholesale Team <wholesale@theprimepetfood.com>";
 
 type MagicLinkMode = "buyer" | "admin";
 
 function isValidMode(value: string): value is MagicLinkMode {
   return value === "buyer" || value === "admin";
+}
+
+function getSenderEmail(raw: string | undefined): string {
+  if (!raw) {
+    return DEFAULT_FROM_EMAIL;
+  }
+
+  const trimmed = raw.trim();
+  const angleEmailMatch = trimmed.match(/<([^\s<>@]+@[^\s<>@]+\.[^\s<>@]+)>/);
+  if (angleEmailMatch) {
+    return trimmed;
+  }
+
+  const plainEmailMatch = trimmed.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+  if (plainEmailMatch?.[1]) {
+    return `Prime Pet Food Wholesale Team <${plainEmailMatch[1]}>`;
+  }
+
+  return DEFAULT_FROM_EMAIL;
 }
 
 export async function POST(request: NextRequest) {
@@ -24,7 +44,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Supabase is not configured" }, { status: 500 });
     }
 
-    if (!process.env.RESEND_API_KEY || !process.env.FROM_EMAIL) {
+    if (!process.env.RESEND_API_KEY) {
       return NextResponse.json({ error: "Email provider is not configured" }, { status: 500 });
     }
 
@@ -75,7 +95,7 @@ export async function POST(request: NextRequest) {
     const text = `Your ${mode} login link (expires in 60 seconds): ${actionLink}`;
 
     const sent = await resend.emails.send({
-      from: process.env.FROM_EMAIL,
+      from: getSenderEmail(process.env.FROM_EMAIL),
       to: [email],
       subject,
       html,
