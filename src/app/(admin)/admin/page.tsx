@@ -4,18 +4,45 @@ import { SectionCard } from "@/components/ui/SectionCard";
 
 export const dynamic = "force-dynamic";
 
+async function safelyLoad<T>(label: string, loader: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await loader();
+  } catch (error) {
+    console.error(`[admin dashboard] Failed to load ${label}:`, error);
+    return fallback;
+  }
+}
+
 export default async function AdminHomePage() {
-  const [pendingApplications, openOrders, customers, totalRevenue, recentOrders, syncJobs] =
-    await Promise.all([
-      prisma.wholesaleApplication.count({ where: { status: "PENDING" } }),
-      prisma.order.count({ where: { status: { in: ["PENDING", "CONFIRMED", "PACKED", "SHIPPED"] } } }),
-      prisma.customer.count(),
+  const pendingApplications = await safelyLoad(
+    "pending applications",
+    () => prisma.wholesaleApplication.count({ where: { status: "PENDING" } }),
+    0,
+  );
+
+  const openOrders = await safelyLoad(
+    "open orders",
+    () => prisma.order.count({ where: { status: { in: ["PENDING", "CONFIRMED", "PACKED", "SHIPPED"] } } }),
+    0,
+  );
+
+  const customers = await safelyLoad("customers", () => prisma.customer.count(), 0);
+
+  const totalRevenue = await safelyLoad(
+    "total revenue",
+    () =>
       prisma.order
         .aggregate({
           where: { paymentStatus: "PAID" },
           _sum: { grandTotal: true },
         })
         .then((r) => r._sum.grandTotal || 0),
+    0,
+  );
+
+  const recentOrders = await safelyLoad(
+    "recent orders",
+    () =>
       prisma.order.findMany({
         where: { status: { in: ["PENDING", "CONFIRMED", "PACKED", "SHIPPED"] } },
         orderBy: { createdAt: "desc" },
@@ -30,11 +57,18 @@ export default async function AdminHomePage() {
           grandTotal: true,
         },
       }),
+    [],
+  );
+
+  const syncJobs = await safelyLoad(
+    "sync jobs",
+    () =>
       prisma.productSyncJob.findMany({
         orderBy: { createdAt: "desc" },
         take: 5,
       }),
-    ]);
+    [],
+  );
 
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString("en-US", {
