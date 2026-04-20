@@ -47,6 +47,31 @@ export default function Home() {
             </article>
           ))}
         </div>
+
+        <div className="mt-12 rounded-3xl border border-[#e5e7eb] bg-white/95 p-8 shadow-sm">
+          <h2 className="text-2xl font-semibold text-[#111827]">About Himalayan Yak Cheese Chews</h2>
+          <p className="mt-4 text-base text-[#4b5563] leading-relaxed max-w-3xl">
+            Our premium Himalayan Yak Cheese chews are a natural, long-lasting treat loved by pet retailers and veterinarians worldwide. Sourced from the pristine Himalayas, these hard cheese chews are packed with protein, low in fat, and completely free from additives—making them a healthy choice for every dog.
+          </p>
+          
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            {[
+              { label: "100% Natural", detail: "No artificial ingredients, preservatives, or fillers. Pure Himalayan yak & cow milk cheese." },
+              { label: "Long-lasting", detail: "Keeps dogs engaged for hours, perfect for dental health and behavioral enrichment." },
+              { label: "High protein", detail: "Packed with amino acids and natural enzymes to support digestive and immune health." },
+              { label: "Wholesale ready", detail: "Available in case packs, bulk bundles, and mixed assortments for retail and clinic resale." },
+            ].map(({ label, detail }) => (
+              <div key={label} className="border-l-2 border-[#1d4b43] pl-4">
+                <p className="font-semibold text-[#1d4b43]">{label}</p>
+                <p className="mt-1 text-sm text-[#6b7280]">{detail}</p>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-6 text-sm text-[#6b7280]">
+            Join hundreds of pet shops, grooming salons, and veterinary clinics already stocking Prime Pet Food Himalayan Yak Cheese chews. Get started with wholesale pricing today.
+          </p>
+        </div>
       </main>
     </div>
   );
