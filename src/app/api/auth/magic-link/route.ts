@@ -42,9 +42,8 @@ export async function POST(request: NextRequest) {
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    if (!supabaseUrl || (!serviceRoleKey && !anonKey)) {
+    if (!supabaseUrl || !serviceRoleKey) {
       return NextResponse.json({ error: "Supabase is not configured" }, { status: 500 });
     }
 
@@ -61,73 +60,54 @@ export async function POST(request: NextRequest) {
     // Always use the current request origin so links cannot bounce to another app/domain.
     const appOrigin = request.nextUrl.origin;
     const redirectTo = `${appOrigin}/auth/callback?next=${encodeURIComponent(next)}&issuedAt=${issuedAt}`;
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
-    // Preferred path: generate link with service-role key and deliver via Resend.
-    if (serviceRoleKey) {
-      const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
-
-      const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-        type: "magiclink",
-        email,
-        options: {
-          redirectTo,
-        },
-      });
-
-      if (error) {
-        return NextResponse.json({ error: error.message }, { status: 400 });
-      }
-
-      const actionLink = data?.properties?.action_link;
-      if (!actionLink) {
-        return NextResponse.json({ error: "Failed to generate magic link" }, { status: 500 });
-      }
-
-      const resend = new Resend(process.env.RESEND_API_KEY);
-      const subject =
-        mode === "admin"
-          ? "Prime Pet Food Admin Login Link (Expires in 60 seconds)"
-          : "Prime Pet Food Wholesale Login Link (Expires in 60 seconds)";
-      const html = `
-        <p>Hello,</p>
-        <p>Your secure ${mode === "admin" ? "admin" : "wholesale"} login link is ready.</p>
-        <p><strong>This link expires in 60 seconds.</strong></p>
-        <p><a href="${actionLink}">Log in now</a></p>
-        <p>If you did not request this, you can ignore this email.</p>
-        <p>Prime Pet Food Wholesale Team</p>
-      `;
-      const text = `Your ${mode} login link (expires in 60 seconds): ${actionLink}`;
-
-      const sent = await resend.emails.send({
-        from: getSenderEmail(process.env.FROM_EMAIL),
-        to: [email],
-        subject,
-        html,
-        text,
-      });
-
-      if (sent.error) {
-        return NextResponse.json({ error: "Email delivery failed" }, { status: 502 });
-      }
-
-      return NextResponse.json({ success: true });
-    }
-
-    // Fallback path: no service-role key available; use Supabase default OTP sender.
-    const supabaseClient = createClient(supabaseUrl, anonKey!);
-    const { error: otpError } = await supabaseClient.auth.signInWithOtp({
+    const { data, error } = await supabaseAdmin.auth.admin.generateLink({
+      type: "magiclink",
       email,
       options: {
-        emailRedirectTo: redirectTo,
+        redirectTo,
       },
     });
 
-    if (otpError) {
-      return NextResponse.json({ error: otpError.message }, { status: 400 });
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    const actionLink = data?.properties?.action_link;
+    if (!actionLink) {
+      return NextResponse.json({ error: "Failed to generate magic link" }, { status: 500 });
+    }
+
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const subject =
+      mode === "admin"
+        ? "Prime Pet Food Admin Login Link (Expires in 60 seconds)"
+        : "Prime Pet Food Wholesale Login Link (Expires in 60 seconds)";
+    const html = `
+      <p>Hello,</p>
+      <p>Your secure ${mode === "admin" ? "admin" : "wholesale"} login link is ready.</p>
+      <p><strong>This link expires in 60 seconds.</strong></p>
+      <p><a href="${actionLink}">Log in now</a></p>
+      <p>If you did not request this, you can ignore this email.</p>
+      <p>Prime Pet Food Wholesale Team</p>
+    `;
+    const text = `Your ${mode} login link (expires in 60 seconds): ${actionLink}`;
+
+    const sent = await resend.emails.send({
+      from: getSenderEmail(process.env.FROM_EMAIL),
+      to: [email],
+      subject,
+      html,
+      text,
+    });
+
+    if (sent.error) {
+      return NextResponse.json({ error: "Email delivery failed" }, { status: 502 });
+    }
+
     return NextResponse.json({
       success: true,
-      fallback: "supabase_otp",
     });
   } catch (error) {
     console.error("Magic link error:", error);
