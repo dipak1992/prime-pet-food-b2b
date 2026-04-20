@@ -58,9 +58,8 @@ export default function AdminLoginPage() {
           />
         </div>
         
-        <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#1d4b43]">Prime Pet Food</p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#111827]">Admin Portal</h1>
-        <p className="mt-2 text-sm text-[#6b7280]">
+        <h1 className="text-2xl font-semibold tracking-tight text-[#1d4b43]">Prime Pet Food Admin Portal</h1>
+        <p className="mt-3 text-sm text-[#6b7280]">
           Enter your admin email to receive a secure magic link.
         </p>
 
