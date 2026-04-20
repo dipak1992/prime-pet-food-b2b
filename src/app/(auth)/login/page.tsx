@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -72,6 +73,12 @@ export default function LoginPage() {
           </p>
         ) : null}
 
+        {status === "password-reset" ? (
+          <p className="mt-4 rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+            Password updated. Please sign in with your new password.
+          </p>
+        ) : null}
+
         <form onSubmit={handleLogin} className="mt-6 space-y-4">
           <label className="flex flex-col gap-1 text-sm text-[#374151]">
             Email
@@ -102,6 +109,12 @@ export default function LoginPage() {
           >
             {isLoading ? "Signing in..." : "Sign in"}
           </button>
+
+          <div className="text-center">
+            <Link href="/forgot-password" className="text-sm text-[#1d4b43] hover:underline">
+              Forgot password?
+            </Link>
+          </div>
         </form>
 
         {error ? <p className="mt-4 text-sm text-red-700">{error}</p> : null}
