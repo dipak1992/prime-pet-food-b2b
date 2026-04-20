@@ -58,8 +58,9 @@ export async function POST(request: NextRequest) {
 
     const issuedAt = Date.now();
     const next = mode === "admin" ? "/admin" : "/dashboard";
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
-    const redirectTo = `${appUrl}/auth/callback?next=${encodeURIComponent(next)}&issuedAt=${issuedAt}`;
+    // Always use the current request origin so links cannot bounce to another app/domain.
+    const appOrigin = request.nextUrl.origin;
+    const redirectTo = `${appOrigin}/auth/callback?next=${encodeURIComponent(next)}&issuedAt=${issuedAt}`;
 
     // Preferred path: generate link with service-role key and deliver via Resend.
     if (serviceRoleKey) {
