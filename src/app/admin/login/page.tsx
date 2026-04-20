@@ -6,9 +6,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-const ADMIN_EMAILS = new Set(["admin@theprimepetfood.com", "admin@theperimeprtfood.com"]);
-const DISPLAY_ADMIN_EMAIL = "admin@theprimepetfood.com";
-
 export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -21,13 +18,6 @@ export default function AdminLoginPage() {
     event.preventDefault();
     setError(null);
     setIsLoading(true);
-
-    // Validate that email is admin email
-    if (!ADMIN_EMAILS.has(email.toLowerCase())) {
-      setError(`Only ${DISPLAY_ADMIN_EMAIL} can access the admin portal.`);
-      setIsLoading(false);
-      return;
-    }
 
     const supabase = createSupabaseBrowserClient();
     const { error: authError } = await supabase.auth.signInWithPassword({
@@ -78,7 +68,7 @@ export default function AdminLoginPage() {
               required
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder={DISPLAY_ADMIN_EMAIL}
+              placeholder="admin@example.com"
               className="rounded-xl border border-[#d6d3cc] px-3 py-2 outline-none ring-[#1d4b43] focus:ring-2"
               disabled={isLoading}
             />
@@ -114,7 +104,7 @@ export default function AdminLoginPage() {
 
           <div className="text-center">
             <Link
-              href={`/forgot-password?email=${encodeURIComponent(DISPLAY_ADMIN_EMAIL)}`}
+              href="/forgot-password"
               className="text-sm text-[#1d4b43] hover:underline"
             >
               Forgot password?
