@@ -68,11 +68,19 @@ function deriveWholesalePrice(msrp: number): number {
 }
 
 export async function syncProductsFromShopify(limit = 100): Promise<SyncResult> {
-  const storeDomain = process.env.SHOPIFY_STORE_DOMAIN;
-  const accessToken = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
+  // Read credentials from DB Setting table (set via OAuth), fall back to env vars
+  const [domainSetting, tokenSetting] = await Promise.all([
+    prisma.setting.findUnique({ where: { key: "shopify_store_domain" } }),
+    prisma.setting.findUnique({ where: { key: "shopify_access_token" } }),
+  ]);
+
+  const storeDomain = domainSetting?.value || process.env.SHOPIFY_STORE_DOMAIN;
+  const accessToken = tokenSetting?.value || process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
 
   if (!storeDomain || !accessToken) {
-    throw new Error("Shopify credentials are missing. Set SHOPIFY_STORE_DOMAIN and SHOPIFY_ADMIN_ACCESS_TOKEN.");
+    throw new Error(
+      "Shopify is not connected. Visit /admin/products and click 'Connect Shopify' to authorize."
+    );
   }
 
   const job = await prisma.productSyncJob.create({

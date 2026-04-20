@@ -3,7 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { LogOut } from "lucide-react";
 
 const navItems = [
   { label: "Dashboard", href: "/admin", icon: "⊞" },
@@ -25,7 +26,23 @@ export default function AdminSidebar() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [viewAsBuyer, setViewAsBuyer] = useState(false);
+  const [adminEmail, setAdminEmail] = useState("");
   const leadAppUrl = "https://prime-pet-food-lead.vercel.app";
+
+  useEffect(() => {
+    fetch("/api/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.profile?.email) setAdminEmail(data.profile.email);
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
+  };
 
   const isActive = (href: string) =>
     href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
@@ -73,6 +90,13 @@ export default function AdminSidebar() {
         <span className="text-base leading-none">👁️</span>
         {viewAsBuyer ? "Exit Buyer View" : "View as Buyer"}
       </button>
+      <button
+        onClick={handleLogout}
+        className="mt-2 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-[#374151] hover:bg-red-50 hover:text-red-600"
+      >
+        <LogOut className="size-4" />
+        Sign out
+      </button>
     </nav>
   );
 
@@ -94,6 +118,9 @@ export default function AdminSidebar() {
             Prime Pet
           </Link>
           <p className="text-xs text-[#6b7280] mt-0.5">Admin Portal</p>
+          {adminEmail && (
+            <p className="mt-1 truncate text-[11px] text-[#9ca3af]">{adminEmail}</p>
+          )}
         </div>
         {navContent}
       </aside>
