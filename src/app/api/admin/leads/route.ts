@@ -18,15 +18,15 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { businessName, contactName, email, phone, source, notes } = body;
 
-  if (!businessName || !contactName || !email) {
-    return NextResponse.json({ error: "businessName, contactName, and email are required" }, { status: 400 });
+  if (!businessName) {
+    return NextResponse.json({ error: "businessName is required" }, { status: 400 });
   }
 
   const lead = await prisma.lead.create({
     data: {
       businessName,
-      contactName,
-      email,
+      contactName: contactName || "",
+      email: email || "",
       phone,
       source: source || "MANUAL",
       notes,
