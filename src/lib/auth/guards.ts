@@ -120,3 +120,27 @@ export async function requireAdmin() {
 
   return profile;
 }
+
+export type PublicSessionInfo = {
+  isLoggedIn: boolean;
+  isApproved: boolean;
+  status: SessionProfile["status"] | null;
+  role: SessionProfile["role"] | null;
+};
+
+/**
+ * Non-redirecting helper for public/catalog pages.
+ * Returns basic session info without redirecting.
+ */
+export async function getPublicSessionInfo(): Promise<PublicSessionInfo> {
+  const profile = await getSessionProfile();
+  if (!profile) {
+    return { isLoggedIn: false, isApproved: false, status: null, role: null };
+  }
+  return {
+    isLoggedIn: true,
+    isApproved: profile.role === "BUYER" && profile.status === "APPROVED",
+    status: profile.status,
+    role: profile.role,
+  };
+}

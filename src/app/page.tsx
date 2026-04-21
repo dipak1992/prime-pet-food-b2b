@@ -43,6 +43,12 @@ export default function Home() {
           >
             Wholesale login
           </Link>
+          <Link
+            href="/catalog"
+            className="inline-flex items-center justify-center rounded-xl border border-[#c7c2b5] bg-white px-5 py-3 text-sm font-semibold text-[#1f2937]"
+          >
+            Browse catalog
+          </Link>
         </div>
 
         <div className="mt-10 grid gap-3 sm:grid-cols-3">

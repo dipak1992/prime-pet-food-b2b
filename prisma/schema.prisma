@@ -122,6 +122,10 @@ model Customer {
   tier                  CustomerTier          @default(BRONZE)
   accountStatus         AccountStatus         @default(PENDING)
   approvedAt            DateTime?
+  adminNotes            String?
+  suspendedAt           DateTime?
+  suspendedReason       String?
+  reactivatedAt         DateTime?
   defaultTerms          String                @default("PREPAID")
   freeShippingThreshold Decimal               @default(500.00) @db.Decimal(12, 2)
   createdAt             DateTime              @default(now())

@@ -47,16 +47,44 @@ export async function PATCH(
   await requireAdmin();
   const { id } = await params;
   const body = await req.json();
-  const { tier, accountStatus, defaultTerms, freeShippingThreshold } = body;
+  const { tier, accountStatus, defaultTerms, freeShippingThreshold, adminNotes, suspendedReason } = body;
 
-  const updated = await prisma.customer.update({
+  const existingCustomer = await prisma.customer.findUnique({
     where: { id },
-    data: {
-      ...(tier && { tier }),
-      ...(accountStatus && { accountStatus }),
-      ...(defaultTerms !== undefined && { defaultTerms }),
-      ...(freeShippingThreshold !== undefined && { freeShippingThreshold }),
-    },
+    select: { id: true, userId: true, accountStatus: true },
+  });
+
+  if (!existingCustomer) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const nextStatus = accountStatus ?? existingCustomer.accountStatus;
+  const isSuspending = nextStatus === "SUSPENDED" && existingCustomer.accountStatus !== "SUSPENDED";
+  const isReactivating = nextStatus === "APPROVED" && existingCustomer.accountStatus === "SUSPENDED";
+
+  const updated = await prisma.$transaction(async (tx) => {
+    const customer = await tx.customer.update({
+      where: { id },
+      data: {
+        ...(tier && { tier }),
+        ...(accountStatus && { accountStatus: nextStatus }),
+        ...(defaultTerms !== undefined && { defaultTerms }),
+        ...(freeShippingThreshold !== undefined && { freeShippingThreshold }),
+        ...(adminNotes !== undefined && { adminNotes }),
+        ...(suspendedReason !== undefined && { suspendedReason: suspendedReason || null }),
+        ...(isSuspending ? { suspendedAt: new Date(), reactivatedAt: null } : {}),
+        ...(isReactivating ? { reactivatedAt: new Date() } : {}),
+      },
+    });
+
+    if (accountStatus && nextStatus !== existingCustomer.accountStatus) {
+      await tx.user.update({
+        where: { id: existingCustomer.userId },
+        data: { status: nextStatus },
+      });
+    }
+
+    return customer;
   });
 
   return NextResponse.json({ customer: { ...updated, freeShippingThreshold: Number(updated.freeShippingThreshold) } });

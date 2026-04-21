@@ -19,6 +19,10 @@ type Customer = {
   businessType: string;
   tier: string;
   accountStatus: string;
+  adminNotes: string | null;
+  suspendedReason: string | null;
+  suspendedAt: string | null;
+  reactivatedAt: string | null;
   defaultTerms: string;
   freeShippingThreshold: number;
   createdAt: string;
@@ -35,7 +39,15 @@ export default function AdminCustomerDetailPage() {
 
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({ tier: "", accountStatus: "", defaultTerms: "", freeShippingThreshold: "" });
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    tier: "",
+    accountStatus: "",
+    defaultTerms: "",
+    freeShippingThreshold: "",
+    adminNotes: "",
+    suspendedReason: "",
+  });
 
   useEffect(() => {
     if (id) fetchCustomer(id);
@@ -52,25 +64,41 @@ export default function AdminCustomerDetailPage() {
         accountStatus: data.customer.accountStatus,
         defaultTerms: data.customer.defaultTerms,
         freeShippingThreshold: String(data.customer.freeShippingThreshold),
+        adminNotes: data.customer.adminNotes ?? "",
+        suspendedReason: data.customer.suspendedReason ?? "",
       });
     }
     setLoading(false);
   }
 
-  async function saveCustomer() {
+  async function saveCustomer(overrides?: Partial<typeof form>) {
     if (!id) return;
+    const nextForm = { ...form, ...overrides };
+    setSaving(true);
     const res = await fetch(`/api/admin/customers/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        tier: form.tier,
-        accountStatus: form.accountStatus,
-        defaultTerms: form.defaultTerms,
-        freeShippingThreshold: Number(form.freeShippingThreshold),
+        tier: nextForm.tier,
+        accountStatus: nextForm.accountStatus,
+        defaultTerms: nextForm.defaultTerms,
+        freeShippingThreshold: Number(nextForm.freeShippingThreshold),
+        adminNotes: nextForm.adminNotes,
+        suspendedReason: nextForm.suspendedReason,
       }),
     });
 
-    if (res.ok) await fetchCustomer(id);
+    if (res.ok) {
+      await fetchCustomer(id);
+    }
+
+    setSaving(false);
+  }
+
+  async function applyStatus(status: string) {
+    const overrides = { accountStatus: status };
+    setForm((current) => ({ ...current, ...overrides }));
+    await saveCustomer(overrides);
   }
 
   if (loading) {
@@ -89,6 +117,13 @@ export default function AdminCustomerDetailPage() {
             <p className="font-semibold text-[#111827]">{customer.user.name}</p>
             <p className="text-[#4b5563]">{customer.user.email}</p>
             <p className="text-[#4b5563]">{customer.businessType}</p>
+            <p className="text-[#4b5563]">Status: {customer.accountStatus}</p>
+            {customer.suspendedAt ? (
+              <p className="text-[#4b5563]">Suspended: {new Date(customer.suspendedAt).toLocaleString()}</p>
+            ) : null}
+            {customer.reactivatedAt ? (
+              <p className="text-[#4b5563]">Reactivated: {new Date(customer.reactivatedAt).toLocaleString()}</p>
+            ) : null}
           </div>
 
           <div className="space-y-2">
@@ -128,12 +163,44 @@ export default function AdminCustomerDetailPage() {
                 className="rounded border border-[#e7e4dc] px-3 py-2 text-sm"
               />
             </div>
-            <button
-              onClick={saveCustomer}
-              className="rounded bg-[#1d4b43] px-4 py-2 text-sm font-semibold text-white hover:bg-[#163836]"
-            >
-              Save customer
-            </button>
+            <textarea
+              value={form.adminNotes}
+              onChange={(e) => setForm((f) => ({ ...f, adminNotes: e.target.value }))}
+              placeholder="Admin notes"
+              rows={4}
+              className="w-full rounded border border-[#e7e4dc] px-3 py-2 text-sm"
+            />
+            {form.accountStatus === "SUSPENDED" ? (
+              <input
+                value={form.suspendedReason}
+                onChange={(e) => setForm((f) => ({ ...f, suspendedReason: e.target.value }))}
+                placeholder="Suspension reason"
+                className="w-full rounded border border-[#e7e4dc] px-3 py-2 text-sm"
+              />
+            ) : null}
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <button
+                onClick={() => saveCustomer()}
+                disabled={saving}
+                className="rounded bg-[#1d4b43] px-4 py-2 text-sm font-semibold text-white hover:bg-[#163836] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {saving ? "Saving..." : "Save customer"}
+              </button>
+              <button
+                onClick={() => applyStatus("SUSPENDED")}
+                disabled={saving || form.accountStatus === "SUSPENDED"}
+                className="rounded border border-orange-200 px-4 py-2 text-sm font-semibold text-orange-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Suspend account
+              </button>
+              <button
+                onClick={() => applyStatus("APPROVED")}
+                disabled={saving || form.accountStatus === "APPROVED"}
+                className="rounded border border-[#c7c2b5] px-4 py-2 text-sm font-semibold text-[#1f2937] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Reactivate account
+              </button>
+            </div>
           </div>
         </div>
       </SectionCard>
