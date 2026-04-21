@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
 
 // ---------- Types ----------
 type Lead = {
@@ -12,7 +13,17 @@ type Lead = {
   source: string;
   status: string;
   notes: string | null;
+  leadScore: number | null;
+  leadTemperature: string | null;
+  leadType: string | null;
   createdAt: string;
+};
+
+type Stats = {
+  total: number;
+  thisMonth: number;
+  byStatus: Record<string, number>;
+  byTemperature: Record<string, number>;
 };
 
 type StoreResult = {
@@ -27,6 +38,14 @@ type StoreResult = {
   email: string | null;
 };
 
+type IntentResult = {
+  name: string;
+  website: string | null;
+  type: string;
+  city?: string;
+  state?: string;
+};
+
 type EmailVariant = {
   type: string;
   label: string;
@@ -34,7 +53,7 @@ type EmailVariant = {
   body: string;
 };
 
-type Tab = "search" | "pipeline";
+type Tab = "dashboard" | "search" | "pipeline" | "intent" | "export";
 
 const LEAD_STATUSES = ["NEW", "CONTACTED", "QUALIFIED", "CONVERTED", "ARCHIVED"];
 
@@ -57,9 +76,33 @@ const LEAD_TYPES = [
   { value: "online_seller", label: "Online Seller" },
 ];
 
+const TEMP_COLORS: Record<string, string> = {
+  HOT: "bg-red-100 text-red-700",
+  WARM: "bg-orange-100 text-orange-700",
+  COLD: "bg-blue-100 text-blue-700",
+};
+
 // ---------- Page ----------
 export default function AdminOutreachPage() {
-  const [tab, setTab] = useState<Tab>("search");
+  const [tab, setTab] = useState<Tab>("dashboard");
+
+  // --- Stats state ---
+  const [stats, setStats] = useState<Stats | null>(null);
+
+  // --- Intent state ---
+  const [intentQuery, setIntentQuery] = useState("");
+  const [intentCity, setIntentCity] = useState("");
+  const [intentState, setIntentState] = useState("");
+  const [intentSearching, setIntentSearching] = useState(false);
+  const [intentResults, setIntentResults] = useState<IntentResult[]>([]);
+  const [intentError, setIntentError] = useState("");
+  const [intentAdded, setIntentAdded] = useState<Set<string>>(new Set());
+
+  // --- Export state ---
+  const [exporting, setExporting] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ created: number; errors: string[] } | null>(null);
 
   // --- Search state ---
   const [city, setCity] = useState("");
@@ -94,7 +137,18 @@ export default function AdminOutreachPage() {
 
   useEffect(() => {
     fetchLeads();
+    fetchStats();
   }, []);
+
+  async function fetchStats() {
+    try {
+      const res = await fetch("/api/admin/leads/stats");
+      const data = await res.json();
+      setStats(data);
+    } catch {
+      // non-critical
+    }
+  }
 
   // ---------- API calls ----------
   async function fetchLeads() {
@@ -173,8 +227,93 @@ export default function AdminOutreachPage() {
     if (res.ok) {
       setManualForm({ businessName: "", contactName: "", email: "", phone: "" });
       await fetchLeads();
+      await fetchStats();
     }
     setAddingManual(false);
+  }
+
+  async function handleIntentSearch(e: FormEvent) {
+    e.preventDefault();
+    if (!intentQuery.trim()) return;
+    setIntentSearching(true);
+    setIntentError("");
+    setIntentResults([]);
+    try {
+      const params = new URLSearchParams({ query: intentQuery.trim() });
+      if (intentCity.trim()) params.set("city", intentCity.trim());
+      if (intentState.trim()) params.set("state", intentState.trim());
+      const res = await fetch(`/api/admin/outreach/intent?${params}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Search failed");
+      setIntentResults(data.results || []);
+      if ((data.results || []).length === 0) setIntentError("No results found for that query.");
+    } catch (err: unknown) {
+      setIntentError(err instanceof Error ? err.message : "Search failed.");
+    } finally {
+      setIntentSearching(false);
+    }
+  }
+
+  async function addIntentLead(result: IntentResult) {
+    const key = result.name + (result.website ?? "");
+    const res = await fetch("/api/admin/leads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        businessName: result.name,
+        contactName: "",
+        email: "",
+        website: result.website || "",
+        city: result.city || "",
+        state: result.state || "",
+        leadType: result.type,
+        source: "INTENT",
+      }),
+    });
+    if (res.ok) {
+      setIntentAdded((prev) => new Set(prev).add(key));
+      await fetchLeads();
+      await fetchStats();
+    }
+  }
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const res = await fetch("/api/admin/leads/export");
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `leads-${Date.now()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // silent
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleBulkImport(e: FormEvent) {
+    e.preventDefault();
+    if (!importFile) return;
+    setImporting(true);
+    setImportResult(null);
+    const text = await importFile.text();
+    const res = await fetch("/api/admin/leads/bulk-import", {
+      method: "POST",
+      headers: { "Content-Type": "text/csv" },
+      body: text,
+    });
+    const data = await res.json();
+    setImportResult(data);
+    setImporting(false);
+    if (res.ok) {
+      await fetchLeads();
+      await fetchStats();
+    }
   }
 
   async function generateEmail() {
@@ -229,17 +368,20 @@ export default function AdminOutreachPage() {
 
       {/* Tabs */}
       <div className="border-b border-[#e7e4dc]">
-        <div className="flex gap-6">
+        <div className="flex gap-6 overflow-x-auto">
           {(
             [
+              { id: "dashboard", label: "📊 Dashboard" },
               { id: "search", label: "🔍 Find Leads" },
               { id: "pipeline", label: `📋 Pipeline (${leads.length})` },
+              { id: "intent", label: "🎯 Intent Leads" },
+              { id: "export", label: "📥 Export" },
             ] as { id: Tab; label: string }[]
           ).map(({ id, label }) => (
             <button
               key={id}
               onClick={() => setTab(id)}
-              className={`-mb-px pb-3 text-sm font-medium transition-colors ${
+              className={`whitespace-nowrap -mb-px pb-3 text-sm font-medium transition-colors ${
                 tab === id
                   ? "border-b-2 border-[#1d4b43] text-[#1d4b43]"
                   : "text-[#6b7280] hover:text-[#111827]"
@@ -250,6 +392,102 @@ export default function AdminOutreachPage() {
           ))}
         </div>
       </div>
+
+      {/* ===================== DASHBOARD TAB ===================== */}
+      {tab === "dashboard" && (
+        <div className="space-y-6">
+          {/* Stats grid */}
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div className="rounded-xl border border-[#e7e4dc] bg-white p-4 text-center">
+              <p className="text-3xl font-bold text-[#111827]">{stats?.total ?? "—"}</p>
+              <p className="mt-1 text-xs text-[#6b7280] font-medium">Total Leads</p>
+            </div>
+            <div className="rounded-xl border border-[#e7e4dc] bg-white p-4 text-center">
+              <p className="text-3xl font-bold text-[#111827]">{stats?.thisMonth ?? "—"}</p>
+              <p className="mt-1 text-xs text-[#6b7280] font-medium">This Month</p>
+            </div>
+            <div className="rounded-xl border border-red-100 bg-red-50 p-4 text-center">
+              <p className="text-3xl font-bold text-red-700">{stats?.byTemperature?.HOT ?? 0}</p>
+              <p className="mt-1 text-xs text-red-600 font-medium">🔥 Hot</p>
+            </div>
+            <div className="rounded-xl border border-orange-100 bg-orange-50 p-4 text-center">
+              <p className="text-3xl font-bold text-orange-700">{stats?.byTemperature?.WARM ?? 0}</p>
+              <p className="mt-1 text-xs text-orange-600 font-medium">⚡ Warm</p>
+            </div>
+          </div>
+
+          {/* Status breakdown */}
+          {stats && (
+            <div className="rounded-xl border border-[#e7e4dc] bg-white p-5">
+              <h2 className="mb-4 text-sm font-semibold text-[#111827]">Pipeline Status</h2>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+                {LEAD_STATUSES.map((s) => (
+                  <div key={s} className="rounded-lg border border-[#e7e4dc] p-3 text-center">
+                    <p className="text-2xl font-bold text-[#111827]">{stats.byStatus?.[s] ?? 0}</p>
+                    <p className={`mt-1 text-xs font-medium rounded-full px-2 py-0.5 inline-block ${STATUS_COLORS[s]}`}>{s}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Recent leads */}
+          <div className="rounded-xl border border-[#e7e4dc] bg-white">
+            <div className="flex items-center justify-between border-b border-[#e7e4dc] px-5 py-3">
+              <p className="text-sm font-semibold text-[#111827]">Recent Leads</p>
+              <button
+                onClick={() => setTab("pipeline")}
+                className="text-xs text-[#1d4b43] underline underline-offset-2"
+              >
+                View all
+              </button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="border-b border-[#e7e4dc] bg-[#fcfbf9] text-xs font-medium text-[#6b7280]">
+                  <tr>
+                    <th className="px-4 py-3 text-left">Business</th>
+                    <th className="px-4 py-3 text-left">Email</th>
+                    <th className="px-4 py-3 text-left">Score</th>
+                    <th className="px-4 py-3 text-left">Status</th>
+                    <th className="px-4 py-3 text-left">Added</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#e7e4dc]">
+                  {leads.slice(0, 10).map((lead) => (
+                    <tr key={lead.id} className="hover:bg-[#fcfbf9]">
+                      <td className="px-4 py-3">
+                        <Link
+                          href={`/admin/outreach/${lead.id}`}
+                          className="font-medium text-[#1d4b43] hover:underline"
+                        >
+                          {lead.businessName}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3 text-[#6b7280]">{lead.email || "—"}</td>
+                      <td className="px-4 py-3">
+                        {lead.leadTemperature ? (
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${TEMP_COLORS[lead.leadTemperature] ?? "bg-gray-100 text-gray-600"}`}>
+                            {lead.leadTemperature} {lead.leadScore != null ? `(${lead.leadScore})` : ""}
+                          </span>
+                        ) : "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[lead.status] ?? "bg-gray-100 text-gray-600"}`}>
+                          {lead.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-[#9ca3af]">
+                        {new Date(lead.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ===================== SEARCH TAB ===================== */}
       {tab === "search" && (
@@ -454,16 +692,19 @@ export default function AdminOutreachPage() {
                       <th className="px-4 py-3 text-left">Business</th>
                       <th className="px-4 py-3 text-left">Contact / Email</th>
                       <th className="px-4 py-3 text-left">Source</th>
+                      <th className="px-4 py-3 text-left">Score</th>
                       <th className="px-4 py-3 text-left">Status</th>
                       <th className="px-4 py-3 text-left">Added</th>
-                      <th className="px-4 py-3 text-right">Email</th>
+                      <th className="px-4 py-3 text-right"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#e7e4dc]">
                     {filteredLeads.map((lead) => (
                       <tr key={lead.id} className="hover:bg-[#fcfbf9]">
                         <td className="px-4 py-3">
-                          <p className="font-medium text-[#111827]">{lead.businessName}</p>
+                          <Link href={`/admin/outreach/${lead.id}`} className="font-medium text-[#1d4b43] hover:underline">
+                            {lead.businessName}
+                          </Link>
                           {lead.phone && (
                             <p className="text-xs text-[#9ca3af]">{lead.phone}</p>
                           )}
@@ -478,6 +719,13 @@ export default function AdminOutreachPage() {
                           <span className="rounded-full bg-[#f3f4f6] px-2 py-0.5 text-xs font-medium text-[#6b7280]">
                             {lead.source}
                           </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          {lead.leadTemperature ? (
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${TEMP_COLORS[lead.leadTemperature] ?? "bg-gray-100 text-gray-600"}`}>
+                              {lead.leadTemperature} {lead.leadScore != null ? `(${lead.leadScore})` : ""}
+                            </span>
+                          ) : "—"}
                         </td>
                         <td className="px-4 py-3">
                           <select
@@ -498,17 +746,12 @@ export default function AdminOutreachPage() {
                           {new Date(lead.createdAt).toLocaleDateString()}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <button
-                            onClick={() => {
-                              setEmailLead(lead);
-                              setEmailVariants([]);
-                              setSingleEmail(null);
-                              setSequenceStep(1);
-                            }}
+                          <Link
+                            href={`/admin/outreach/${lead.id}`}
                             className="rounded border border-[#e7e4dc] px-3 py-1 text-xs hover:border-[#1d4b43] hover:text-[#1d4b43] transition-colors"
                           >
-                            ✉ Draft
-                          </button>
+                            View →
+                          </Link>
                         </td>
                       </tr>
                     ))}
@@ -628,6 +871,196 @@ export default function AdminOutreachPage() {
                 />
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================== INTENT LEADS TAB ===================== */}
+      {tab === "intent" && (
+        <div className="space-y-6">
+          <div className="rounded-xl border border-[#e7e4dc] bg-white p-5">
+            <h2 className="mb-1 text-base font-semibold text-[#111827]">Intent-Based Lead Search</h2>
+            <p className="mb-4 text-xs text-[#6b7280]">
+              Find businesses that distribute, resell, or carry pet products — not just pet stores.
+            </p>
+            <form onSubmit={handleIntentSearch} className="flex flex-wrap gap-3">
+              <input
+                value={intentQuery}
+                onChange={(e) => setIntentQuery(e.target.value)}
+                placeholder='e.g. "dog treat distributor" or "pet food reseller"'
+                className="flex-1 min-w-[200px] rounded border border-[#e7e4dc] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1d4b43]/30"
+                required
+              />
+              <input
+                value={intentCity}
+                onChange={(e) => setIntentCity(e.target.value)}
+                placeholder="City (optional)"
+                className="w-36 rounded border border-[#e7e4dc] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1d4b43]/30"
+              />
+              <input
+                value={intentState}
+                onChange={(e) => setIntentState(e.target.value)}
+                placeholder="State (optional)"
+                className="w-36 rounded border border-[#e7e4dc] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1d4b43]/30"
+              />
+              <button
+                type="submit"
+                disabled={intentSearching}
+                className="rounded bg-[#1d4b43] px-5 py-2 text-sm font-semibold text-white hover:bg-[#163836] disabled:opacity-60"
+              >
+                {intentSearching ? "Searching…" : "Search"}
+              </button>
+            </form>
+          </div>
+
+          {intentError && (
+            <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {intentError}
+            </p>
+          )}
+
+          {intentResults.length > 0 && (
+            <div className="rounded-xl border border-[#e7e4dc] bg-white">
+              <div className="border-b border-[#e7e4dc] px-5 py-3">
+                <p className="text-sm font-medium text-[#111827]">
+                  {intentResults.length} result{intentResults.length !== 1 ? "s" : ""} found
+                </p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="border-b border-[#e7e4dc] bg-[#fcfbf9] text-xs font-medium text-[#6b7280]">
+                    <tr>
+                      <th className="px-4 py-3 text-left">Business</th>
+                      <th className="px-4 py-3 text-left">Type</th>
+                      <th className="px-4 py-3 text-left">Location</th>
+                      <th className="px-4 py-3 text-left">Website</th>
+                      <th className="px-4 py-3 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#e7e4dc]">
+                    {intentResults.map((r) => {
+                      const key = r.name + (r.website ?? "");
+                      const added = intentAdded.has(key);
+                      return (
+                        <tr key={key} className="hover:bg-[#fcfbf9]">
+                          <td className="px-4 py-3 font-medium text-[#111827]">{r.name}</td>
+                          <td className="px-4 py-3">
+                            <span className="rounded-full bg-[#f3f4f6] px-2 py-0.5 text-xs font-medium text-[#6b7280]">
+                              {r.type}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-[#6b7280]">
+                            {[r.city, r.state].filter(Boolean).join(", ") || "—"}
+                          </td>
+                          <td className="px-4 py-3">
+                            {r.website ? (
+                              <a
+                                href={r.website}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[#1d4b43] underline underline-offset-2 hover:text-[#163836]"
+                              >
+                                {r.website.replace(/^https?:\/\//, "").split("/")[0]}
+                              </a>
+                            ) : "—"}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            {added ? (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
+                                ✓ Added
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => addIntentLead(r)}
+                                className="rounded border border-[#1d4b43] px-3 py-1 text-xs font-medium text-[#1d4b43] hover:bg-[#1d4b43] hover:text-white transition-colors"
+                              >
+                                + Add to Pipeline
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ===================== EXPORT TAB ===================== */}
+      {tab === "export" && (
+        <div className="space-y-6">
+          {/* CSV Export */}
+          <div className="rounded-xl border border-[#e7e4dc] bg-white p-5">
+            <h2 className="mb-1 text-base font-semibold text-[#111827]">Export Leads</h2>
+            <p className="mb-4 text-sm text-[#6b7280]">
+              Download all leads as a CSV file. Includes business name, contact, email, phone,
+              website, city, state, lead type, score, temperature, and status.
+            </p>
+            <button
+              onClick={handleExport}
+              disabled={exporting}
+              className="rounded bg-[#1d4b43] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#163836] disabled:opacity-60"
+            >
+              {exporting ? "Preparing download…" : "⬇ Download CSV"}
+            </button>
+          </div>
+
+          {/* Bulk Import */}
+          <div className="rounded-xl border border-[#e7e4dc] bg-white p-5">
+            <h2 className="mb-1 text-base font-semibold text-[#111827]">Bulk Import</h2>
+            <p className="mb-4 text-sm text-[#6b7280]">
+              Upload a CSV file to import leads in bulk. Required columns:{" "}
+              <code className="rounded bg-[#f3f4f6] px-1 py-0.5 text-xs">businessName</code>,{" "}
+              <code className="rounded bg-[#f3f4f6] px-1 py-0.5 text-xs">email</code>. Optional:{" "}
+              <code className="rounded bg-[#f3f4f6] px-1 py-0.5 text-xs">contactName</code>,{" "}
+              <code className="rounded bg-[#f3f4f6] px-1 py-0.5 text-xs">phone</code>,{" "}
+              <code className="rounded bg-[#f3f4f6] px-1 py-0.5 text-xs">website</code>,{" "}
+              <code className="rounded bg-[#f3f4f6] px-1 py-0.5 text-xs">city</code>,{" "}
+              <code className="rounded bg-[#f3f4f6] px-1 py-0.5 text-xs">state</code>.
+            </p>
+            <form onSubmit={handleBulkImport} className="space-y-3">
+              <input
+                type="file"
+                accept=".csv"
+                onChange={(e) => {
+                  setImportFile(e.target.files?.[0] ?? null);
+                  setImportResult(null);
+                }}
+                className="block text-sm text-[#6b7280] file:mr-3 file:rounded file:border-0 file:bg-[#1d4b43] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-[#163836]"
+              />
+              <button
+                type="submit"
+                disabled={!importFile || importing}
+                className="rounded bg-[#1d4b43] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#163836] disabled:opacity-60"
+              >
+                {importing ? "Importing…" : "Import"}
+              </button>
+            </form>
+            {importResult && (
+              <div className="mt-4 rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-4 space-y-2">
+                <p className="text-sm font-medium text-[#111827]">
+                  ✓ {importResult.created} lead{importResult.created !== 1 ? "s" : ""} imported
+                </p>
+                {importResult.errors.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-[#6b7280]">
+                      {importResult.errors.length} row{importResult.errors.length !== 1 ? "s" : ""} skipped:
+                    </p>
+                    <ul className="mt-1 space-y-0.5">
+                      {importResult.errors.slice(0, 10).map((err, i) => (
+                        <li key={i} className="text-xs text-red-600">{err}</li>
+                      ))}
+                      {importResult.errors.length > 10 && (
+                        <li className="text-xs text-[#9ca3af]">…and {importResult.errors.length - 10} more</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

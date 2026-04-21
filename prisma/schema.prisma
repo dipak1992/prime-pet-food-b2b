@@ -377,16 +377,104 @@ enum LeadStatus {
 }
 
 model Lead {
-  id          String     @id @default(uuid())
-  businessName String
-  contactName  String
-  email        String
-  phone        String?
-  source       String     @default("MANUAL")
-  status       LeadStatus @default(NEW)
-  notes        String?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  id                      String     @id @default(uuid())
+  businessName            String
+  contactName             String
+  email                   String
+  phone                   String?
+  source                  String     @default("MANUAL")
+  status                  LeadStatus @default(NEW)
+  notes                   String?
+  // Extended fields
+  leadType                String?
+  website                 String?
+  address                 String?
+  city                    String?
+  state                   String?
+  zip                     String?
+  leadScore               Int?
+  leadTemperature         String?
+  sellsDogTreats          Boolean    @default(false)
+  sellsCompetitorProducts Boolean    @default(false)
+  instagram               String?
+  contactedAt             DateTime?
+  createdAt               DateTime   @default(now())
+  updatedAt               DateTime   @updatedAt
+  // Relations
+  emails                  OutreachEmail[]
+  activities              LeadActivity[]
+  deals                   LeadDeal[]
+  samples                 LeadSample[]
+  sequences               LeadFollowUpSequence[]
+}
+
+model OutreachEmail {
+  id            String    @id @default(uuid())
+  leadId        String
+  lead          Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  subject       String
+  body          String    @db.Text
+  status        String    @default("DRAFT")
+  sequenceStep  Int       @default(1)
+  sentAt        DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([leadId])
+}
+
+model LeadActivity {
+  id        String   @id @default(uuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  detail    String?
+  createdAt DateTime @default(now())
+
+  @@index([leadId])
+}
+
+model LeadDeal {
+  id          String    @id @default(uuid())
+  leadId      String
+  lead        Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  value       Decimal   @default(0) @db.Decimal(12, 2)
+  status      String    @default("OPEN")
+  lossReason  String?
+  closedAt    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([leadId])
+}
+
+model LeadSample {
+  id             String    @id @default(uuid())
+  leadId         String
+  lead           Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  status         String    @default("REQUESTED")
+  trackingNumber String?
+  shippedAt      DateTime?
+  deliveredAt    DateTime?
+  feedback       String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([leadId])
+}
+
+model LeadFollowUpSequence {
+  id          String    @id @default(uuid())
+  leadId      String
+  lead        Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  currentStep Int       @default(1)
+  status      String    @default("ACTIVE")
+  nextSendAt  DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([leadId])
 }
 
 model Setting {
