@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   Package,
   LayoutDashboard,
@@ -27,6 +27,8 @@ const links = [
 
 export function PortalNavLinks() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const viewAs = searchParams.get("viewAs");
 
   return (
     <nav className="space-y-1">
@@ -34,10 +36,11 @@ export function PortalNavLinks() {
         const Icon = item.icon;
         const isActive =
           pathname === item.href || pathname.startsWith(item.href + "/");
+        const href = viewAs ? `${item.href}?viewAs=${viewAs}` : item.href;
         return (
           <Link
             key={item.href}
-            href={item.href}
+            href={href}
             className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
               isActive
                 ? "bg-[#1d4b43]/10 text-[#1d4b43]"

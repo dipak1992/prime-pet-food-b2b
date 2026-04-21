@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 
 type ProductRow = {
@@ -16,6 +17,7 @@ type ProductRow = {
   stockStatus: string;
   isActive: boolean;
   syncedAt: string | null;
+  imageUrl: string | null;
 };
 
 type EditForm = {
@@ -160,13 +162,29 @@ export function ProductsTable({ initialProducts }: { initialProducts: ProductRow
           <tbody className="divide-y divide-[#e7e4dc]">
             {products.map((product) => (
               <tr key={product.id} className="hover:bg-[#f7f7fb]">
-                <td className="px-3 py-3 font-medium text-[#111827]">
-                  {product.title}
-                  {product.isBestSeller && (
-                    <span className="ml-1.5 rounded-full bg-yellow-100 px-1.5 py-0.5 text-xs font-medium text-yellow-700">
-                      ★ Best Seller
+                <td className="px-3 py-3">
+                  <div className="flex items-center gap-2">
+                    {product.imageUrl ? (
+                      <Image
+                        src={product.imageUrl}
+                        alt={product.title}
+                        width={36}
+                        height={36}
+                        className="size-9 shrink-0 rounded object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="size-9 shrink-0 rounded bg-[#f3f1eb]" />
+                    )}
+                    <span className="font-medium text-[#111827]">
+                      {product.title}
+                      {product.isBestSeller && (
+                        <span className="ml-1.5 rounded-full bg-yellow-100 px-1.5 py-0.5 text-xs font-medium text-yellow-700">
+                          ★ Best Seller
+                        </span>
+                      )}
                     </span>
-                  )}
+                  </div>
                 </td>
                 <td className="px-3 py-3 text-[#4b5563]">{product.sku || "-"}</td>
                 <td className="px-3 py-3 text-[#4b5563]">{product.category || "Uncategorized"}</td>

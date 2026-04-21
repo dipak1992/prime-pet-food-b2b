@@ -25,6 +25,7 @@ export default async function AdminProductsPage() {
         stockStatus: true,
         isActive: true,
         syncedAt: true,
+        imageUrl: true,
       },
     }),
     prisma.setting.findUnique({ where: { key: "shopify_access_token" } }),

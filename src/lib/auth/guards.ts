@@ -91,8 +91,8 @@ export async function requireApprovedBuyer() {
     redirect("/reset-password");
   }
 
-  // Admin can view as buyer via query param
-  if (profile.role === "ADMIN" && viewAs === "buyer") {
+  // Admins can freely access buyer portal pages (viewAs mode or direct navigation)
+  if (profile.role === "ADMIN") {
     return profile;
   }
 
