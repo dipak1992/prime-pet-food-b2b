@@ -7,9 +7,15 @@ export async function GET() {
 
   const products = await prisma.product.findMany({
     where: { isActive: true },
-    orderBy: { title: "asc" },
+    orderBy: [{ isBestSeller: "desc" }, { title: "asc" }],
     take: 100,
   });
 
-  return NextResponse.json({ products });
+  return NextResponse.json({
+    products: products.map((product) => ({
+      ...product,
+      wholesalePrice: Number(product.wholesalePrice),
+      msrp: product.msrp == null ? null : Number(product.msrp),
+    })),
+  });
 }

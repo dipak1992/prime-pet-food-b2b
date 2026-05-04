@@ -2,15 +2,20 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { SectionCard } from "@/components/ui/SectionCard";
 
 interface Product {
   id: string;
   title: string;
   sku: string;
+  imageUrl?: string | null;
+  category?: string | null;
+  stockStatus?: string;
+  isBestSeller?: boolean;
   description?: string;
   wholesalePrice: number;
-  msrp?: number;
+  msrp?: number | null;
   moq: number;
   casePack: number;
   isActive: boolean;
@@ -161,6 +166,35 @@ export default function ProductsPage() {
                 key={product.id}
                 className="rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-4 flex flex-col hover:border-[#1d4b43] hover:shadow-sm transition-all"
               >
+                <div className="relative mb-3 aspect-[4/3] overflow-hidden rounded-lg bg-white">
+                  {product.imageUrl ? (
+                    <Image
+                      src={product.imageUrl}
+                      alt={product.title}
+                      fill
+                      unoptimized
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center px-4 text-center text-xs text-[#9ca3af]">
+                      Product image coming soon
+                    </div>
+                  )}
+                  <div className="absolute left-2 top-2 flex flex-wrap gap-1">
+                    {product.isBestSeller && (
+                      <span className="rounded-full bg-[#1d4b43] px-2 py-0.5 text-xs font-semibold text-white">
+                        Best seller
+                      </span>
+                    )}
+                    {product.stockStatus === "LOW_STOCK" && (
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                        Low stock
+                      </span>
+                    )}
+                  </div>
+                </div>
+
                 {/* Product Header */}
                 <div className="flex-1 mb-4">
                   <h3 className="font-semibold text-[#111827] text-sm mb-1 line-clamp-2">
@@ -184,10 +218,16 @@ export default function ProductsPage() {
                       <span className="text-xs text-[#4b5563]">wholesale</span>
                     </div>
                     {product.msrp && (
-                      <p className="text-xs text-[#4b5563]">
-                        MSRP: ${product.msrp.toFixed(2)}
-                      </p>
+                      <div className="mt-1 grid grid-cols-2 gap-2 text-xs text-[#4b5563]">
+                        <p>MSRP: ${product.msrp.toFixed(2)}</p>
+                        <p className="text-right font-medium text-green-700">
+                          {Math.round(((product.msrp - product.wholesalePrice) / product.msrp) * 100)}% margin
+                        </p>
+                      </div>
                     )}
+                    <p className="mt-1 text-xs text-[#4b5563]">
+                      Case cost: ${(product.wholesalePrice * product.casePack).toFixed(2)}
+                    </p>
                   </div>
 
                   {/* Constraints */}

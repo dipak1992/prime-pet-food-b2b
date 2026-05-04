@@ -4,16 +4,6 @@ import Image from "next/image";
 export default function Home() {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_10%_10%,#f9f2df_0%,#f8f7f4_45%,#eef6f3_100%)]">
-      {/* Admin login button - hidden by default, visible on hover */}
-      <div className="fixed top-4 right-4 z-50 opacity-0 hover:opacity-100 transition-opacity duration-300">
-        <Link
-          href="/admin/login"
-          className="inline-flex items-center justify-center rounded-lg bg-[#1d4b43] px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#0f2820]"
-        >
-          Admin Login
-        </Link>
-      </div>
-      
       <main className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-6 py-16">
         <Image
           src="/logoedited.jpg"
@@ -24,10 +14,10 @@ export default function Home() {
         />
         <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#1d4b43]">Prime Pet Food</p>
         <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-[#111827] sm:text-5xl">
-          Simple, premium wholesale ordering for approved B2B buyers.
+          Wholesale Himalayan Yak Chews built for retail margins.
         </h1>
         <p className="mt-5 max-w-2xl text-base text-[#4b5563] sm:text-lg">
-          Apply once, get approved, and reorder your best-selling Himalayan Yak Cheese treats in minutes.
+          Stock natural, long-lasting dog chews with protected wholesale pricing, case-pack ordering, and a portal built for fast reorders.
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -38,10 +28,10 @@ export default function Home() {
             Apply for wholesale
           </Link>
           <Link
-            href="/login"
+            href="/wholesale"
             className="inline-flex items-center justify-center rounded-xl border border-[#c7c2b5] bg-white px-5 py-3 text-sm font-semibold text-[#1f2937]"
           >
-            Wholesale login
+            See wholesale program
           </Link>
           <Link
             href="/catalog"
@@ -53,9 +43,9 @@ export default function Home() {
 
         <div className="mt-10 grid gap-3 sm:grid-cols-3">
           {[
-            ["Approved-only pricing", "Wholesale prices and bundles are visible only to approved accounts."],
-            ["Fast reorder workflow", "Reorder from last order or order history with case-pack-aware quantities."],
-            ["Built for busy stores", "Simple mobile-friendly UI for pet shops, groomers, and clinics."],
+            ["Protected wholesale pricing", "Approved retailers see wholesale pricing, MSRP guidance, MOQ, and case-pack details."],
+            ["Fast replenishment", "Reorder proven sellers from your order history with case-pack-aware quantities."],
+            ["Retail-ready assortment", "Built for pet shops, groomers, daycare counters, vet clinics, and boutique shelves."],
           ].map(([title, description]) => (
             <article key={title} className="rounded-2xl border border-[#e5e7eb] bg-white/90 p-4 shadow-sm">
               <h2 className="text-sm font-semibold text-[#111827]">{title}</h2>
@@ -65,17 +55,17 @@ export default function Home() {
         </div>
 
         <div className="mt-12 rounded-3xl border border-[#e5e7eb] bg-white/95 p-8 shadow-sm">
-          <h2 className="text-2xl font-semibold text-[#111827]">About Himalayan Yak Cheese Chews</h2>
+          <h2 className="text-2xl font-semibold text-[#111827]">Why retailers stock yak cheese chews</h2>
           <p className="mt-4 text-base text-[#4b5563] leading-relaxed max-w-3xl">
-            Our premium Himalayan Yak Cheese chews are a natural, long-lasting treat loved by pet retailers and veterinarians worldwide. Sourced from the pristine Himalayas, these hard cheese chews are packed with protein, low in fat, and completely free from additives—making them a healthy choice for every dog.
+            Himalayan Yak Cheese chews are a simple, high-protein, long-lasting treat with strong shelf appeal and repeat-purchase potential. Approved buyers get case-pack ordering, invoice-based fulfillment, and merchandising assets for resale.
           </p>
           
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {[
-              { label: "100% Natural", detail: "No artificial ingredients, preservatives, or fillers. Pure Himalayan yak & cow milk cheese." },
-              { label: "Long-lasting", detail: "Keeps dogs engaged for hours, perfect for dental health and behavioral enrichment." },
-              { label: "High protein", detail: "Packed with amino acids and natural enzymes to support digestive and immune health." },
-              { label: "Wholesale ready", detail: "Available in case packs, bulk bundles, and mixed assortments for retail and clinic resale." },
+              { label: "Simple ingredients", detail: "A straightforward natural chew story that is easy for staff to explain at the shelf." },
+              { label: "Long-lasting value", detail: "A premium treat format that fits impulse buys, counter displays, and enrichment sections." },
+              { label: "Clear case economics", detail: "Approved buyers see MOQ, case packs, MSRP, and wholesale unit pricing before ordering." },
+              { label: "Invoice-first ordering", detail: "Submit order requests online; our team confirms availability and follows up with invoice details." },
             ].map(({ label, detail }) => (
               <div key={label} className="border-l-2 border-[#1d4b43] pl-4">
                 <p className="font-semibold text-[#1d4b43]">{label}</p>
@@ -85,7 +75,7 @@ export default function Home() {
           </div>
 
           <p className="mt-6 text-sm text-[#6b7280]">
-            Join hundreds of pet shops, grooming salons, and veterinary clinics already stocking Prime Pet Food Himalayan Yak Cheese chews. Get started with wholesale pricing today.
+            Apply for wholesale access to review pricing, build a case-pack order, and request support from the Prime Pet Food team.
           </p>
         </div>
       </main>

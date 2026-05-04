@@ -101,15 +101,10 @@ export default function CheckoutPage() {
 
       if (!res.ok) {
         const errData = await res.json();
-        throw new Error(errData.error || "Checkout failed");
+        throw new Error(errData.error || "Order request failed");
       }
 
       const result = await res.json();
-      if (result.checkoutUrl) {
-        window.location.assign(result.checkoutUrl);
-        return;
-      }
-
       router.push(`/orders/${result.order.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error placing order");
@@ -120,7 +115,7 @@ export default function CheckoutPage() {
 
   if (loading) {
     return (
-      <SectionCard title="Checkout" description="Shipping, billing, terms, and order notes.">
+      <SectionCard title="Review & submit order" description="Submit your wholesale order request for invoice review.">
         <p className="text-sm text-[#4b5563]">Loading...</p>
       </SectionCard>
     );
@@ -128,7 +123,7 @@ export default function CheckoutPage() {
 
   if (!cart || cart.items.length === 0) {
     return (
-      <SectionCard title="Checkout" description="Shipping, billing, terms, and order notes.">
+      <SectionCard title="Review & submit order" description="Submit your wholesale order request for invoice review.">
         <div className="text-center py-12">
           <p className="text-sm text-[#4b5563] mb-4">Your cart is empty.</p>
           <Link
@@ -143,7 +138,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <SectionCard title="Checkout" description="Shipping, billing, terms, and order notes.">
+    <SectionCard title="Review & submit order" description="Submit your wholesale order request for invoice review.">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Order Form */}
         <div className="lg:col-span-2 space-y-6">
@@ -305,13 +300,14 @@ export default function CheckoutPage() {
                 />
                 <label htmlFor="terms" className="text-sm text-[#4b5563]">
                   I agree to the{" "}
-                  <a href="#" className="font-semibold text-[#1d4b43] hover:underline">
+                  <span className="font-semibold text-[#1d4b43]">
                     wholesale terms and conditions
-                  </a>
+                  </span>
                 </label>
               </div>
               <p className="text-xs text-[#6b7280]">
-                Payment is due upon receipt of invoice. Standard Net 30 terms apply for approved accounts.
+                This submits an order request, not an online card payment. Our team will confirm
+                availability and send invoice details. ACH is preferred; account terms are applied after review.
               </p>
             </div>
 
@@ -328,7 +324,7 @@ export default function CheckoutPage() {
                 disabled={submitting}
                 className="flex-1 rounded-lg bg-[#1d4b43] px-4 py-3 text-center text-sm font-semibold text-white hover:bg-[#163836] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {submitting ? "Placing Order..." : "Place Order"}
+                {submitting ? "Submitting..." : "Submit Order Request"}
               </button>
             </div>
           </form>
@@ -377,8 +373,8 @@ export default function CheckoutPage() {
 
             {/* Payment Terms Note */}
             <div className="mt-4 p-3 rounded bg-[#f5f3f0] text-xs text-[#4b5563]">
-              <p className="font-medium mb-1">Payment Terms</p>
-              <p>Secure online payment is required to confirm your order.</p>
+              <p className="font-medium mb-1">Invoice next step</p>
+              <p>Submit now and we will follow up with invoice details after confirming availability.</p>
             </div>
           </div>
         </div>

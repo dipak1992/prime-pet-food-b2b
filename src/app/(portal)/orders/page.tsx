@@ -31,10 +31,6 @@ export default function OrdersPage() {
   const [reorderingId, setReorderingId] = useState<string>("");
   const [reorderSuccess, setReorderSuccess] = useState<string>("");
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
   async function fetchOrders() {
     try {
       setLoading(true);
@@ -49,12 +45,18 @@ export default function OrdersPage() {
     }
   }
 
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
   async function handleReorder(orderId: string) {
     setReorderingId(orderId);
     setReorderSuccess("");
     try {
       const res = await fetch("/api/cart/reorder-last", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId }),
       });
 
       if (!res.ok) {
@@ -157,7 +159,7 @@ export default function OrdersPage() {
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-[#111827]">
-                    ${(Number(order.grandTotal) / 100).toFixed(2)}
+                    ${Number(order.grandTotal).toFixed(2)}
                   </p>
                   <p className="text-xs text-[#4b5563]">{order.paymentStatus}</p>
                 </div>

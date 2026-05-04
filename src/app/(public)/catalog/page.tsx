@@ -19,22 +19,27 @@ export const dynamic = "force-dynamic";
 export default async function CatalogPage() {
   const session = await getPublicSessionInfo();
 
-  const products = await prisma.product.findMany({
-    where: { isActive: true },
-    orderBy: [{ isBestSeller: "desc" }, { title: "asc" }],
-    take: 200,
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      imageUrl: true,
-      sku: true,
-      category: true,
-      stockStatus: true,
-      isBestSeller: true,
-      msrp: true,
-    },
-  });
+  const products = await prisma.product
+    .findMany({
+      where: { isActive: true },
+      orderBy: [{ isBestSeller: "desc" }, { title: "asc" }],
+      take: 200,
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        imageUrl: true,
+        sku: true,
+        category: true,
+        stockStatus: true,
+        isBestSeller: true,
+        msrp: true,
+      },
+    })
+    .catch((error) => {
+      console.error("[public catalog] Failed to load products", error);
+      return null;
+    });
 
   const isApproved = session.isApproved;
   const isPending = session.isLoggedIn && session.status === "PENDING";
@@ -55,7 +60,9 @@ export default async function CatalogPage() {
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl font-semibold tracking-tight text-[#111827]">Product catalog</h1>
-              <p className="mt-1 text-sm text-[#6b7280]">{products.length} products</p>
+              <p className="mt-1 text-sm text-[#6b7280]">
+                {products ? `${products.length} products` : "Catalog preview temporarily unavailable"}
+              </p>
             </div>
             <div className="flex items-center gap-3">
               {isApproved ? (
@@ -77,8 +84,14 @@ export default async function CatalogPage() {
           </div>
 
           {/* Product grid */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {products.map((product) => (
+          {!products ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-800">
+              We could not load the live catalog preview right now. You can still apply for wholesale access,
+              and our team will follow up with current product and case-pack details.
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {products.map((product) => (
               <Link
                 key={product.id}
                 href={`/catalog/${product.id}`}
@@ -140,10 +153,11 @@ export default async function CatalogPage() {
                   </div>
                 </div>
               </Link>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
-          {products.length === 0 && (
+          {products?.length === 0 && (
             <div className="py-24 text-center text-[#9ca3af]">No products available yet.</div>
           )}
         </div>
