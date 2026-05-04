@@ -14,6 +14,10 @@ async function safelyLoad<T>(label: string, loader: () => Promise<T>, fallback: 
 }
 
 export default async function AdminHomePage() {
+  const now = new Date();
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
   const pendingApplications = await safelyLoad(
     "pending applications",
     () => prisma.wholesaleApplication.count({ where: { status: "PENDING" } }),
@@ -39,6 +43,66 @@ export default async function AdminHomePage() {
         .then((r) => r._sum.grandTotal || 0),
     0,
   );
+
+  const [ordersNeedingInvoice, ordersNeedingTracking, overdueInvoices, openQuoteRequests, reorderCandidates] =
+    await Promise.all([
+      safelyLoad(
+        "orders needing invoice",
+        () =>
+          prisma.order.count({
+            where: {
+              status: "PENDING",
+              OR: [{ invoice: null }, { invoice: { status: "DRAFT" } }],
+            },
+          }),
+        0,
+      ),
+      safelyLoad(
+        "orders needing tracking",
+        () =>
+          prisma.order.count({
+            where: {
+              status: { in: ["PACKED", "SHIPPED"] },
+              trackingNumber: null,
+            },
+          }),
+        0,
+      ),
+      safelyLoad(
+        "overdue invoices",
+        () =>
+          prisma.invoice.count({
+            where: {
+              status: { in: ["SENT", "PARTIAL", "OVERDUE"] },
+              dueDate: { lt: now },
+            },
+          }),
+        0,
+      ),
+      safelyLoad(
+        "open quote requests",
+        () =>
+          prisma.supportRequest.count({
+            where: {
+              status: { in: ["OPEN", "IN_PROGRESS"] },
+              type: { in: ["SAMPLE_REQUEST", "CUSTOM_PRICING", "SALES_REP"] },
+            },
+          }),
+        0,
+      ),
+      safelyLoad(
+        "reorder candidates",
+        () =>
+          prisma.order
+            .groupBy({
+              by: ["customerId"],
+              where: { createdAt: { lt: thirtyDaysAgo } },
+              _max: { createdAt: true },
+            })
+            .then((rows) => rows.length),
+        0,
+      ),
+    ]);
 
   const recentOrders = await safelyLoad(
     "recent orders",
@@ -123,6 +187,29 @@ export default async function AdminHomePage() {
           </div>
         </SectionCard>
       </div>
+
+      <SectionCard title="Task queue" description="Operational work that directly affects revenue and fulfillment.">
+        <div className="grid gap-3 md:grid-cols-5">
+          {[
+            ["Applications", pendingApplications, "/admin/applications", "Need review"],
+            ["Invoice", ordersNeedingInvoice, "/admin/invoices", "Draft or missing"],
+            ["Overdue", overdueInvoices, "/admin/invoices", "Past due"],
+            ["Tracking", ordersNeedingTracking, "/admin/orders", "Packed/shipped without tracking"],
+            ["Quotes", openQuoteRequests, "/admin/support", "Samples or custom pricing"],
+            ["Reorders", reorderCandidates, "/admin/reorders", "Customers past 30 days"],
+          ].map(([label, value, href, detail]) => (
+            <Link
+              key={String(label)}
+              href={String(href)}
+              className="rounded-xl border border-[#e7e4dc] bg-[#fcfbf9] p-4 hover:border-[#1d4b43] hover:bg-white"
+            >
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">{label}</p>
+              <p className="mt-2 text-3xl font-bold text-[#1d4b43]">{String(value)}</p>
+              <p className="mt-1 text-xs text-[#6b7280]">{detail}</p>
+            </Link>
+          ))}
+        </div>
+      </SectionCard>
 
       {/* Recent Orders & Sync Jobs */}
       <div className="grid gap-6 lg:grid-cols-2">

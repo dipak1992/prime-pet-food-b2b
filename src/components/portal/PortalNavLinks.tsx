@@ -11,15 +11,19 @@ import {
   LifeBuoy,
   Download,
   ShoppingBag,
+  Zap,
+  FileQuestion,
 } from "lucide-react";
 import { CartBadge } from "@/components/portal/CartBadge";
 
 const links = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/products", label: "Catalog", icon: Package },
+  { href: "/quick-order", label: "Quick Order", icon: Zap },
   { href: "/orders", label: "Orders", icon: ShoppingCart },
   { href: "/cart", label: "Cart", icon: ShoppingBag, badge: true },
   { href: "/invoices", label: "Invoices", icon: Receipt },
+  { href: "/quote", label: "Quote/Samples", icon: FileQuestion },
   { href: "/account", label: "Account", icon: UserCircle },
   { href: "/support", label: "Support", icon: LifeBuoy },
   { href: "/downloads", label: "Downloads", icon: Download },

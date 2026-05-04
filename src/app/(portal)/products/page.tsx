@@ -225,9 +225,29 @@ export default function ProductsPage() {
                         </p>
                       </div>
                     )}
-                    <p className="mt-1 text-xs text-[#4b5563]">
-                      Case cost: ${(product.wholesalePrice * product.casePack).toFixed(2)}
-                    </p>
+                    <div className="mt-2 grid grid-cols-2 gap-2 rounded-lg bg-white p-2 text-xs text-[#4b5563]">
+                      <p>
+                        Case cost:{" "}
+                        <span className="font-semibold text-[#111827]">
+                          ${(product.wholesalePrice * product.casePack).toFixed(2)}
+                        </span>
+                      </p>
+                      {product.msrp ? (
+                        <p className="text-right">
+                          Case MSRP:{" "}
+                          <span className="font-semibold text-[#111827]">
+                            ${(product.msrp * product.casePack).toFixed(2)}
+                          </span>
+                        </p>
+                      ) : (
+                        <p className="text-right">Case MSRP: -</p>
+                      )}
+                      {product.msrp ? (
+                        <p className="col-span-2 text-green-700">
+                          Gross profit per case: ${(product.msrp * product.casePack - product.wholesalePrice * product.casePack).toFixed(2)}
+                        </p>
+                      ) : null}
+                    </div>
                   </div>
 
                   {/* Constraints */}

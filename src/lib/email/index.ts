@@ -8,14 +8,20 @@ export type EmailTemplate =
 export interface EmailPayload {
   to: string;
   template: EmailTemplate;
-  variables: Record<string, any>;
+  variables: Record<string, unknown>;
+}
+
+function getStringVariable(variables: Record<string, unknown>, key: string, fallback = "") {
+  const value = variables[key];
+  if (typeof value === "number") return String(value);
+  return typeof value === "string" ? value : fallback;
 }
 
 export function renderEmailBody(payload: EmailPayload): { subject: string; text: string; html: string } {
   if (payload.template === "application-approved") {
-    const businessName = payload.variables.businessName || "your business";
-    const loginUrl = payload.variables.loginUrl || process.env.NEXT_PUBLIC_APP_URL || "";
-    const setPasswordUrl = payload.variables.setPasswordUrl || "";
+    const businessName = getStringVariable(payload.variables, "businessName", "your business");
+    const loginUrl = getStringVariable(payload.variables, "loginUrl", process.env.NEXT_PUBLIC_APP_URL || "");
+    const setPasswordUrl = getStringVariable(payload.variables, "setPasswordUrl");
     const subject = "Your Prime Pet wholesale account is approved";
     const text = setPasswordUrl
       ? `Great news. Your wholesale application for ${businessName} has been approved. Set your password here: ${setPasswordUrl}`
@@ -34,8 +40,8 @@ export function renderEmailBody(payload: EmailPayload): { subject: string; text:
   }
 
   if (payload.template === "order-confirmed") {
-    const orderNumber = payload.variables.orderNumber || "";
-    const amount = payload.variables.amount || "";
+    const orderNumber = getStringVariable(payload.variables, "orderNumber");
+    const amount = getStringVariable(payload.variables, "amount");
     const subject = `Order ${orderNumber} confirmed`;
     const text = `Your payment was received and order ${orderNumber} is now confirmed. Total: $${amount}.`;
     const html = `<p>Your payment was received and order <strong>${orderNumber}</strong> is now confirmed.</p><p>Total: <strong>$${amount}</strong></p>`;
@@ -43,17 +49,24 @@ export function renderEmailBody(payload: EmailPayload): { subject: string; text:
   }
 
   if (payload.template === "invoice-ready") {
-    const invoiceNumber = payload.variables.invoiceNumber || "";
-    const invoiceUrl = payload.variables.invoiceUrl || "";
+    const invoiceNumber = getStringVariable(payload.variables, "invoiceNumber");
+    const invoiceUrl = getStringVariable(payload.variables, "invoiceUrl");
     const subject = `Invoice ${invoiceNumber} is ready`;
-    const text = `Your invoice ${invoiceNumber} is ready. View it here: ${invoiceUrl}`;
-    const html = `<p>Your invoice <strong>${invoiceNumber}</strong> is ready.</p><p><a href="${invoiceUrl}">View invoice</a></p>`;
+    const text = `Your invoice ${invoiceNumber} is ready. ACH is preferred when possible. View it here: ${invoiceUrl}`;
+    const html = `<p>Your invoice <strong>${invoiceNumber}</strong> is ready.</p><p>ACH is preferred when possible.</p><p><a href="${invoiceUrl}">View invoice</a></p>`;
     return { subject, text, html };
   }
 
-  const subject = "Time to reorder your favorites";
-  const text = "Your fast-moving items may be running low. Reorder in your wholesale portal.";
-  const html = "<p>Your fast-moving items may be running low. Reorder in your wholesale portal.</p>";
+  const businessName = getStringVariable(payload.variables, "businessName", "there");
+  const products = getStringVariable(payload.variables, "products", "your previous best sellers");
+  const reorderUrl = getStringVariable(
+    payload.variables,
+    "reorderUrl",
+    `${process.env.NEXT_PUBLIC_APP_URL || ""}/quick-order`
+  );
+  const subject = "Time to restock your yak chew assortment";
+  const text = `Hi ${businessName}, your fast-moving items may be running low. Reorder ${products} in your wholesale portal: ${reorderUrl}`;
+  const html = `<p>Hi ${businessName},</p><p>Your fast-moving items may be running low.</p><p>Suggested reorder: <strong>${products}</strong></p><p><a href="${reorderUrl}">Open quick order</a></p>`;
   return { subject, text, html };
 }
 

@@ -168,7 +168,8 @@ export default function AdminOrdersPage() {
         {filteredOrders.length === 0 ? (
           <div className="text-center py-8 text-sm text-[#4b5563]">No orders found.</div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <thead className="border-b border-[#e7e4dc] bg-[#fcfbf9]">
                 <tr>
@@ -230,6 +231,41 @@ export default function AdminOrdersPage() {
               </tbody>
             </table>
           </div>
+          <div className="space-y-3 md:hidden">
+            {filteredOrders.map((order) => (
+              <div key={order.id} className="rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-[#111827]">{order.orderNumber}</p>
+                    <p className="text-xs text-[#6b7280]">{formatDate(order.createdAt)}</p>
+                  </div>
+                  <p className="font-semibold text-[#111827]">${Number(order.grandTotal).toFixed(2)}</p>
+                </div>
+                <div className="mt-3 space-y-1 text-sm">
+                  <p className="font-medium text-[#111827]">{order.customer.businessName}</p>
+                  <p className="text-xs text-[#6b7280]">{order.customer.user.email}</p>
+                  <p className="text-xs text-[#4b5563]">
+                    {order.items.length} item{order.items.length !== 1 ? "s" : ""}
+                  </p>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className={`inline-block rounded-full px-2 py-1 text-xs font-semibold ${getStatusColor(order.status)}`}>
+                    {order.status}
+                  </span>
+                  <span className={`inline-block rounded-full px-2 py-1 text-xs font-semibold ${getPaymentColor(order.paymentStatus)}`}>
+                    {order.paymentStatus}
+                  </span>
+                </div>
+                <Link
+                  href={`/admin/orders/${order.id}`}
+                  className="mt-3 inline-flex w-full justify-center rounded-lg border border-[#1d4b43] px-3 py-2 text-xs font-semibold text-[#1d4b43]"
+                >
+                  Details
+                </Link>
+              </div>
+            ))}
+          </div>
+          </>
         )}
 
         {/* Summary Stats */}
