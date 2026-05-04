@@ -20,6 +20,21 @@ interface Customer {
   addressCount: number;
   orderCount: number;
   totalSpent: number;
+  metrics: {
+    healthScore: number;
+    healthLabel: "Healthy" | "Watch" | "At Risk";
+    reorderRisk: "LOW" | "MEDIUM" | "HIGH";
+    daysSinceLastOrder: number | null;
+    recommendedTier: string;
+    nextTierHint: string;
+  };
+  attribution: {
+    leadId: string;
+    source: string;
+    status: string;
+    leadCreatedAt: string;
+    contactedAt: string | null;
+  } | null;
 }
 
 interface CustomersResponse {
@@ -96,6 +111,15 @@ export default function AdminCustomersPage() {
     return colors[status] || "bg-gray-100 text-gray-700";
   };
 
+  const getRiskColor = (risk: string) => {
+    const colors: Record<string, string> = {
+      LOW: "bg-green-100 text-green-700",
+      MEDIUM: "bg-yellow-100 text-yellow-700",
+      HIGH: "bg-red-100 text-red-700",
+    };
+    return colors[risk] || "bg-gray-100 text-gray-700";
+  };
+
   if (loading) {
     return (
       <SectionCard title="Customer Management" description="Manage tiers, status, and terms.">
@@ -166,6 +190,8 @@ export default function AdminCustomersPage() {
                   <th className="px-4 py-2 text-left font-semibold text-[#111827]">Contact</th>
                   <th className="px-4 py-2 text-left font-semibold text-[#111827]">Type</th>
                   <th className="px-4 py-2 text-left font-semibold text-[#111827]">Tier</th>
+                  <th className="px-4 py-2 text-left font-semibold text-[#111827]">Health</th>
+                  <th className="px-4 py-2 text-left font-semibold text-[#111827]">Attribution</th>
                   <th className="px-4 py-2 text-left font-semibold text-[#111827]">Status</th>
                   <th className="px-4 py-2 text-right font-semibold text-[#111827]">Orders</th>
                   <th className="px-4 py-2 text-right font-semibold text-[#111827]">Spent</th>
@@ -197,6 +223,37 @@ export default function AdminCustomersPage() {
                       >
                         {customer.tier}
                       </span>
+                      {customer.metrics.recommendedTier !== customer.tier ? (
+                        <div className="mt-1 text-[11px] font-medium text-[#b45309]">
+                          Suggest {customer.metrics.recommendedTier}
+                        </div>
+                      ) : null}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-semibold text-[#111827]">
+                          {customer.metrics.healthScore} · {customer.metrics.healthLabel}
+                        </span>
+                        <span
+                          className={`w-fit rounded-full px-2 py-0.5 text-[11px] font-semibold ${getRiskColor(
+                            customer.metrics.reorderRisk
+                          )}`}
+                        >
+                          {customer.metrics.reorderRisk} risk
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      {customer.attribution ? (
+                        <Link
+                          href={`/admin/outreach/${customer.attribution.leadId}`}
+                          className="text-xs font-semibold text-[#1d4b43] hover:underline"
+                        >
+                          {customer.attribution.source}
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-[#9ca3af]">No matched lead</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <span

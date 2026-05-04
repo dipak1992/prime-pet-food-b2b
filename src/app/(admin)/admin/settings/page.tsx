@@ -16,6 +16,14 @@ export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<Setting[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ key: "", value: "" });
+  const [integrationForm, setIntegrationForm] = useState({
+    quickbooksCompanyId: "",
+    quickbooksInvoicePrefix: "PPF-",
+    achBankName: "",
+    achRoutingLast4: "",
+    achRemittanceEmail: "",
+    achInstructions: "ACH preferred. Please include the invoice number in the payment memo.",
+  });
   const [provisioningForm, setProvisioningForm] = useState<ProvisioningForm>({
     email: "",
     name: "",
@@ -33,7 +41,21 @@ export default function AdminSettingsPage() {
     setLoading(true);
     const res = await fetch("/api/admin/settings");
     const data = await res.json();
-    setSettings(data.settings || []);
+    const nextSettings = data.settings || [];
+    setSettings(nextSettings);
+    const settingValue = (key: string, fallback = "") =>
+      nextSettings.find((setting: Setting) => setting.key === key)?.value || fallback;
+    setIntegrationForm({
+      quickbooksCompanyId: settingValue("quickbooks.companyId"),
+      quickbooksInvoicePrefix: settingValue("quickbooks.invoicePrefix", "PPF-"),
+      achBankName: settingValue("ach.bankName"),
+      achRoutingLast4: settingValue("ach.routingLast4"),
+      achRemittanceEmail: settingValue("ach.remittanceEmail"),
+      achInstructions: settingValue(
+        "ach.instructions",
+        "ACH preferred. Please include the invoice number in the payment memo."
+      ),
+    });
     setLoading(false);
   }
 
@@ -46,6 +68,29 @@ export default function AdminSettingsPage() {
     });
     if (!res.ok) return;
     setForm({ key: "", value: "" });
+    await fetchSettings();
+  }
+
+  async function saveIntegrationSettings(e: FormEvent) {
+    e.preventDefault();
+    const settingsToSave = [
+      ["quickbooks.companyId", integrationForm.quickbooksCompanyId],
+      ["quickbooks.invoicePrefix", integrationForm.quickbooksInvoicePrefix],
+      ["ach.bankName", integrationForm.achBankName],
+      ["ach.routingLast4", integrationForm.achRoutingLast4],
+      ["ach.remittanceEmail", integrationForm.achRemittanceEmail],
+      ["ach.instructions", integrationForm.achInstructions],
+    ];
+
+    await Promise.all(
+      settingsToSave.map(([key, value]) =>
+        fetch("/api/admin/settings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key, value }),
+        })
+      )
+    );
     await fetchSettings();
   }
 
@@ -207,6 +252,85 @@ export default function AdminSettingsPage() {
             className="rounded bg-[#1d4b43] px-4 py-2 text-sm font-semibold text-white hover:bg-[#163836]"
           >
             Save
+          </button>
+        </form>
+      </SectionCard>
+
+      <SectionCard title="QuickBooks & ACH Workflow" description="Export invoice payloads and standardize buyer payment instructions.">
+        <form onSubmit={saveIntegrationSettings} className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-[#2c2c2c] mb-1">QuickBooks company ID</label>
+              <input
+                value={integrationForm.quickbooksCompanyId}
+                onChange={(e) =>
+                  setIntegrationForm((f) => ({ ...f, quickbooksCompanyId: e.target.value }))
+                }
+                placeholder="913035..."
+                className="w-full rounded border border-[#e7e4dc] px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#2c2c2c] mb-1">Invoice export prefix</label>
+              <input
+                value={integrationForm.quickbooksInvoicePrefix}
+                onChange={(e) =>
+                  setIntegrationForm((f) => ({ ...f, quickbooksInvoicePrefix: e.target.value }))
+                }
+                placeholder="PPF-"
+                className="w-full rounded border border-[#e7e4dc] px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#2c2c2c] mb-1">ACH bank name</label>
+              <input
+                value={integrationForm.achBankName}
+                onChange={(e) => setIntegrationForm((f) => ({ ...f, achBankName: e.target.value }))}
+                placeholder="Bank name shown to admins"
+                className="w-full rounded border border-[#e7e4dc] px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#2c2c2c] mb-1">Routing last 4</label>
+              <input
+                value={integrationForm.achRoutingLast4}
+                onChange={(e) =>
+                  setIntegrationForm((f) => ({ ...f, achRoutingLast4: e.target.value }))
+                }
+                placeholder="1234"
+                maxLength={4}
+                className="w-full rounded border border-[#e7e4dc] px-3 py-2 text-sm"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-[#2c2c2c] mb-1">Remittance email</label>
+              <input
+                type="email"
+                value={integrationForm.achRemittanceEmail}
+                onChange={(e) =>
+                  setIntegrationForm((f) => ({ ...f, achRemittanceEmail: e.target.value }))
+                }
+                placeholder="ap@theprimepetfood.com"
+                className="w-full rounded border border-[#e7e4dc] px-3 py-2 text-sm"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-[#2c2c2c] mb-1">ACH invoice instructions</label>
+              <textarea
+                value={integrationForm.achInstructions}
+                onChange={(e) =>
+                  setIntegrationForm((f) => ({ ...f, achInstructions: e.target.value }))
+                }
+                rows={3}
+                className="w-full rounded border border-[#e7e4dc] px-3 py-2 text-sm"
+              />
+            </div>
+          </div>
+          <button
+            type="submit"
+            className="rounded bg-[#1d4b43] px-4 py-2 text-sm font-semibold text-white hover:bg-[#163836]"
+          >
+            Save workflow settings
           </button>
         </form>
       </SectionCard>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionProfile } from "@/lib/auth/guards";
+import { calculateCustomerMetrics } from "@/lib/customer-metrics";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
@@ -25,12 +26,33 @@ export async function GET() {
           addresses: {
             orderBy: { createdAt: "asc" },
           },
+          orders: {
+            orderBy: { createdAt: "desc" },
+            take: 20,
+            select: {
+              createdAt: true,
+              grandTotal: true,
+              paymentStatus: true,
+            },
+          },
         },
       },
     },
   });
 
-  return NextResponse.json({ authenticated: true, profile, user });
+  const userWithMetrics =
+    user?.customer
+      ? {
+          ...user,
+          customer: {
+            ...user.customer,
+            metrics: calculateCustomerMetrics(user.customer.orders, user.customer.tier),
+            orders: undefined,
+          },
+        }
+      : user;
+
+  return NextResponse.json({ authenticated: true, profile, user: userWithMetrics });
 }
 
 export async function PATCH(req: NextRequest) {
@@ -55,4 +77,3 @@ export async function PATCH(req: NextRequest) {
 
   return NextResponse.json({ user });
 }
-

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/guards";
+import { calculateCustomerMetrics } from "@/lib/customer-metrics";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
@@ -25,10 +26,39 @@ export async function GET(
 
   if (!customer) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  const matchedLead = await prisma.lead.findFirst({
+    where: {
+      OR: [
+        { email: { equals: customer.user.email, mode: "insensitive" } },
+        { businessName: { equals: customer.businessName, mode: "insensitive" } },
+      ],
+    },
+    select: {
+      id: true,
+      businessName: true,
+      email: true,
+      source: true,
+      status: true,
+      createdAt: true,
+      contactedAt: true,
+    },
+  });
+  const metrics = calculateCustomerMetrics(customer.orders, customer.tier);
+
   return NextResponse.json({
     customer: {
       ...customer,
       freeShippingThreshold: Number(customer.freeShippingThreshold),
+      metrics,
+      attribution: matchedLead
+        ? {
+            leadId: matchedLead.id,
+            source: matchedLead.source,
+            status: matchedLead.status,
+            leadCreatedAt: matchedLead.createdAt,
+            contactedAt: matchedLead.contactedAt,
+          }
+        : null,
       orders: customer.orders.map((o) => ({
         ...o,
         subtotal: Number(o.subtotal),

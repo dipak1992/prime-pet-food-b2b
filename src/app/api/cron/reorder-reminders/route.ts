@@ -1,6 +1,17 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
+import { Resend } from "resend";
+
+const STEP_DELAYS = [0, 3, 4, 3, 7];
+const MAX_STEP = STEP_DELAYS.length;
+
+function nextSendAtForStep(step: number): Date {
+  const delay = STEP_DELAYS[step - 1] ?? 3;
+  const d = new Date();
+  d.setDate(d.getDate() + delay);
+  return d;
+}
 
 function isAuthorized(request: Request) {
   const secret = process.env.CRON_SECRET;
@@ -69,8 +80,154 @@ export async function GET(request: Request) {
     update: { value: todayKey },
   });
 
+  const leadAutomation = await processLeadFollowUps();
+
   return NextResponse.json({
     processed: customers.length,
     results,
+    leadAutomation,
   });
+}
+
+async function processLeadFollowUps() {
+  if (!process.env.RESEND_API_KEY) {
+    return { skipped: true, reason: "RESEND_API_KEY not configured" };
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const from = process.env.FROM_EMAIL ?? "outreach@theprimepetfood.com";
+  const now = new Date();
+
+  const dueSequences = await prisma.leadFollowUpSequence.findMany({
+    where: {
+      status: "ACTIVE",
+      nextSendAt: { lte: now },
+    },
+    include: { lead: true },
+    take: 50,
+  });
+
+  let sequenceSent = 0;
+  let sequenceFailed = 0;
+
+  for (const sequence of dueSequences) {
+    const existingEmail = await prisma.outreachEmail.findFirst({
+      where: { leadId: sequence.leadId, sequenceStep: sequence.currentStep },
+      orderBy: { createdAt: "desc" },
+    });
+    const subject = existingEmail?.subject ?? `Following up - ${sequence.lead.businessName}`;
+    const body =
+      existingEmail?.body ??
+      `Hi ${sequence.lead.contactName},\n\nI wanted to follow up about Prime Pet Food wholesale opportunities.\n\nBest,\nPrime Pet Food Team`;
+
+    try {
+      await resend.emails.send({
+        from,
+        to: sequence.lead.email,
+        subject,
+        text: body,
+      });
+
+      if (existingEmail?.status === "DRAFT") {
+        await prisma.outreachEmail.update({
+          where: { id: existingEmail.id },
+          data: { status: "SENT", sentAt: now },
+        });
+      }
+
+      const nextStep = sequence.currentStep + 1;
+      const complete = nextStep > MAX_STEP;
+      await prisma.leadFollowUpSequence.update({
+        where: { id: sequence.id },
+        data: {
+          currentStep: complete ? sequence.currentStep : nextStep,
+          status: complete ? "COMPLETED" : "ACTIVE",
+          nextSendAt: complete ? null : nextSendAtForStep(nextStep),
+          completedAt: complete ? now : null,
+        },
+      });
+
+      if (sequence.lead.status === "NEW") {
+        await prisma.lead.update({
+          where: { id: sequence.leadId },
+          data: { status: "CONTACTED", contactedAt: now },
+        });
+      }
+
+      await prisma.leadActivity.create({
+        data: {
+          leadId: sequence.leadId,
+          type: "SEQUENCE_EMAIL_SENT",
+          title: `Sequence step ${sequence.currentStep} sent: "${subject}"`,
+        },
+      });
+      sequenceSent++;
+    } catch {
+      await prisma.leadActivity.create({
+        data: {
+          leadId: sequence.leadId,
+          type: "SEQUENCE_EMAIL_FAILED",
+          title: `Sequence step ${sequence.currentStep} failed to send`,
+        },
+      });
+      sequenceFailed++;
+    }
+  }
+
+  const ownershipSettings = await prisma.setting.findMany({
+    where: { key: { startsWith: "lead-owner:" } },
+    take: 200,
+  });
+  let ownerRemindersSent = 0;
+
+  for (const setting of ownershipSettings) {
+    const ownership = JSON.parse(setting.value) as {
+      ownerName?: string;
+      ownerEmail?: string;
+      nextFollowUpAt?: string;
+      notes?: string;
+    };
+    if (!ownership.ownerEmail || !ownership.nextFollowUpAt) continue;
+    const dueAt = new Date(ownership.nextFollowUpAt);
+    if (Number.isNaN(dueAt.getTime()) || dueAt > now) continue;
+
+    const leadId = setting.key.replace("lead-owner:", "");
+    const lead = await prisma.lead.findUnique({ where: { id: leadId } });
+    if (!lead || lead.status === "CONVERTED" || lead.status === "ARCHIVED") continue;
+
+    await resend.emails.send({
+      from,
+      to: ownership.ownerEmail,
+      subject: `Follow up with ${lead.businessName}`,
+      text: `Follow-up is due for ${lead.businessName}.\n\nContact: ${lead.contactName}\nEmail: ${lead.email}\nNotes: ${ownership.notes || "No notes"}\n\nOpen the lead: ${process.env.NEXT_PUBLIC_APP_URL || ""}/admin/outreach/${lead.id}`,
+    });
+
+    const nextFollowUp = new Date(now);
+    nextFollowUp.setDate(nextFollowUp.getDate() + 7);
+    await prisma.setting.update({
+      where: { key: setting.key },
+      data: {
+        value: JSON.stringify({
+          ...ownership,
+          nextFollowUpAt: nextFollowUp.toISOString(),
+        }),
+      },
+    });
+    await prisma.leadActivity.create({
+      data: {
+        leadId: lead.id,
+        type: "OWNER_REMINDER_SENT",
+        title: `Follow-up reminder sent to ${ownership.ownerName || ownership.ownerEmail}`,
+        detail: "Next reminder moved forward 7 days.",
+      },
+    });
+    ownerRemindersSent++;
+  }
+
+  return {
+    sequencesProcessed: dueSequences.length,
+    sequenceSent,
+    sequenceFailed,
+    ownerRemindersSent,
+  };
 }

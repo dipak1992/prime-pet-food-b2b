@@ -1,0 +1,22 @@
+Prime Pet Food Shelf Talker Copy
+
+Option 1
+Himalayan Yak Cheese Dog Chews
+Natural, long-lasting chews customers can feel good about.
+
+Option 2
+Premium Yak Cheese Chews
+A durable chew option for dogs who need something that lasts.
+
+Option 3
+Staff Pick: Yak Cheese Chews
+Great for customers asking for a simple, premium chew.
+
+Small Shelf Tag
+Long-lasting natural dog chew.
+
+Checkout Counter Prompt
+Ask us which size fits your dog.
+
+Grooming Add-On Prompt
+Add a chew for the ride home.

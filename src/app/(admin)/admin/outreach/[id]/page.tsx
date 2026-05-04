@@ -75,6 +75,13 @@ type Sequence = {
   createdAt: string;
 };
 
+type LeadOwnership = {
+  ownerName: string;
+  ownerEmail: string;
+  nextFollowUpAt: string;
+  notes: string;
+};
+
 type EmailVariant = {
   type: string;
   label: string;
@@ -123,6 +130,13 @@ export default function LeadDetailPage() {
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
+  const [ownership, setOwnership] = useState<LeadOwnership>({
+    ownerName: "",
+    ownerEmail: "",
+    nextFollowUpAt: "",
+    notes: "",
+  });
+  const [savingOwnership, setSavingOwnership] = useState(false);
 
   // --- Emails state ---
   const [emails, setEmails] = useState<OutreachEmail[]>([]);
@@ -171,6 +185,8 @@ export default function LeadDetailPage() {
 
   useEffect(() => {
     fetchLead();
+    fetchOwnership();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchLead]);
 
   // Lazy-load per tab
@@ -214,6 +230,19 @@ export default function LeadDetailPage() {
     setLoadingSamples(false);
   }
 
+  async function fetchOwnership() {
+    const res = await fetch(`/api/admin/leads/${id}/ownership`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const next = data.ownership as LeadOwnership;
+    setOwnership({
+      ownerName: next.ownerName ?? "",
+      ownerEmail: next.ownerEmail ?? "",
+      nextFollowUpAt: next.nextFollowUpAt ? next.nextFollowUpAt.slice(0, 16) : "",
+      notes: next.notes ?? "",
+    });
+  }
+
   // ---------- Details ----------
   async function saveLead(e: FormEvent) {
     e.preventDefault();
@@ -233,6 +262,23 @@ export default function LeadDetailPage() {
       setSaveMsg("Save failed.");
     }
     setSaving(false);
+  }
+
+  async function saveOwnership() {
+    setSavingOwnership(true);
+    const res = await fetch(`/api/admin/leads/${id}/ownership`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(ownership),
+    });
+    if (res.ok) {
+      await fetchOwnership();
+      setSaveMsg("Ownership saved.");
+      setTimeout(() => setSaveMsg(""), 2500);
+    } else {
+      setSaveMsg("Ownership save failed.");
+    }
+    setSavingOwnership(false);
   }
 
   // ---------- Email Studio ----------
@@ -451,6 +497,54 @@ export default function LeadDetailPage() {
       {/* ===================== DETAILS TAB ===================== */}
       {tab === "details" && (
         <form onSubmit={saveLead} className="space-y-5">
+          <div className="rounded-xl border border-[#e7e4dc] bg-white p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
+              <div className="grid flex-1 gap-3 sm:grid-cols-2">
+                <Field label="Sales Owner">
+                  <input
+                    value={ownership.ownerName}
+                    onChange={(e) => setOwnership((current) => ({ ...current, ownerName: e.target.value }))}
+                    className="w-full rounded border border-[#e7e4dc] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1d4b43]/30"
+                    placeholder="Rep name"
+                  />
+                </Field>
+                <Field label="Owner Email">
+                  <input
+                    type="email"
+                    value={ownership.ownerEmail}
+                    onChange={(e) => setOwnership((current) => ({ ...current, ownerEmail: e.target.value }))}
+                    className="w-full rounded border border-[#e7e4dc] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1d4b43]/30"
+                    placeholder="rep@example.com"
+                  />
+                </Field>
+                <Field label="Next Follow-up">
+                  <input
+                    type="datetime-local"
+                    value={ownership.nextFollowUpAt}
+                    onChange={(e) => setOwnership((current) => ({ ...current, nextFollowUpAt: e.target.value }))}
+                    className="w-full rounded border border-[#e7e4dc] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1d4b43]/30"
+                  />
+                </Field>
+                <Field label="Rep Notes">
+                  <input
+                    value={ownership.notes}
+                    onChange={(e) => setOwnership((current) => ({ ...current, notes: e.target.value }))}
+                    className="w-full rounded border border-[#e7e4dc] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1d4b43]/30"
+                    placeholder="Follow-up angle or next step"
+                  />
+                </Field>
+              </div>
+              <button
+                type="button"
+                onClick={saveOwnership}
+                disabled={savingOwnership}
+                className="rounded border border-[#1d4b43] px-4 py-2 text-sm font-semibold text-[#1d4b43] hover:bg-[#f0f7f5] disabled:opacity-60"
+              >
+                {savingOwnership ? "Saving..." : "Save Owner"}
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Business Name">
               <input

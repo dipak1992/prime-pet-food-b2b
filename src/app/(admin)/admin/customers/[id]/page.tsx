@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { SectionCard } from "@/components/ui/SectionCard";
 
@@ -27,6 +28,21 @@ type Customer = {
   freeShippingThreshold: number;
   createdAt: string;
   user: { name: string; email: string };
+  metrics: {
+    healthScore: number;
+    healthLabel: "Healthy" | "Watch" | "At Risk";
+    reorderRisk: "LOW" | "MEDIUM" | "HIGH";
+    daysSinceLastOrder: number | null;
+    recommendedTier: string;
+    nextTierHint: string;
+  };
+  attribution: {
+    leadId: string;
+    source: string;
+    status: string;
+    leadCreatedAt: string;
+    contactedAt: string | null;
+  } | null;
   orders: CustomerOrder[];
 };
 
@@ -204,6 +220,60 @@ export default function AdminCustomerDetailPage() {
           </div>
         </div>
       </SectionCard>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <SectionCard title="Customer Health" description="Reorder risk and tier recommendation.">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-3">
+              <p className="text-xs font-medium uppercase text-[#6b7280]">Health</p>
+              <p className="mt-1 text-2xl font-bold text-[#111827]">{customer.metrics.healthScore}</p>
+              <p className="text-xs font-semibold text-[#1d4b43]">{customer.metrics.healthLabel}</p>
+            </div>
+            <div className="rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-3">
+              <p className="text-xs font-medium uppercase text-[#6b7280]">Reorder risk</p>
+              <p className="mt-1 text-lg font-bold text-[#111827]">{customer.metrics.reorderRisk}</p>
+              <p className="text-xs text-[#6b7280]">
+                {customer.metrics.daysSinceLastOrder == null
+                  ? "No order yet"
+                  : `${customer.metrics.daysSinceLastOrder} days since order`}
+              </p>
+            </div>
+            <div className="rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-3">
+              <p className="text-xs font-medium uppercase text-[#6b7280]">Tier action</p>
+              <p className="mt-1 text-lg font-bold text-[#111827]">{customer.metrics.recommendedTier}</p>
+              <p className="text-xs text-[#6b7280]">{customer.metrics.nextTierHint}</p>
+            </div>
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Lead Attribution" description="Matched outreach source for this buyer.">
+          {customer.attribution ? (
+            <div className="space-y-2 text-sm">
+              <p>
+                <span className="font-semibold text-[#111827]">Source:</span>{" "}
+                <span className="text-[#4b5563]">{customer.attribution.source}</span>
+              </p>
+              <p>
+                <span className="font-semibold text-[#111827]">Lead status:</span>{" "}
+                <span className="text-[#4b5563]">{customer.attribution.status}</span>
+              </p>
+              <p className="text-xs text-[#6b7280]">
+                Lead created {new Date(customer.attribution.leadCreatedAt).toLocaleDateString()}
+              </p>
+              <Link
+                href={`/admin/outreach/${customer.attribution.leadId}`}
+                className="inline-flex rounded border border-[#1d4b43] px-3 py-2 text-xs font-semibold text-[#1d4b43] hover:bg-[#f0f7f5]"
+              >
+                View source lead
+              </Link>
+            </div>
+          ) : (
+            <p className="text-sm text-[#4b5563]">
+              No outreach lead matched this customer by email or business name.
+            </p>
+          )}
+        </SectionCard>
+      </div>
 
       <SectionCard title="Recent Orders" description="Most recent orders and payment status.">
         {customer.orders.length === 0 ? (

@@ -23,6 +23,8 @@ export default function AdminInvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(true);
+  const [exportingId, setExportingId] = useState<string | null>(null);
+  const [exportMessage, setExportMessage] = useState("");
 
   async function fetchInvoices() {
     setLoading(true);
@@ -60,6 +62,23 @@ export default function AdminInvoicesPage() {
     }
   }
 
+  async function exportQuickBooks(invoiceId: string) {
+    setExportingId(invoiceId);
+    setExportMessage("");
+    const res = await fetch(`/api/admin/invoices/${invoiceId}/quickbooks`, {
+      method: "POST",
+    });
+    if (res.ok) {
+      const data = await res.json();
+      await navigator.clipboard.writeText(JSON.stringify(data.payload, null, 2));
+      setExportMessage("QuickBooks export copied to clipboard.");
+      await fetchInvoices();
+    } else {
+      setExportMessage("QuickBooks export failed.");
+    }
+    setExportingId(null);
+  }
+
   const filtered = invoices.filter((inv) => !statusFilter || inv.status === statusFilter);
 
   return (
@@ -86,6 +105,11 @@ export default function AdminInvoicesPage() {
             Refresh
           </button>
         </div>
+        {exportMessage ? (
+          <div className="rounded border border-[#e7e4dc] bg-[#fcfbf9] px-3 py-2 text-sm text-[#4b5563]">
+            {exportMessage}
+          </div>
+        ) : null}
 
         {loading ? (
           <p className="text-sm text-[#4b5563]">Loading invoices...</p>
@@ -138,6 +162,13 @@ export default function AdminInvoicesPage() {
                             </button>
                           )}
                           <button
+                            onClick={() => exportQuickBooks(invoice.id)}
+                            disabled={exportingId === invoice.id}
+                            className="rounded border border-blue-200 px-3 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-50 disabled:opacity-60"
+                          >
+                            {exportingId === invoice.id ? "Exporting..." : "Export QB"}
+                          </button>
+                          <button
                             onClick={() => markPaid(invoice.id)}
                             className="rounded border border-[#e7e4dc] px-3 py-1 text-xs font-semibold hover:bg-[#f3f1eb]"
                           >
@@ -178,6 +209,13 @@ export default function AdminInvoicesPage() {
                         Send invoice
                       </button>
                     )}
+                    <button
+                      onClick={() => exportQuickBooks(invoice.id)}
+                      disabled={exportingId === invoice.id}
+                      className="flex-1 rounded border border-blue-200 px-3 py-2 text-xs font-semibold text-blue-700"
+                    >
+                      {exportingId === invoice.id ? "Exporting..." : "Export QB"}
+                    </button>
                     <button
                       onClick={() => markPaid(invoice.id)}
                       className="flex-1 rounded border border-[#e7e4dc] px-3 py-2 text-xs font-semibold"

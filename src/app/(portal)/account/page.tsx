@@ -25,6 +25,14 @@ type UserData = {
     businessName: string | null;
     businessType: string | null;
     tier: string | null;
+    metrics?: {
+      healthScore: number;
+      healthLabel: string;
+      reorderRisk: string;
+      daysSinceLastOrder: number | null;
+      recommendedTier: string;
+      nextTierHint: string;
+    };
     addresses: Address[];
   } | null;
 };
@@ -40,6 +48,12 @@ const emptyAddress = {
   country: "US",
   isDefault: false,
 };
+
+const tierBenefits = [
+  { tier: "BRONZE", label: "Bronze", target: "Approved wholesale account", benefits: "Standard wholesale pricing, ACH invoicing, reorder reminders" },
+  { tier: "SILVER", label: "Silver", target: "$1,500 annual volume", benefits: "Priority samples, merchandising support, preferred reorder review" },
+  { tier: "GOLD", label: "Gold", target: "$5,000 annual volume", benefits: "Best account review cadence, launch support, seasonal merchandising priority" },
+];
 
 export default function AccountPage() {
   const [user, setUser] = useState<UserData | null>(null);
@@ -247,11 +261,38 @@ export default function AccountPage() {
             </div>
           )}
           {user?.customer?.tier && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-[#6b7280]">Account tier:</span>
-              <span className="rounded-full bg-[#1d4b43]/10 px-2.5 py-0.5 text-xs font-semibold text-[#1d4b43]">
-                {user.customer.tier}
-              </span>
+            <div className="rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-xs font-medium uppercase text-[#6b7280]">Wholesale loyalty tier</p>
+                  <p className="mt-1 text-lg font-bold text-[#111827]">{user.customer.tier}</p>
+                </div>
+                <span className="rounded-full bg-[#1d4b43]/10 px-2.5 py-0.5 text-xs font-semibold text-[#1d4b43]">
+                  {user.customer.metrics?.healthLabel ?? "Active"}
+                </span>
+              </div>
+              <p className="mt-2 text-sm text-[#4b5563]">
+                {user.customer.metrics?.nextTierHint ?? "Keep ordering to unlock higher-volume benefits."}
+              </p>
+              <div className="mt-4 grid gap-2">
+                {tierBenefits.map((tier) => {
+                  const active = tier.tier === user.customer?.tier;
+                  return (
+                    <div
+                      key={tier.tier}
+                      className={`rounded-lg border p-3 ${
+                        active ? "border-[#1d4b43] bg-white" : "border-[#e7e4dc] bg-white/70"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-[#111827]">{tier.label}</p>
+                        <p className="text-xs text-[#6b7280]">{tier.target}</p>
+                      </div>
+                      <p className="mt-1 text-xs text-[#4b5563]">{tier.benefits}</p>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
           <button
@@ -459,4 +500,3 @@ export default function AccountPage() {
     </div>
   );
 }
-
