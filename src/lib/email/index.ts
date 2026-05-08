@@ -1,8 +1,11 @@
 export type EmailTemplate = 
   | "application-approved"
   | "application-rejected"
+  | "order-submitted"
   | "order-confirmed"
+  | "order-status-updated"
   | "invoice-ready"
+  | "support-acknowledgment"
   | "reorder-reminder";
 
 export interface EmailPayload {
@@ -39,6 +42,16 @@ export function renderEmailBody(payload: EmailPayload): { subject: string; text:
     return { subject, text, html };
   }
 
+  if (payload.template === "order-submitted") {
+    const orderNumber = getStringVariable(payload.variables, "orderNumber");
+    const amount = getStringVariable(payload.variables, "amount");
+    const orderUrl = getStringVariable(payload.variables, "orderUrl");
+    const subject = `Order request ${orderNumber} received`;
+    const text = `We received your wholesale order request ${orderNumber}. Estimated total: $${amount}. Our team will review inventory and send your invoice before fulfillment.${orderUrl ? ` View it here: ${orderUrl}` : ""}`;
+    const html = `<p>We received your wholesale order request <strong>${orderNumber}</strong>.</p><p>Estimated total: <strong>$${amount}</strong></p><p>Our team will review inventory and send your invoice before fulfillment.</p>${orderUrl ? `<p><a href="${orderUrl}">View order</a></p>` : ""}`;
+    return { subject, text, html };
+  }
+
   if (payload.template === "order-confirmed") {
     const orderNumber = getStringVariable(payload.variables, "orderNumber");
     const amount = getStringVariable(payload.variables, "amount");
@@ -48,12 +61,36 @@ export function renderEmailBody(payload: EmailPayload): { subject: string; text:
     return { subject, text, html };
   }
 
+  if (payload.template === "order-status-updated") {
+    const orderNumber = getStringVariable(payload.variables, "orderNumber");
+    const status = getStringVariable(payload.variables, "status").replace(/_/g, " ").toLowerCase();
+    const trackingNumber = getStringVariable(payload.variables, "trackingNumber");
+    const trackingUrl = getStringVariable(payload.variables, "trackingUrl");
+    const orderUrl = getStringVariable(payload.variables, "orderUrl");
+    const subject = `Order ${orderNumber} status updated`;
+    const trackingText = trackingNumber ? ` Tracking: ${trackingNumber}${trackingUrl ? ` (${trackingUrl})` : ""}.` : "";
+    const text = `Your order ${orderNumber} is now ${status}.${trackingText}${orderUrl ? ` View details: ${orderUrl}` : ""}`;
+    const html = `<p>Your order <strong>${orderNumber}</strong> is now <strong>${status}</strong>.</p>${trackingNumber ? `<p>Tracking: <strong>${trackingNumber}</strong>${trackingUrl ? ` · <a href="${trackingUrl}">Track shipment</a>` : ""}</p>` : ""}${orderUrl ? `<p><a href="${orderUrl}">View order details</a></p>` : ""}`;
+    return { subject, text, html };
+  }
+
   if (payload.template === "invoice-ready") {
     const invoiceNumber = getStringVariable(payload.variables, "invoiceNumber");
     const invoiceUrl = getStringVariable(payload.variables, "invoiceUrl");
     const subject = `Invoice ${invoiceNumber} is ready`;
     const text = `Your invoice ${invoiceNumber} is ready. ACH is preferred when possible. View it here: ${invoiceUrl}`;
     const html = `<p>Your invoice <strong>${invoiceNumber}</strong> is ready.</p><p>ACH is preferred when possible.</p><p><a href="${invoiceUrl}">View invoice</a></p>`;
+    return { subject, text, html };
+  }
+
+  if (payload.template === "support-acknowledgment") {
+    const ticketNumber = getStringVariable(payload.variables, "ticketNumber");
+    const subjectText = getStringVariable(payload.variables, "subject", "your request");
+    const requestType = getStringVariable(payload.variables, "requestType", "support request").replace(/_/g, " ").toLowerCase();
+    const ticketUrl = getStringVariable(payload.variables, "ticketUrl");
+    const subject = `We received ${subjectText}`;
+    const text = `We received your ${requestType}: ${subjectText}. Reference: ${ticketNumber}. Our wholesale team will follow up within one business day.${ticketUrl ? ` View it here: ${ticketUrl}` : ""}`;
+    const html = `<p>We received your ${requestType}: <strong>${subjectText}</strong>.</p><p>Reference: <strong>${ticketNumber}</strong></p><p>Our wholesale team will follow up within one business day.</p>${ticketUrl ? `<p><a href="${ticketUrl}">View request</a></p>` : ""}`;
     return { subject, text, html };
   }
 
@@ -106,13 +143,25 @@ export const emailTemplates: Record<EmailTemplate, { subject: string; preview: s
     subject: "Prime Pet Wholesale Application Update",
     preview: "Thank you for applying to Prime Pet Wholesale.",
   },
+  "order-submitted": {
+    subject: "Your Order Request Was Received",
+    preview: "Your wholesale order request has been received.",
+  },
   "order-confirmed": {
     subject: "Your Order is Confirmed",
     preview: "Your order has been received and confirmed.",
   },
+  "order-status-updated": {
+    subject: "Your Order Status Was Updated",
+    preview: "Your wholesale order has a new status.",
+  },
   "invoice-ready": {
     subject: "Your Invoice is Ready",
     preview: "Your invoice is available for download.",
+  },
+  "support-acknowledgment": {
+    subject: "We Received Your Request",
+    preview: "Your quote or support request has been received.",
   },
   "reorder-reminder": {
     subject: "Time to Reorder Your Favorites",

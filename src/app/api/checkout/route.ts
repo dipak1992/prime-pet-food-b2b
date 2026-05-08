@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireApprovedBuyer } from "@/lib/auth/guards";
+import { sendEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import {
   computeCartSubtotal,
@@ -152,6 +153,23 @@ export async function POST(request: Request) {
 
     return createdOrder;
   });
+
+  if (profile.email) {
+    try {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+      await sendEmail({
+        to: profile.email,
+        template: "order-submitted",
+        variables: {
+          orderNumber: order.orderNumber,
+          amount: Number(order.grandTotal).toFixed(2),
+          orderUrl: appUrl ? `${appUrl}/orders/${order.id}` : "",
+        },
+      });
+    } catch (error) {
+      console.error("Failed to send order confirmation email:", error);
+    }
+  }
 
   return NextResponse.json({
     order: {

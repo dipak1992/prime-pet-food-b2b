@@ -1,4 +1,5 @@
 import { requireApprovedBuyer } from "@/lib/auth/guards";
+import { sendEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -62,11 +63,31 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const ticketNumber = `TKT-${ticket.id.slice(0, 8).toUpperCase()}`;
+
+    if (profile.email) {
+      try {
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+        await sendEmail({
+          to: profile.email,
+          template: "support-acknowledgment",
+          variables: {
+            ticketNumber,
+            subject,
+            requestType: type,
+            ticketUrl: appUrl ? `${appUrl}/support` : "",
+          },
+        });
+      } catch (error) {
+        console.error("Failed to send support acknowledgment email:", error);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       ticket: {
         id: ticket.id,
-        ticketNumber: `TKT-${ticket.id.slice(0, 8).toUpperCase()}`,
+        ticketNumber,
         priority: priority || "normal",
       },
     });

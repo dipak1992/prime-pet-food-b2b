@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/guards";
+import { sendEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
@@ -67,4 +68,56 @@ export async function GET() {
     .sort((a, b) => (b!.daysSinceLastOrder - a!.daysSinceLastOrder));
 
   return NextResponse.json({ reorders });
+}
+
+export async function POST(request: Request) {
+  await requireAdmin();
+
+  const body = await request.json().catch(() => ({}));
+  const customerId = typeof body.customerId === "string" ? body.customerId : "";
+
+  if (!customerId) {
+    return NextResponse.json({ error: "customerId is required" }, { status: 400 });
+  }
+
+  const customer = await prisma.customer.findUnique({
+    where: { id: customerId },
+    include: {
+      user: { select: { email: true } },
+      orders: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        include: {
+          items: {
+            take: 3,
+            orderBy: { totalPrice: "desc" },
+            select: { productTitleSnapshot: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (!customer) {
+    return NextResponse.json({ error: "Customer not found" }, { status: 404 });
+  }
+
+  if (!customer.user?.email) {
+    return NextResponse.json({ error: "Customer does not have an email address" }, { status: 400 });
+  }
+
+  const products = customer.orders[0]?.items.map((item) => item.productTitleSnapshot).join(", ");
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+
+  await sendEmail({
+    to: customer.user.email,
+    template: "reorder-reminder",
+    variables: {
+      businessName: customer.businessName,
+      products: products || "your previous best sellers",
+      reorderUrl: appUrl ? `${appUrl}/quick-order` : "/quick-order",
+    },
+  });
+
+  return NextResponse.json({ success: true });
 }

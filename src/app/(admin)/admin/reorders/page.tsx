@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { SectionCard } from "@/components/ui/SectionCard";
 
 type ReorderCandidate = {
@@ -18,21 +18,43 @@ type ReorderCandidate = {
 export default function AdminReordersPage() {
   const [rows, setRows] = useState<ReorderCandidate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sendingId, setSendingId] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  async function fetchData() {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     const res = await fetch("/api/admin/reorders");
     const data = await res.json();
     setRows(data.reorders || []);
     setLoading(false);
-  }
+  }, []);
 
-  function sendReminder(email: string) {
-    window.alert(`Reminder queued for ${email}`);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  async function sendReminder(row: ReorderCandidate) {
+    setSendingId(row.id);
+    setMessage("");
+    setError("");
+
+    try {
+      const res = await fetch("/api/admin/reorders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customerId: row.id }),
+      });
+
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload.error || "Could not send reminder");
+
+      setMessage(`Reminder sent to ${row.email}.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not send reminder");
+    } finally {
+      setSendingId("");
+    }
   }
 
   return (
@@ -40,6 +62,16 @@ export default function AdminReordersPage() {
       title="Reorder Opportunities"
       description="Customers with 2+ orders and no purchase in the last 30 days."
     >
+      {message && (
+        <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+          {message}
+        </div>
+      )}
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
       {loading ? (
         <p className="text-sm text-[#4b5563]">Loading reorder opportunities...</p>
       ) : rows.length === 0 ? (
@@ -73,10 +105,11 @@ export default function AdminReordersPage() {
                   <td className="px-3 py-3 text-right">{row.daysSinceLastOrder}d</td>
                   <td className="px-3 py-3 text-right">
                     <button
-                      onClick={() => sendReminder(row.email)}
-                      className="rounded bg-[#1d4b43] px-3 py-1 text-xs font-semibold text-white hover:bg-[#163836]"
+                      onClick={() => sendReminder(row)}
+                      disabled={sendingId === row.id}
+                      className="rounded bg-[#1d4b43] px-3 py-1 text-xs font-semibold text-white hover:bg-[#163836] disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      Send Reminder
+                      {sendingId === row.id ? "Sending..." : "Send Reminder"}
                     </button>
                   </td>
                 </tr>

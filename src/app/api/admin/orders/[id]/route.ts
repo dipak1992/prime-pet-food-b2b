@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/guards";
+import { sendEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
@@ -50,7 +51,10 @@ export async function PATCH(
   const body = await req.json();
   const { status, paymentStatus, trackingNumber, trackingUrl, notes } = body;
 
-  const currentOrder = await prisma.order.findUnique({ where: { id } });
+  const currentOrder = await prisma.order.findUnique({
+    where: { id },
+    include: { customer: { include: { user: { select: { email: true } } } } },
+  });
   if (!currentOrder) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const updated = await prisma.order.update({
@@ -68,6 +72,25 @@ export async function PATCH(
     await prisma.orderStatusHistory.create({
       data: { orderId: id, status, note: `Status updated to ${status}` },
     });
+
+    if (currentOrder.customer.user?.email) {
+      try {
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+        await sendEmail({
+          to: currentOrder.customer.user.email,
+          template: "order-status-updated",
+          variables: {
+            orderNumber: currentOrder.orderNumber,
+            status,
+            trackingNumber: trackingNumber ?? updated.trackingNumber ?? "",
+            trackingUrl: trackingUrl ?? updated.trackingUrl ?? "",
+            orderUrl: appUrl ? `${appUrl}/orders/${id}` : "",
+          },
+        });
+      } catch (error) {
+        console.error("Failed to send order status email:", error);
+      }
+    }
   }
 
   return NextResponse.json({ order: { ...updated, grandTotal: Number(updated.grandTotal) } });
