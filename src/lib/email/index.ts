@@ -20,6 +20,23 @@ function getStringVariable(variables: Record<string, unknown>, key: string, fall
   return typeof value === "string" ? value : fallback;
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function textToHtml(text: string) {
+  return text
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\n/g, "<br />")}</p>`)
+    .join("");
+}
+
 export function renderEmailBody(payload: EmailPayload): { subject: string; text: string; html: string } {
   if (payload.template === "application-approved") {
     const businessName = getStringVariable(payload.variables, "businessName", "your business");
@@ -96,14 +113,21 @@ export function renderEmailBody(payload: EmailPayload): { subject: string; text:
 
   const businessName = getStringVariable(payload.variables, "businessName", "there");
   const products = getStringVariable(payload.variables, "products", "your previous best sellers");
+  const productLines = getStringVariable(payload.variables, "productLines", products);
+  const customSubject = getStringVariable(payload.variables, "subject");
+  const bodyText = getStringVariable(payload.variables, "bodyText");
   const reorderUrl = getStringVariable(
     payload.variables,
     "reorderUrl",
     `${process.env.NEXT_PUBLIC_APP_URL || ""}/quick-order`
   );
-  const subject = "Time to restock your yak chew assortment";
-  const text = `Hi ${businessName}, your fast-moving items may be running low. Reorder ${products} in your wholesale portal: ${reorderUrl}`;
-  const html = `<p>Hi ${businessName},</p><p>Your fast-moving items may be running low.</p><p>Suggested reorder: <strong>${products}</strong></p><p><a href="${reorderUrl}">Open quick order</a></p>`;
+  const subject = customSubject || "Time to restock your yak chew assortment";
+  const text = bodyText
+    ? `${bodyText}\n\nSuggested reorder:\n${productLines}\n\nOpen quick order: ${reorderUrl}`
+    : `Hi ${businessName}, your fast-moving items may be running low. Reorder ${products} in your wholesale portal: ${reorderUrl}`;
+  const html = bodyText
+    ? `${textToHtml(bodyText)}<p>Suggested reorder:<br /><strong>${escapeHtml(productLines).replace(/\n/g, "<br />")}</strong></p><p><a href="${reorderUrl}">Open quick order</a></p>`
+    : `<p>Hi ${businessName},</p><p>Your fast-moving items may be running low.</p><p>Suggested reorder: <strong>${escapeHtml(products)}</strong></p><p><a href="${reorderUrl}">Open quick order</a></p>`;
   return { subject, text, html };
 }
 

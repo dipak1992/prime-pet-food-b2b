@@ -1,10 +1,52 @@
 import { NextResponse } from "next/server";
+import OpenAI from "openai";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 import { Resend } from "resend";
 
 const STEP_DELAYS = [0, 3, 4, 3, 7];
 const MAX_STEP = STEP_DELAYS.length;
+const DEFAULT_REORDER_ROLLOUT_LIMIT = 5;
+const MAX_REORDER_ROLLOUT_LIMIT = 50;
+const REORDER_HISTORY_LIMIT = 6;
+
+const reorderCustomerInclude = {
+  user: { select: { email: true, name: true } },
+  orders: {
+    orderBy: { createdAt: "desc" },
+    take: REORDER_HISTORY_LIMIT,
+    include: {
+      items: {
+        select: {
+          productId: true,
+          productTitleSnapshot: true,
+          skuSnapshot: true,
+          quantity: true,
+          totalPrice: true,
+        },
+      },
+    },
+  },
+} satisfies Prisma.CustomerInclude;
+
+type ReorderCustomer = Prisma.CustomerGetPayload<{ include: typeof reorderCustomerInclude }>;
+
+type ProductRecommendation = {
+  title: string;
+  sku: string;
+  quantity: number;
+};
+
+type ReorderCandidate = {
+  customer: ReorderCustomer;
+  cadenceDays: number;
+  daysSinceLastOrder: number;
+  daysOverdue: number;
+  lastOrderNumber: string;
+  lastOrderDate: Date;
+  products: ProductRecommendation[];
+};
 
 function nextSendAtForStep(step: number): Date {
   const delay = STEP_DELAYS[step - 1] ?? 3;
@@ -19,6 +61,286 @@ function isAuthorized(request: Request) {
   return request.headers.get("authorization") === `Bearer ${secret}`;
 }
 
+function getReorderRolloutLimit() {
+  const raw = Number.parseInt(process.env.REORDER_REMINDER_ROLLOUT_LIMIT || "", 10);
+  if (!Number.isFinite(raw)) return DEFAULT_REORDER_ROLLOUT_LIMIT;
+  return Math.min(Math.max(raw, 0), MAX_REORDER_ROLLOUT_LIMIT);
+}
+
+function daysBetween(later: Date, earlier: Date) {
+  return (later.getTime() - earlier.getTime()) / (1000 * 60 * 60 * 24);
+}
+
+function calculateCadenceDays(orders: ReorderCustomer["orders"]) {
+  if (orders.length < 2) return null;
+
+  const intervals = orders
+    .slice(0, -1)
+    .map((order, index) => daysBetween(order.createdAt, orders[index + 1].createdAt))
+    .filter((interval) => interval > 0);
+
+  if (!intervals.length) return null;
+
+  const average = intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length;
+  return Math.round(Math.min(Math.max(average, 7), 180));
+}
+
+function getRecommendedProducts(orders: ReorderCustomer["orders"]): ProductRecommendation[] {
+  const productMap = new Map<
+    string,
+    { title: string; sku: string; totalQuantity: number; ordersSeen: number; latestQuantity: number; revenue: number }
+  >();
+
+  for (const order of orders.slice(0, 3)) {
+    for (const item of order.items) {
+      const existing = productMap.get(item.productId);
+      const quantity = item.quantity;
+      const revenue = Number(item.totalPrice);
+
+      if (existing) {
+        existing.totalQuantity += quantity;
+        existing.ordersSeen += 1;
+        existing.revenue += revenue;
+      } else {
+        productMap.set(item.productId, {
+          title: item.productTitleSnapshot,
+          sku: item.skuSnapshot || "",
+          totalQuantity: quantity,
+          ordersSeen: 1,
+          latestQuantity: quantity,
+          revenue,
+        });
+      }
+    }
+  }
+
+  return [...productMap.values()]
+    .sort((a, b) => b.ordersSeen - a.ordersSeen || b.revenue - a.revenue)
+    .slice(0, 3)
+    .map((item) => ({
+      title: item.title,
+      sku: item.sku,
+      quantity: Math.max(item.latestQuantity, Math.round(item.totalQuantity / item.ordersSeen)),
+    }));
+}
+
+function productLines(products: ProductRecommendation[]) {
+  return products
+    .map((product) => {
+      const sku = product.sku ? ` (${product.sku})` : "";
+      return `${product.quantity} x ${product.title}${sku}`;
+    })
+    .join("\n");
+}
+
+function parseLastSent(value: string) {
+  try {
+    const parsed = JSON.parse(value) as { sentAt?: string };
+    return parsed.sentAt ? new Date(parsed.sentAt) : null;
+  } catch {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+}
+
+async function buildAiReorderCopy(candidate: ReorderCandidate) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return null;
+
+  const openai = new OpenAI({ apiKey });
+  const products = productLines(candidate.products);
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You write concise B2B wholesale reorder emails for Prime Pet Food. Return only valid JSON with subject and bodyText.",
+        },
+        {
+          role: "user",
+          content: `Write a friendly reorder reminder for a wholesale buyer.
+
+Business: ${candidate.customer.businessName}
+Business type: ${candidate.customer.businessType}
+Last order: ${candidate.lastOrderNumber}
+Days since last order: ${candidate.daysSinceLastOrder}
+Typical reorder cadence: ${candidate.cadenceDays} days
+Suggested products and quantities:
+${products}
+
+Rules:
+- Subject must be 3-7 words.
+- Body must be under 120 words.
+- Mention that the reminder is based on their usual reorder timing.
+- Include the suggested products and quantities naturally.
+- Keep it practical and not pushy.
+- End with a simple prompt to reorder in the portal.`,
+        },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.7,
+      max_tokens: 500,
+    });
+
+    const result = JSON.parse(completion.choices[0].message.content || "{}") as {
+      subject?: unknown;
+      bodyText?: unknown;
+    };
+
+    if (typeof result.subject !== "string" || typeof result.bodyText !== "string") {
+      return null;
+    }
+
+    return {
+      subject: result.subject.slice(0, 120),
+      bodyText: result.bodyText.slice(0, 1200),
+    };
+  } catch (error) {
+    console.error("Failed to generate AI reorder email:", error);
+    return null;
+  }
+}
+
+function fallbackReorderCopy(candidate: ReorderCandidate) {
+  const products = productLines(candidate.products);
+  return {
+    subject: "Time to restock",
+    bodyText: `Hi ${candidate.customer.businessName},\n\nBased on your usual ${candidate.cadenceDays}-day reorder cycle, you may be ready to restock the items from your last orders:\n\n${products}\n\nYou can reorder from the wholesale portal when you are ready.`,
+  };
+}
+
+async function processReorderReminders() {
+  const rolloutLimit = getReorderRolloutLimit();
+  if (rolloutLimit === 0) {
+    return { skipped: true, reason: "REORDER_REMINDER_ROLLOUT_LIMIT is 0" };
+  }
+
+  const now = new Date();
+  const customers = await prisma.customer.findMany({
+    where: { accountStatus: "APPROVED", orders: { some: {} } },
+    include: reorderCustomerInclude,
+  });
+
+  const eligibleCandidates = customers
+    .map((customer): ReorderCandidate | null => {
+      const cadenceDays = calculateCadenceDays(customer.orders);
+      const lastOrder = customer.orders[0];
+      if (!cadenceDays || !lastOrder || !customer.user.email) return null;
+
+      const daysSinceLastOrder = Math.floor(daysBetween(now, lastOrder.createdAt));
+      const daysOverdue = daysSinceLastOrder - cadenceDays;
+      const products = getRecommendedProducts(customer.orders);
+
+      if (daysOverdue < 0 || !products.length) return null;
+
+      return {
+        customer,
+        cadenceDays,
+        daysSinceLastOrder,
+        daysOverdue,
+        lastOrderNumber: lastOrder.orderNumber,
+        lastOrderDate: lastOrder.createdAt,
+        products,
+      };
+    })
+    .filter((candidate): candidate is ReorderCandidate => Boolean(candidate));
+
+  const lastSentSettings = await prisma.setting.findMany({
+    where: {
+      key: {
+        in: eligibleCandidates.map((candidate) => `reorder-reminder:last-sent:${candidate.customer.id}`),
+      },
+    },
+  });
+  const lastSentByCustomerId = new Map(
+    lastSentSettings.map((setting) => [setting.key.replace("reorder-reminder:last-sent:", ""), parseLastSent(setting.value)])
+  );
+
+  const candidates = eligibleCandidates
+    .filter((candidate) => {
+      const lastSentAt = lastSentByCustomerId.get(candidate.customer.id);
+      return !lastSentAt || lastSentAt < candidate.lastOrderDate;
+    })
+    .sort((a, b) => b.daysOverdue - a.daysOverdue)
+    .slice(0, rolloutLimit);
+
+  let sent = 0;
+  let failed = 0;
+  let skipped = 0;
+  let aiGenerated = 0;
+  const results = [];
+
+  for (const candidate of candidates) {
+    const aiCopy = await buildAiReorderCopy(candidate);
+    const copy = aiCopy ?? fallbackReorderCopy(candidate);
+    if (aiCopy) aiGenerated++;
+
+    try {
+      const result = await sendEmail({
+        to: candidate.customer.user.email,
+        template: "reorder-reminder",
+        variables: {
+          businessName: candidate.customer.businessName,
+          lastOrderNumber: candidate.lastOrderNumber,
+          products: candidate.products.map((product) => product.title).join(", "),
+          productLines: productLines(candidate.products),
+          reorderUrl: `${process.env.NEXT_PUBLIC_APP_URL || ""}/quick-order`,
+          subject: copy.subject,
+          bodyText: copy.bodyText,
+        },
+      });
+
+      const emailSkipped = typeof result === "object" && result !== null && "skipped" in result;
+      if (!emailSkipped) {
+        await prisma.setting.upsert({
+          where: { key: `reorder-reminder:last-sent:${candidate.customer.id}` },
+          create: {
+            key: `reorder-reminder:last-sent:${candidate.customer.id}`,
+            value: JSON.stringify({ sentAt: now.toISOString(), lastOrderNumber: candidate.lastOrderNumber }),
+          },
+          update: {
+            value: JSON.stringify({ sentAt: now.toISOString(), lastOrderNumber: candidate.lastOrderNumber }),
+          },
+        });
+        sent++;
+      } else {
+        skipped++;
+      }
+
+      results.push({
+        customerId: candidate.customer.id,
+        email: candidate.customer.user.email,
+        cadenceDays: candidate.cadenceDays,
+        daysSinceLastOrder: candidate.daysSinceLastOrder,
+        products: candidate.products,
+        aiGenerated: Boolean(aiCopy),
+        skipped: emailSkipped,
+      });
+    } catch (error) {
+      failed++;
+      results.push({
+        customerId: candidate.customer.id,
+        email: candidate.customer.user.email,
+        error: error instanceof Error ? error.message : "Email failed",
+      });
+    }
+  }
+
+  return {
+    rolloutLimit,
+    eligible: eligibleCandidates.length,
+    processed: candidates.length,
+    sent,
+    skipped,
+    failed,
+    aiGenerated,
+    results,
+  };
+}
+
 export async function GET(request: Request) {
   if (!isAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -31,48 +353,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ skipped: true, reason: "Already processed today" });
   }
 
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - 30);
-
-  const latestOrders = await prisma.order.groupBy({
-    by: ["customerId"],
-    _max: { createdAt: true },
-  });
-
-  const dueCustomerIds = latestOrders
-    .filter((row) => row._max.createdAt && row._max.createdAt < cutoff)
-    .map((row) => row.customerId)
-    .slice(0, 50);
-
-  const customers = await prisma.customer.findMany({
-    where: { id: { in: dueCustomerIds }, accountStatus: "APPROVED" },
-    include: {
-      user: { select: { email: true } },
-      orders: {
-        orderBy: { createdAt: "desc" },
-        take: 1,
-        include: { items: { take: 3 } },
-      },
-    },
-  });
-
-  const results = await Promise.all(
-    customers.map((customer) => {
-      const lastOrder = customer.orders[0];
-      return sendEmail({
-        to: customer.user.email,
-        template: "reorder-reminder",
-        variables: {
-          businessName: customer.businessName,
-          lastOrderNumber: lastOrder?.orderNumber || "",
-          products:
-            lastOrder?.items.map((item) => item.productTitleSnapshot).join(", ") ||
-            "your previous best sellers",
-          reorderUrl: `${process.env.NEXT_PUBLIC_APP_URL || ""}/quick-order`,
-        },
-      }).catch((error) => ({ error: error instanceof Error ? error.message : "Email failed" }));
-    })
-  );
+  const reorderReminders = await processReorderReminders();
 
   await prisma.setting.upsert({
     where: { key: settingKey },
@@ -83,8 +364,7 @@ export async function GET(request: Request) {
   const leadAutomation = await processLeadFollowUps();
 
   return NextResponse.json({
-    processed: customers.length,
-    results,
+    reorderReminders,
     leadAutomation,
   });
 }
