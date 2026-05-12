@@ -73,7 +73,9 @@ export async function PATCH(
       data: { orderId: id, status, note: `Status updated to ${status}` },
     });
 
-    if (currentOrder.customer.user?.email) {
+    // Only send email notifications for meaningful status changes
+    const notifiableStatuses = ["CONFIRMED", "SHIPPED", "DELIVERED"];
+    if (notifiableStatuses.includes(status) && currentOrder.customer.user?.email) {
       try {
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
         await sendEmail({

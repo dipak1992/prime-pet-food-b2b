@@ -482,3 +482,102 @@ model Setting {
   value     String
   updatedAt DateTime @updatedAt
 }
+
+// ─── AI MULTI-AGENT SYSTEM ───────────────────────────────────────────────────
+
+model AiRun {
+  id              String             @id @default(uuid())
+  agentId         String
+  status          String             @default("running") // running, completed, failed, skipped
+  triggeredBy     String             @default("system") // system, admin, cron, manual
+  startedAt       DateTime           @default(now())
+  completedAt     DateTime?
+  error           String?
+  result          Json?
+  metadata        Json?
+  tokensUsed      Int                @default(0)
+  createdAt       DateTime           @default(now())
+  recommendations AiRecommendation[]
+
+  @@index([agentId])
+  @@index([status])
+  @@index([startedAt])
+}
+
+model AiRecommendation {
+  id          String   @id @default(uuid())
+  aiRunId     String
+  agentId     String
+  type        String   // lead_found, qualification, outreach_draft, follow_up, reorder, churn_risk
+  title       String
+  description String
+  priority    String   @default("medium") // low, medium, high, critical
+  status      String   @default("pending") // pending, approved, rejected, actioned
+  actionUrl   String?
+  metadata    Json?
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  aiRun       AiRun    @relation(fields: [aiRunId], references: [id], onDelete: Cascade)
+
+  @@index([agentId])
+  @@index([status])
+  @@index([priority])
+}
+
+model FollowUpTask {
+  id            String    @id @default(uuid())
+  leadId        String?
+  customerId    String?
+  type          String    // email, call, check_in, reorder_reminder
+  status        String    @default("pending") // pending, approved, sent, skipped, cancelled
+  scheduledFor  DateTime
+  subject       String?
+  draftContent  String?
+  finalContent  String?
+  approvedBy    String?
+  approvedAt    DateTime?
+  sentAt        DateTime?
+  metadata      Json?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([status])
+  @@index([scheduledFor])
+  @@index([leadId])
+  @@index([customerId])
+}
+
+model ReorderPrediction {
+  id                  String   @id @default(uuid())
+  customerId          String
+  predictedDate       DateTime
+  confidence          Float    @default(0.5)
+  reasoning           String?
+  suggestedProducts   Json?    // array of product IDs/names
+  estimatedOrderValue Float?
+  status              String   @default("pending") // pending, notified, ordered, dismissed
+  notifiedAt          DateTime?
+  orderedAt           DateTime?
+  aiRunId             String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([predictedDate])
+  @@index([status])
+}
+
+model AiAgentConfig {
+  id          String   @id @default(uuid())
+  agentId     String   @unique
+  name        String
+  description String?
+  enabled     Boolean  @default(false)
+  schedule    String?  // cron expression
+  config      Json?    // agent-specific configuration
+  lastRunAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
