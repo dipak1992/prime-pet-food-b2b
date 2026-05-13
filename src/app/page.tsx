@@ -1,9 +1,18 @@
 import Link from "next/link";
 import Image from "next/image";
+import { Lock } from "lucide-react";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_10%_10%,#f9f2df_0%,#f8f7f4_45%,#eef6f3_100%)]">
+      <Link
+        href="/admin/login"
+        aria-label="Admin login"
+        className="fixed right-4 top-4 z-50 rounded-full border border-[#1d4b43]/10 bg-white/40 p-2 text-[#1d4b43]/20 shadow-sm backdrop-blur-sm transition hover:border-[#1d4b43]/20 hover:bg-white hover:text-[#1d4b43] focus:outline-none focus:ring-2 focus:ring-[#1d4b43]/30 focus:text-[#1d4b43]"
+      >
+        <Lock className="h-4 w-4" />
+      </Link>
+
       <main className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-6 py-16">
         <Image
           src="/logoedited.jpg"
