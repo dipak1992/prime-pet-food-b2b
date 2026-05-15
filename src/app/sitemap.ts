@@ -4,6 +4,7 @@ import { retailerGuides } from "@/content/seo/retailerGuides";
 import { comparisonPages } from "@/content/seo/comparisonPages";
 import { distributorPages } from "@/content/seo/distributorPages";
 import { stateData } from "@/content/seo/locationPages";
+import { blogArticles } from "@/content/seo/blogArticles";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://wholesale.theprimepetfood.com";
@@ -25,6 +26,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/catalog`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     { url: `${BASE_URL}/dog-treat-profit-calculator`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/wholesale/locations`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE_URL}/resources`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
   ];
 
   // Wholesale intent pages
@@ -78,6 +80,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       }))
   );
 
+  // Blog article pages
+  const blogPages: MetadataRoute.Sitemap = blogArticles.map((article) => ({
+    url: `${BASE_URL}/resources/${article.slug}`,
+    lastModified: article.publishedAt,
+    changeFrequency: "monthly" as const,
+    priority: 0.75,
+  }));
+
   return [
     ...staticPages,
     ...intentPages,
@@ -86,5 +96,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...distPages,
     ...statePages,
     ...cityPages,
+    ...blogPages,
   ];
 }

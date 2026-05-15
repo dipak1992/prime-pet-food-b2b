@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { getFeaturedArticles, formatArticleDate, categoryColors } from "@/content/seo/blogArticles";
 
 export const metadata = {
   title: "Wholesale Program | Prime Pet Food",
@@ -23,9 +24,12 @@ const economics = [
   ["Reorder speed", "Approved buyers can reorder from order history and keep fast-moving chews in stock."],
 ];
 
+const featuredArticles = getFeaturedArticles(3);
+
 export default function WholesalePage() {
   return (
     <main className="min-h-screen bg-[#f8f7f4] text-[#111827]">
+      {/* Hero */}
       <section className="mx-auto grid max-w-6xl gap-10 px-6 py-12 lg:grid-cols-[1.1fr_0.9fr] lg:py-16">
         <div>
           <Link href="/" className="text-sm font-semibold text-[#1d4b43]">
@@ -86,6 +90,7 @@ export default function WholesalePage() {
         </div>
       </section>
 
+      {/* Who this is for */}
       <section className="border-y border-[#e7e4dc] bg-white">
         <div className="mx-auto grid max-w-6xl gap-8 px-6 py-10 lg:grid-cols-3">
           <div>
@@ -104,6 +109,7 @@ export default function WholesalePage() {
         </div>
       </section>
 
+      {/* Economics + How it works */}
       <section className="mx-auto max-w-6xl px-6 py-12">
         <div className="grid gap-4 md:grid-cols-4">
           {economics.map(([title, description]) => (
@@ -135,6 +141,126 @@ export default function WholesalePage() {
           >
             Start wholesale application
           </Link>
+        </div>
+      </section>
+
+      {/* Quick Links to SEO pages */}
+      <section className="border-t border-[#e7e4dc] bg-white py-10">
+        <div className="mx-auto max-w-6xl px-6">
+          <h2 className="mb-5 text-xl font-semibold text-[#111827]">Explore the wholesale program</h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { label: "Wholesale Yak Cheese Dog Chews", href: "/wholesale-yak-cheese-dog-chews", desc: "Protected pricing, MOQ, and case-pack ordering" },
+              { label: "Bulk Yak Cheese Dog Chews", href: "/bulk-yak-cheese-dog-chews", desc: "Volume pricing for distributors and high-volume buyers" },
+              { label: "Distributor Program", href: "/distributor-program", desc: "Partner with us to distribute in your region" },
+              { label: "Private Label Yak Chews", href: "/private-label-yak-chews", desc: "Launch your own branded yak chew line" },
+              { label: "Wholesale Dog Chews for Pet Stores", href: "/wholesale-dog-chews-for-pet-stores", desc: "40–60% gross margin for independent pet stores" },
+              { label: "Yak Chews vs Rawhide", href: "/yak-chews-vs-rawhide-for-retailers", desc: "Side-by-side comparison for retail buyers" },
+            ].map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="group rounded-xl border border-[#e7e4dc] bg-[#fcfbf9] p-4 hover:border-[#1d4b43]/30 hover:bg-[#eef6f3]"
+              >
+                <p className="text-sm font-semibold text-[#111827] group-hover:text-[#1d4b43]">
+                  {item.label} →
+                </p>
+                <p className="mt-1 text-xs text-[#6b7280]">{item.desc}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Blog / Resources Section */}
+      <section className="border-t border-[#e7e4dc] bg-[#f8f7f4] py-12">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#1d4b43]">
+                Retailer Resources
+              </p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[#111827]">
+                Guides &amp; articles for wholesale buyers
+              </h2>
+              <p className="mt-2 text-sm text-[#4b5563]">
+                Practical advice on margin, merchandising, and growing your dog treat section.
+              </p>
+            </div>
+            <Link
+              href="/resources"
+              className="hidden shrink-0 text-sm font-semibold text-[#1d4b43] hover:underline sm:block"
+            >
+              View all articles →
+            </Link>
+          </div>
+
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {featuredArticles.map((article) => (
+              <article
+                key={article.slug}
+                className="group flex flex-col rounded-2xl border border-[#e7e4dc] bg-white p-5 shadow-sm hover:shadow-md"
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${categoryColors[article.category]}`}
+                  >
+                    {article.categoryLabel}
+                  </span>
+                  <span className="text-xs text-[#9ca3af]">{article.readTime}</span>
+                </div>
+                <h3 className="mt-3 flex-1 text-sm font-semibold leading-snug text-[#111827] group-hover:text-[#1d4b43]">
+                  <Link href={`/resources/${article.slug}`}>{article.h1}</Link>
+                </h3>
+                <p className="mt-2 text-xs leading-5 text-[#6b7280] line-clamp-2">{article.excerpt}</p>
+                <div className="mt-4 flex items-center justify-between">
+                  <span className="text-xs text-[#9ca3af]">{formatArticleDate(article.publishedAt)}</span>
+                  <Link
+                    href={`/resources/${article.slug}`}
+                    className="text-xs font-semibold text-[#1d4b43] hover:underline"
+                  >
+                    Read →
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="mt-6 sm:hidden">
+            <Link
+              href="/resources"
+              className="inline-flex items-center text-sm font-semibold text-[#1d4b43] hover:underline"
+            >
+              View all articles →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Profit Calculator CTA */}
+      <section className="border-t border-[#e7e4dc] bg-white py-10">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="rounded-2xl border border-[#1d4b43]/20 bg-[#eef6f3] p-6 sm:flex sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#1d4b43]">
+                Free Tool
+              </p>
+              <h2 className="mt-1 text-xl font-semibold text-[#111827]">
+                Dog Treat Profit Calculator
+              </h2>
+              <p className="mt-2 text-sm text-[#4b5563]">
+                See your exact gross margin on yak chews before you place a wholesale order.
+              </p>
+            </div>
+            <div className="mt-4 shrink-0 sm:mt-0 sm:ml-6">
+              <Link
+                href="/dog-treat-profit-calculator"
+                className="inline-flex items-center justify-center rounded-xl bg-[#1d4b43] px-5 py-3 text-sm font-semibold text-white hover:bg-[#163d36]"
+              >
+                Calculate your margin →
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
     </main>
