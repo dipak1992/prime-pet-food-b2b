@@ -45,7 +45,7 @@ export default function WholesaleYakCheeseDogChewsPage() {
         />
         <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#1d4b43]">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#ea580c]">
               B2B Wholesale Program
             </p>
             <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
@@ -58,7 +58,7 @@ export default function WholesaleYakCheeseDogChewsPage() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href={page.cta.primary.href}
-                className="inline-flex items-center justify-center rounded-xl bg-[#1d4b43] px-5 py-3 text-sm font-semibold text-white hover:bg-[#163d36]"
+                className="inline-flex items-center justify-center rounded-xl bg-[#ea580c] px-5 py-3 text-sm font-semibold text-white hover:bg-[#c2410c]"
               >
                 {page.cta.primary.label}
               </Link>

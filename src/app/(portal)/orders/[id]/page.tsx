@@ -51,7 +51,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       <div className="flex items-center gap-2">
         <Link
           href="/orders"
-          className="flex items-center gap-1 text-sm text-[#6b7280] hover:text-[#1d4b43]"
+          className="flex items-center gap-1 text-sm text-[#6b7280] hover:text-[#ea580c]"
         >
           <ChevronLeft className="size-4" />
           Back to Orders
@@ -150,7 +150,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                   href={order.trackingUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-[#1d4b43] hover:underline"
+                  className="inline-flex items-center gap-1 text-[#ea580c] hover:underline"
                 >
                   Track shipment <ExternalLink className="size-3" />
                 </a>
@@ -181,7 +181,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                   href={order.invoice.pdfUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 rounded-lg border border-[#1d4b43] px-3 py-1.5 text-xs font-medium text-[#1d4b43] hover:bg-[#1d4b43]/5"
+                  className="flex items-center gap-1 rounded-lg border border-[#ea580c] px-3 py-1.5 text-xs font-medium text-[#ea580c] hover:bg-[#ea580c]/5"
                 >
                   Download PDF <ExternalLink className="size-3" />
                 </a>

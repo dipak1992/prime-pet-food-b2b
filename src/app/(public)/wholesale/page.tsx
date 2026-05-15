@@ -32,7 +32,7 @@ export default function WholesalePage() {
       {/* Hero */}
       <section className="mx-auto grid max-w-6xl gap-10 px-6 py-12 lg:grid-cols-[1.1fr_0.9fr] lg:py-16">
         <div>
-          <Link href="/" className="text-sm font-semibold text-[#1d4b43]">
+          <Link href="/" className="text-sm font-semibold text-[#ea580c]">
             Prime Pet Food
           </Link>
           <h1 className="mt-5 max-w-3xl text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
@@ -45,7 +45,7 @@ export default function WholesalePage() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/apply"
-              className="inline-flex items-center justify-center rounded-xl bg-[#1d4b43] px-5 py-3 text-sm font-semibold text-white hover:bg-[#163d36]"
+              className="inline-flex items-center justify-center rounded-xl bg-[#ea580c] px-5 py-3 text-sm font-semibold text-white hover:bg-[#c2410c]"
             >
               Apply for wholesale pricing
             </Link>
@@ -114,13 +114,13 @@ export default function WholesalePage() {
         <div className="grid gap-4 md:grid-cols-4">
           {economics.map(([title, description]) => (
             <article key={title} className="rounded-xl border border-[#e7e4dc] bg-white p-5 shadow-sm">
-              <h3 className="text-sm font-semibold text-[#1d4b43]">{title}</h3>
+              <h3 className="text-sm font-semibold text-[#ea580c]">{title}</h3>
               <p className="mt-2 text-sm leading-6 text-[#4b5563]">{description}</p>
             </article>
           ))}
         </div>
 
-        <div className="mt-10 rounded-2xl border border-[#1d4b43]/20 bg-[#eef6f3] p-6">
+        <div className="mt-10 rounded-2xl border border-[#ea580c]/20 bg-[#fff7ed] p-6">
           <h2 className="text-xl font-semibold">How ordering works</h2>
           <div className="mt-5 grid gap-3 md:grid-cols-4">
             {[
@@ -130,14 +130,14 @@ export default function WholesalePage() {
               ["4", "Receive invoice and fulfillment updates"],
             ].map(([step, label]) => (
               <div key={step} className="rounded-xl bg-white p-4">
-                <p className="text-xs font-bold text-[#1d4b43]">Step {step}</p>
+                <p className="text-xs font-bold text-[#ea580c]">Step {step}</p>
                 <p className="mt-2 text-sm font-medium text-[#111827]">{label}</p>
               </div>
             ))}
           </div>
           <Link
             href="/apply"
-            className="mt-6 inline-flex rounded-xl bg-[#1d4b43] px-5 py-3 text-sm font-semibold text-white hover:bg-[#163d36]"
+            className="mt-6 inline-flex rounded-xl bg-[#ea580c] px-5 py-3 text-sm font-semibold text-white hover:bg-[#c2410c]"
           >
             Start wholesale application
           </Link>
@@ -160,9 +160,9 @@ export default function WholesalePage() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="group rounded-xl border border-[#e7e4dc] bg-[#fcfbf9] p-4 hover:border-[#1d4b43]/30 hover:bg-[#eef6f3]"
+                className="group rounded-xl border border-[#e7e4dc] bg-[#fcfbf9] p-4 hover:border-[#ea580c]/30 hover:bg-[#fff7ed]"
               >
-                <p className="text-sm font-semibold text-[#111827] group-hover:text-[#1d4b43]">
+                <p className="text-sm font-semibold text-[#111827] group-hover:text-[#ea580c]">
                   {item.label} →
                 </p>
                 <p className="mt-1 text-xs text-[#6b7280]">{item.desc}</p>
@@ -177,7 +177,7 @@ export default function WholesalePage() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#1d4b43]">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#ea580c]">
                 Retailer Resources
               </p>
               <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[#111827]">
@@ -189,7 +189,7 @@ export default function WholesalePage() {
             </div>
             <Link
               href="/resources"
-              className="hidden shrink-0 text-sm font-semibold text-[#1d4b43] hover:underline sm:block"
+              className="hidden shrink-0 text-sm font-semibold text-[#ea580c] hover:underline sm:block"
             >
               View all articles →
             </Link>
@@ -209,7 +209,7 @@ export default function WholesalePage() {
                   </span>
                   <span className="text-xs text-[#9ca3af]">{article.readTime}</span>
                 </div>
-                <h3 className="mt-3 flex-1 text-sm font-semibold leading-snug text-[#111827] group-hover:text-[#1d4b43]">
+                <h3 className="mt-3 flex-1 text-sm font-semibold leading-snug text-[#111827] group-hover:text-[#ea580c]">
                   <Link href={`/resources/${article.slug}`}>{article.h1}</Link>
                 </h3>
                 <p className="mt-2 text-xs leading-5 text-[#6b7280] line-clamp-2">{article.excerpt}</p>
@@ -217,7 +217,7 @@ export default function WholesalePage() {
                   <span className="text-xs text-[#9ca3af]">{formatArticleDate(article.publishedAt)}</span>
                   <Link
                     href={`/resources/${article.slug}`}
-                    className="text-xs font-semibold text-[#1d4b43] hover:underline"
+                    className="text-xs font-semibold text-[#ea580c] hover:underline"
                   >
                     Read →
                   </Link>
@@ -229,7 +229,7 @@ export default function WholesalePage() {
           <div className="mt-6 sm:hidden">
             <Link
               href="/resources"
-              className="inline-flex items-center text-sm font-semibold text-[#1d4b43] hover:underline"
+              className="inline-flex items-center text-sm font-semibold text-[#ea580c] hover:underline"
             >
               View all articles →
             </Link>
@@ -240,9 +240,9 @@ export default function WholesalePage() {
       {/* Profit Calculator CTA */}
       <section className="border-t border-[#e7e4dc] bg-white py-10">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="rounded-2xl border border-[#1d4b43]/20 bg-[#eef6f3] p-6 sm:flex sm:items-center sm:justify-between">
+          <div className="rounded-2xl border border-[#ea580c]/20 bg-[#fff7ed] p-6 sm:flex sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#1d4b43]">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#ea580c]">
                 Free Tool
               </p>
               <h2 className="mt-1 text-xl font-semibold text-[#111827]">
@@ -255,7 +255,7 @@ export default function WholesalePage() {
             <div className="mt-4 shrink-0 sm:mt-0 sm:ml-6">
               <Link
                 href="/dog-treat-profit-calculator"
-                className="inline-flex items-center justify-center rounded-xl bg-[#1d4b43] px-5 py-3 text-sm font-semibold text-white hover:bg-[#163d36]"
+                className="inline-flex items-center justify-center rounded-xl bg-[#ea580c] px-5 py-3 text-sm font-semibold text-white hover:bg-[#c2410c]"
               >
                 Calculate your margin →
               </Link>

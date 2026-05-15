@@ -35,7 +35,7 @@ export default function ComparisonTable({
               <td className="px-4 py-3 text-[#374151]">{row.competitor}</td>
               <td className="px-4 py-3 text-center">
                 {row.winner === "yak" ? (
-                  <span className="inline-flex items-center rounded-full bg-[#eef6f3] px-2 py-0.5 text-xs font-semibold text-[#1d4b43]">
+                  <span className="inline-flex items-center rounded-full bg-[#fff7ed] px-2 py-0.5 text-xs font-semibold text-[#1d4b43]">
                     Yak Chews ✓
                   </span>
                 ) : row.winner === "competitor" ? (

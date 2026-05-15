@@ -128,7 +128,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
           <div className="space-y-3 pb-4 border-b border-[#e7e4dc]">
             <div>
               <p className="text-xs text-[#4b5563] uppercase font-semibold mb-1">Your Wholesale Price</p>
-              <p className="text-2xl font-bold text-[#1d4b43]">
+              <p className="text-2xl font-bold text-[#ea580c]">
                 ${product.wholesalePrice.toFixed(2)}
                 <span className="text-xs text-[#4b5563] font-normal ml-2">per unit</span>
               </p>
@@ -189,7 +189,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             <div className="flex gap-3 pt-2">
               <button
                 onClick={handleAddToCart}
-                className="flex-1 rounded-lg bg-[#1d4b43] px-4 py-3 text-sm font-semibold text-white hover:bg-[#163836]"
+                className="flex-1 rounded-lg bg-[#ea580c] px-4 py-3 text-sm font-semibold text-white hover:bg-[#c2410c]"
               >
                 Add to Cart
               </button>

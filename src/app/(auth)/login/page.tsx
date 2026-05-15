@@ -56,7 +56,7 @@ export default function LoginPage() {
             className="h-20 w-20 object-contain"
           />
         </div>
-        <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#1d4b43]">Prime Pet Food Wholesale</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#ea580c]">Prime Pet Food Wholesale</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#111827]">Log in</h1>
         <p className="mt-2 text-sm text-[#6b7280]">
           Use your approved wholesale account email and password.
@@ -106,7 +106,7 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
-            className="text-left text-xs font-medium text-[#1d4b43] hover:underline"
+            className="text-left text-xs font-medium text-[#ea580c] hover:underline"
           >
             {showPassword ? "Hide password" : "Show password"}
           </button>
@@ -114,13 +114,13 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="inline-flex w-full items-center justify-center rounded-xl bg-[#1d4b43] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+            className="inline-flex w-full items-center justify-center rounded-xl bg-[#ea580c] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
           >
             {isLoading ? "Signing in..." : "Sign in"}
           </button>
 
           <div className="text-center">
-            <Link href="/forgot-password" className="text-sm text-[#1d4b43] hover:underline">
+            <Link href="/forgot-password" className="text-sm text-[#ea580c] hover:underline">
               Forgot password?
             </Link>
           </div>

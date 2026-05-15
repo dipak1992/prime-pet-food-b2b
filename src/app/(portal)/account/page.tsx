@@ -216,7 +216,7 @@ export default function AccountPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#1d4b43] border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#ea580c] border-t-transparent" />
       </div>
     );
   }
@@ -235,7 +235,7 @@ export default function AccountPage() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm outline-none focus:border-[#1d4b43] focus:ring-1 focus:ring-[#1d4b43]"
+              className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm outline-none focus:border-[#ea580c] focus:ring-1 focus:ring-[#1d4b43]"
               placeholder="Your name"
             />
           </div>
@@ -255,7 +255,7 @@ export default function AccountPage() {
                 type="text"
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
-                className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm outline-none focus:border-[#1d4b43] focus:ring-1 focus:ring-[#1d4b43]"
+                className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm outline-none focus:border-[#ea580c] focus:ring-1 focus:ring-[#1d4b43]"
                 placeholder="Your business name"
               />
             </div>
@@ -267,7 +267,7 @@ export default function AccountPage() {
                   <p className="text-xs font-medium uppercase text-[#6b7280]">Wholesale loyalty tier</p>
                   <p className="mt-1 text-lg font-bold text-[#111827]">{user.customer.tier}</p>
                 </div>
-                <span className="rounded-full bg-[#1d4b43]/10 px-2.5 py-0.5 text-xs font-semibold text-[#1d4b43]">
+                <span className="rounded-full bg-[#ea580c]/10 px-2.5 py-0.5 text-xs font-semibold text-[#ea580c]">
                   {user.customer.metrics?.healthLabel ?? "Active"}
                 </span>
               </div>
@@ -281,7 +281,7 @@ export default function AccountPage() {
                     <div
                       key={tier.tier}
                       className={`rounded-lg border p-3 ${
-                        active ? "border-[#1d4b43] bg-white" : "border-[#e7e4dc] bg-white/70"
+                        active ? "border-[#ea580c] bg-white" : "border-[#e7e4dc] bg-white/70"
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
@@ -298,7 +298,7 @@ export default function AccountPage() {
           <button
             onClick={saveProfile}
             disabled={savingProfile}
-            className="rounded-lg bg-[#1d4b43] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+            className="rounded-lg bg-[#ea580c] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
           >
             {savingProfile ? "Saving…" : "Save Profile"}
           </button>
@@ -315,7 +315,7 @@ export default function AccountPage() {
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm outline-none focus:border-[#1d4b43] focus:ring-1 focus:ring-[#1d4b43]"
+              className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm outline-none focus:border-[#ea580c] focus:ring-1 focus:ring-[#1d4b43]"
               placeholder="Min. 8 characters"
             />
           </div>
@@ -325,14 +325,14 @@ export default function AccountPage() {
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm outline-none focus:border-[#1d4b43] focus:ring-1 focus:ring-[#1d4b43]"
+              className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm outline-none focus:border-[#ea580c] focus:ring-1 focus:ring-[#1d4b43]"
               placeholder="Repeat new password"
             />
           </div>
           <button
             onClick={savePassword}
             disabled={savingPassword || !newPassword}
-            className="rounded-lg bg-[#1d4b43] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+            className="rounded-lg bg-[#ea580c] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
           >
             {savingPassword ? "Updating…" : "Update Password"}
           </button>
@@ -345,7 +345,7 @@ export default function AccountPage() {
           <h2 className="text-base font-semibold text-[#111827]">Saved Addresses</h2>
           <button
             onClick={openAddAddress}
-            className="flex items-center gap-1.5 rounded-lg border border-[#1d4b43] px-3 py-1.5 text-xs font-medium text-[#1d4b43] hover:bg-[#1d4b43]/5"
+            className="flex items-center gap-1.5 rounded-lg border border-[#ea580c] px-3 py-1.5 text-xs font-medium text-[#ea580c] hover:bg-[#ea580c]/5"
           >
             <Plus className="size-3.5" />
             Add Address
@@ -367,7 +367,7 @@ export default function AccountPage() {
                   <span className="text-xs font-semibold uppercase text-[#6b7280]">{addr.type}</span>
                   {addr.label && <span className="text-xs text-[#9ca3af]">· {addr.label}</span>}
                   {addr.isDefault && (
-                    <span className="flex items-center gap-0.5 text-[11px] font-medium text-[#1d4b43]">
+                    <span className="flex items-center gap-0.5 text-[11px] font-medium text-[#ea580c]">
                       <Star className="size-3 fill-[#1d4b43]" /> Default
                     </span>
                   )}
@@ -401,7 +401,7 @@ export default function AccountPage() {
 
         {/* Address form */}
         {showAddressForm && (
-          <div className="mt-4 rounded-lg border border-[#1d4b43]/30 bg-[#f9f8f5] p-4">
+          <div className="mt-4 rounded-lg border border-[#ea580c]/30 bg-[#f9f8f5] p-4">
             <h3 className="mb-3 text-sm font-semibold text-[#111827]">
               {editingAddress ? "Edit Address" : "New Address"}
             </h3>
@@ -412,7 +412,7 @@ export default function AccountPage() {
                   type="text"
                   value={addressForm.line1}
                   onChange={(e) => setAddressForm((f) => ({ ...f, line1: e.target.value }))}
-                  className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm outline-none focus:border-[#1d4b43] focus:ring-1 focus:ring-[#1d4b43]"
+                  className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm outline-none focus:border-[#ea580c] focus:ring-1 focus:ring-[#1d4b43]"
                   placeholder="123 Main St"
                 />
               </div>
@@ -422,7 +422,7 @@ export default function AccountPage() {
                   type="text"
                   value={addressForm.line2}
                   onChange={(e) => setAddressForm((f) => ({ ...f, line2: e.target.value }))}
-                  className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm outline-none focus:border-[#1d4b43] focus:ring-1 focus:ring-[#1d4b43]"
+                  className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm outline-none focus:border-[#ea580c] focus:ring-1 focus:ring-[#1d4b43]"
                   placeholder="Suite, unit, etc."
                 />
               </div>
@@ -432,7 +432,7 @@ export default function AccountPage() {
                   type="text"
                   value={addressForm.city}
                   onChange={(e) => setAddressForm((f) => ({ ...f, city: e.target.value }))}
-                  className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm outline-none focus:border-[#1d4b43] focus:ring-1 focus:ring-[#1d4b43]"
+                  className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm outline-none focus:border-[#ea580c] focus:ring-1 focus:ring-[#1d4b43]"
                 />
               </div>
               <div>
@@ -441,7 +441,7 @@ export default function AccountPage() {
                   type="text"
                   value={addressForm.state}
                   onChange={(e) => setAddressForm((f) => ({ ...f, state: e.target.value }))}
-                  className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm outline-none focus:border-[#1d4b43] focus:ring-1 focus:ring-[#1d4b43]"
+                  className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm outline-none focus:border-[#ea580c] focus:ring-1 focus:ring-[#1d4b43]"
                   placeholder="CA"
                   maxLength={2}
                 />
@@ -452,7 +452,7 @@ export default function AccountPage() {
                   type="text"
                   value={addressForm.zip}
                   onChange={(e) => setAddressForm((f) => ({ ...f, zip: e.target.value }))}
-                  className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm outline-none focus:border-[#1d4b43] focus:ring-1 focus:ring-[#1d4b43]"
+                  className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm outline-none focus:border-[#ea580c] focus:ring-1 focus:ring-[#1d4b43]"
                   placeholder="90001"
                 />
               </div>
@@ -462,7 +462,7 @@ export default function AccountPage() {
                   type="text"
                   value={addressForm.label}
                   onChange={(e) => setAddressForm((f) => ({ ...f, label: e.target.value }))}
-                  className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm outline-none focus:border-[#1d4b43] focus:ring-1 focus:ring-[#1d4b43]"
+                  className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm outline-none focus:border-[#ea580c] focus:ring-1 focus:ring-[#1d4b43]"
                   placeholder="Home, Warehouse…"
                 />
               </div>
@@ -483,7 +483,7 @@ export default function AccountPage() {
               <button
                 onClick={saveAddress}
                 disabled={savingAddress}
-                className="rounded-lg bg-[#1d4b43] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                className="rounded-lg bg-[#ea580c] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
               >
                 {savingAddress ? "Saving…" : editingAddress ? "Update" : "Add Address"}
               </button>

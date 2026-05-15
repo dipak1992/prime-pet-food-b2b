@@ -45,7 +45,7 @@ function ArticleCard({ article }: { article: BlogArticle }) {
           </span>
           <span className="text-xs text-[#9ca3af]">{article.readTime}</span>
         </div>
-        <h2 className="mt-3 text-base font-semibold leading-snug text-[#111827] group-hover:text-[#1d4b43]">
+        <h2 className="mt-3 text-base font-semibold leading-snug text-[#111827] group-hover:text-[#ea580c]">
           <Link href={`/resources/${article.slug}`}>{article.h1}</Link>
         </h2>
         <p className="mt-2 flex-1 text-sm leading-6 text-[#4b5563]">{article.excerpt}</p>
@@ -53,7 +53,7 @@ function ArticleCard({ article }: { article: BlogArticle }) {
           <span className="text-xs text-[#9ca3af]">{formatArticleDate(article.publishedAt)}</span>
           <Link
             href={`/resources/${article.slug}`}
-            className="text-xs font-semibold text-[#1d4b43] hover:underline"
+            className="text-xs font-semibold text-[#ea580c] hover:underline"
           >
             Read article →
           </Link>
@@ -88,7 +88,7 @@ export default function ResourcesIndexPage() {
             { label: "Resources" },
           ]}
         />
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#1d4b43]">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#ea580c]">
           B2B Wholesale Resources
         </p>
         <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
@@ -116,21 +116,21 @@ export default function ResourcesIndexPage() {
                 >
                   {featured.categoryLabel}
                 </span>
-                <h2 className="mt-3 text-2xl font-semibold leading-snug text-[#111827] group-hover:text-[#1d4b43] sm:text-3xl">
+                <h2 className="mt-3 text-2xl font-semibold leading-snug text-[#111827] group-hover:text-[#ea580c] sm:text-3xl">
                   {featured.h1}
                 </h2>
                 <p className="mt-3 text-sm leading-7 text-[#4b5563]">{featured.excerpt}</p>
                 <div className="mt-4 flex items-center gap-4">
                   <span className="text-xs text-[#9ca3af]">{formatArticleDate(featured.publishedAt)}</span>
                   <span className="text-xs text-[#9ca3af]">{featured.readTime}</span>
-                  <span className="text-sm font-semibold text-[#1d4b43] group-hover:underline">
+                  <span className="text-sm font-semibold text-[#ea580c] group-hover:underline">
                     Read article →
                   </span>
                 </div>
               </div>
-              <div className="flex items-center justify-center rounded-2xl border border-[#e7e4dc] bg-[#eef6f3] p-8">
+              <div className="flex items-center justify-center rounded-2xl border border-[#e7e4dc] bg-[#fff7ed] p-8">
                 <div className="text-center">
-                  <p className="text-4xl font-bold text-[#1d4b43]">B2B</p>
+                  <p className="text-4xl font-bold text-[#ea580c]">B2B</p>
                   <p className="mt-2 text-sm font-medium text-[#374151]">Wholesale Guide</p>
                   <p className="mt-1 text-xs text-[#6b7280]">Prime Pet Food</p>
                 </div>

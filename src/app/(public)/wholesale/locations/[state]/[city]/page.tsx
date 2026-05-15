@@ -135,7 +135,7 @@ export default async function CityLocationPage({ params }: Props) {
             { label: city.name },
           ]}
         />
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#1d4b43]">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#ea580c]">
           Wholesale — {city.name}, {state.code}
         </p>
         <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
@@ -148,7 +148,7 @@ export default async function CityLocationPage({ params }: Props) {
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <Link
             href="/apply"
-            className="inline-flex items-center justify-center rounded-xl bg-[#1d4b43] px-5 py-3 text-sm font-semibold text-white hover:bg-[#163d36]"
+            className="inline-flex items-center justify-center rounded-xl bg-[#ea580c] px-5 py-3 text-sm font-semibold text-white hover:bg-[#c2410c]"
           >
             Apply for {city.name} wholesale pricing
           </Link>

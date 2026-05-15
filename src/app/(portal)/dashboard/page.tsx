@@ -91,7 +91,7 @@ export default async function DashboardPage() {
             <Link
               key={label}
               href={href}
-              className="rounded-xl border border-[#d6d3cc] bg-white px-4 py-3 text-left text-sm font-medium text-[#1f2937] hover:border-[#1d4b43] hover:bg-[#f9f8f5] transition-colors"
+              className="rounded-xl border border-[#d6d3cc] bg-white px-4 py-3 text-left text-sm font-medium text-[#1f2937] hover:border-[#ea580c] hover:bg-[#f9f8f5] transition-colors"
             >
               {label}
             </Link>
@@ -114,7 +114,7 @@ export default async function DashboardPage() {
           ) : (
             <div className="space-y-3">
               <p className="text-sm text-[#4b5563]">No previous order to reorder yet.</p>
-              <Link href="/quick-order" className="inline-flex rounded-lg bg-[#1d4b43] px-4 py-2 text-sm font-semibold text-white">
+              <Link href="/quick-order" className="inline-flex rounded-lg bg-[#ea580c] px-4 py-2 text-sm font-semibold text-white">
                 Start first order
               </Link>
             </div>
@@ -127,7 +127,7 @@ export default async function DashboardPage() {
               <p className="text-sm text-[#4b5563]">
                 {cart.items.length} SKU{cart.items.length === 1 ? "" : "s"} waiting in your cart.
               </p>
-              <Link href="/cart" className="inline-flex rounded-lg border border-[#1d4b43] px-4 py-2 text-sm font-semibold text-[#1d4b43]">
+              <Link href="/cart" className="inline-flex rounded-lg border border-[#ea580c] px-4 py-2 text-sm font-semibold text-[#ea580c]">
                 Review cart
               </Link>
             </div>
@@ -149,7 +149,7 @@ export default async function DashboardPage() {
                 {latestInvoice.status} · ${Number(latestInvoice.amount).toFixed(2)}
                 {latestInvoice.dueDate ? ` · Due ${new Date(latestInvoice.dueDate).toLocaleDateString()}` : ""}
               </p>
-              <Link href="/invoices" className="inline-flex rounded-lg border border-[#1d4b43] px-4 py-2 text-sm font-semibold text-[#1d4b43]">
+              <Link href="/invoices" className="inline-flex rounded-lg border border-[#ea580c] px-4 py-2 text-sm font-semibold text-[#ea580c]">
                 View invoices
               </Link>
             </div>
@@ -170,7 +170,7 @@ export default async function DashboardPage() {
             </div>
             <Link
               href={`/orders/${recentOrder.id}`}
-              className="rounded-lg border border-[#1d4b43] px-3 py-1.5 text-xs font-medium text-[#1d4b43] hover:bg-[#1d4b43]/5"
+              className="rounded-lg border border-[#ea580c] px-3 py-1.5 text-xs font-medium text-[#ea580c] hover:bg-[#ea580c]/5"
             >
               View
             </Link>

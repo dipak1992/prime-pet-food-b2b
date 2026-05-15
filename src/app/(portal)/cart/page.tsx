@@ -102,7 +102,7 @@ export default function CartPage() {
           <p className="text-sm text-[#4b5563] mb-4">Your cart is empty.</p>
           <Link
             href="/products"
-            className="inline-block rounded-lg bg-[#1d4b43] px-4 py-2 text-sm font-semibold text-white hover:bg-[#163836]"
+            className="inline-block rounded-lg bg-[#ea580c] px-4 py-2 text-sm font-semibold text-white hover:bg-[#c2410c]"
           >
             Continue Shopping
           </Link>
@@ -132,7 +132,7 @@ export default function CartPage() {
           </div>
           <div className="w-full bg-[#e7e4dc] rounded-full h-2">
             <div
-              className="bg-[#1d4b43] h-2 rounded-full transition-all"
+              className="bg-[#ea580c] h-2 rounded-full transition-all"
               style={{ width: `${Math.min(shippingProgress, 100)}%` }}
             />
           </div>
@@ -181,7 +181,7 @@ export default function CartPage() {
                   <button
                     onClick={() => updateQuantity(item.productId, item.quantity + item.casePack)}
                     disabled={updating}
-                    className="rounded px-2 py-1 text-xs font-semibold text-white bg-[#1d4b43] hover:bg-[#163836] disabled:opacity-50"
+                    className="rounded px-2 py-1 text-xs font-semibold text-white bg-[#ea580c] hover:bg-[#c2410c] disabled:opacity-50"
                   >
                     + Case
                   </button>
@@ -231,7 +231,7 @@ export default function CartPage() {
           </Link>
           <Link
             href="/checkout"
-            className="flex-1 rounded-lg bg-[#1d4b43] px-4 py-3 text-center text-sm font-semibold text-white hover:bg-[#163836]"
+            className="flex-1 rounded-lg bg-[#ea580c] px-4 py-3 text-center text-sm font-semibold text-white hover:bg-[#c2410c]"
           >
             Checkout
           </Link>

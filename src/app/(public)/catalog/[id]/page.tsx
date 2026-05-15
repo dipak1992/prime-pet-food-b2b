@@ -42,7 +42,7 @@ export default async function CatalogProductPage({
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
         <nav className="mb-6 flex items-center gap-2 text-sm text-[#9ca3af]">
-          <Link href="/catalog" className="hover:text-[#1d4b43]">Catalog</Link>
+          <Link href="/catalog" className="hover:text-[#ea580c]">Catalog</Link>
           <span>/</span>
           <span className="text-[#111827]">{product.title}</span>
         </nav>
@@ -66,7 +66,7 @@ export default async function CatalogProductPage({
               </div>
             )}
             {product.isBestSeller && (
-              <span className="absolute left-3 top-3 rounded-full bg-[#1d4b43] px-3 py-1 text-xs font-semibold text-white">
+              <span className="absolute left-3 top-3 rounded-full bg-[#ea580c] px-3 py-1 text-xs font-semibold text-white">
                 Best seller
               </span>
             )}
@@ -78,7 +78,7 @@ export default async function CatalogProductPage({
               <p className="text-xs font-medium text-[#9ca3af] uppercase tracking-wide">{product.sku}</p>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#111827]">{product.title}</h1>
               {product.category && (
-                <span className="mt-2 inline-block rounded-full bg-[#f0f7f5] px-3 py-0.5 text-xs font-medium text-[#1d4b43]">
+                <span className="mt-2 inline-block rounded-full bg-[#f0f7f5] px-3 py-0.5 text-xs font-medium text-[#ea580c]">
                   {product.category}
                 </span>
               )}
@@ -120,7 +120,7 @@ export default async function CatalogProductPage({
               {isApproved ? (
                 <Link
                   href={`/products/${product.id}`}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1d4b43] px-4 py-3 text-sm font-semibold text-white hover:bg-[#163d36]"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#ea580c] px-4 py-3 text-sm font-semibold text-white hover:bg-[#c2410c]"
                 >
                   View wholesale pricing & order
                 </Link>
@@ -140,7 +140,7 @@ export default async function CatalogProductPage({
             {!isApproved && (
               <p className="text-xs text-[#9ca3af]">
                 Already have an account?{" "}
-                <Link href="/login" className="underline hover:text-[#1d4b43]">
+                <Link href="/login" className="underline hover:text-[#ea580c]">
                   Log in
                 </Link>
               </p>

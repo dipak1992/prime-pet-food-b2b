@@ -89,7 +89,7 @@ export default function DogTreatProfitCalculatorPage() {
             { label: "Profit Calculator" },
           ]}
         />
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#1d4b43]">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#ea580c]">
           Free Tool for Pet Store Owners
         </p>
         <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
@@ -108,7 +108,7 @@ export default function DogTreatProfitCalculatorPage() {
             "Estimate monthly and annual gross profit",
           ].map((item) => (
             <li key={item} className="flex items-start gap-2 text-sm text-[#374151]">
-              <span className="mt-0.5 text-[#1d4b43]">✓</span>
+              <span className="mt-0.5 text-[#ea580c]">✓</span>
               {item}
             </li>
           ))}
@@ -174,7 +174,7 @@ export default function DogTreatProfitCalculatorPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full rounded-xl bg-[#1d4b43] px-5 py-3 text-sm font-semibold text-white hover:bg-[#163d36] disabled:opacity-60"
+                  className="w-full rounded-xl bg-[#ea580c] px-5 py-3 text-sm font-semibold text-white hover:bg-[#c2410c] disabled:opacity-60"
                 >
                   {submitting ? "Loading…" : "Access the free calculator →"}
                 </button>
@@ -186,8 +186,8 @@ export default function DogTreatProfitCalculatorPage() {
           ) : (
             /* Calculator */
             <div className="space-y-8">
-              <div className="rounded-2xl border border-[#e7e4dc] bg-[#eef6f3] p-4">
-                <p className="text-sm font-semibold text-[#1d4b43]">
+              <div className="rounded-2xl border border-[#e7e4dc] bg-[#fff7ed] p-4">
+                <p className="text-sm font-semibold text-[#ea580c]">
                   Calculator unlocked! Use the presets below or enter your own numbers.
                 </p>
               </div>
@@ -203,8 +203,8 @@ export default function DogTreatProfitCalculatorPage() {
                       onClick={() => applyPreset(i)}
                       className={`rounded-xl border px-3 py-1.5 text-xs font-medium transition-colors ${
                         selectedPreset === i
-                          ? "border-[#1d4b43] bg-[#1d4b43] text-white"
-                          : "border-[#e7e4dc] bg-white text-[#374151] hover:border-[#1d4b43]/40"
+                          ? "border-[#ea580c] bg-[#ea580c] text-white"
+                          : "border-[#e7e4dc] bg-white text-[#374151] hover:border-[#ea580c]/40"
                       }`}
                     >
                       {preset.label}
@@ -308,14 +308,14 @@ export default function DogTreatProfitCalculatorPage() {
                         key={label}
                         className={`flex items-center justify-between rounded-xl border px-4 py-3 ${
                           highlight
-                            ? "border-[#1d4b43]/20 bg-[#eef6f3]"
+                            ? "border-[#ea580c]/20 bg-[#fff7ed]"
                             : "border-[#e7e4dc] bg-[#fcfbf9]"
                         }`}
                       >
                         <span className="text-sm text-[#374151]">{label}</span>
                         <span
                           className={`text-sm font-bold ${
-                            highlight ? "text-[#1d4b43]" : "text-[#111827]"
+                            highlight ? "text-[#ea580c]" : "text-[#111827]"
                           }`}
                         >
                           {value}
@@ -325,8 +325,8 @@ export default function DogTreatProfitCalculatorPage() {
                   </div>
 
                   {results.grossMarginPercent >= 40 && (
-                    <div className="mt-4 rounded-xl border border-[#1d4b43]/20 bg-[#eef6f3] p-4">
-                      <p className="text-sm font-semibold text-[#1d4b43]">
+                    <div className="mt-4 rounded-xl border border-[#ea580c]/20 bg-[#fff7ed] p-4">
+                      <p className="text-sm font-semibold text-[#ea580c]">
                         Strong margin! Yak chews typically deliver 40–60% gross margin for pet stores.
                       </p>
                     </div>
@@ -335,7 +335,7 @@ export default function DogTreatProfitCalculatorPage() {
                   <div className="mt-6">
                     <Link
                       href="/apply"
-                      className="inline-flex w-full items-center justify-center rounded-xl bg-[#1d4b43] px-5 py-3 text-sm font-semibold text-white hover:bg-[#163d36]"
+                      className="inline-flex w-full items-center justify-center rounded-xl bg-[#ea580c] px-5 py-3 text-sm font-semibold text-white hover:bg-[#c2410c]"
                     >
                       Apply for wholesale pricing →
                     </Link>

@@ -42,7 +42,7 @@ export default function YakChewsVsRawhidePage() {
             { label: "Yak Chews vs Rawhide" },
           ]}
         />
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#1d4b43]">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#ea580c]">
           Retailer Buying Guide
         </p>
         <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
@@ -67,7 +67,7 @@ export default function YakChewsVsRawhidePage() {
 
       {/* Verdict */}
       <section className="mx-auto max-w-4xl px-6 py-12">
-        <div className="rounded-2xl border border-[#1d4b43]/20 bg-[#eef6f3] p-6">
+        <div className="rounded-2xl border border-[#ea580c]/20 bg-[#fff7ed] p-6">
           <h2 className="text-xl font-semibold text-[#111827]">The retailer verdict</h2>
           <p className="mt-3 text-sm leading-7 text-[#374151]">{page.verdict}</p>
         </div>

@@ -62,7 +62,7 @@ export default function ApplyPage() {
             className="h-24 w-24 object-contain"
           />
         </div>
-        <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#1d4b43]">Prime Pet Food Wholesale</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#ea580c]">Prime Pet Food Wholesale</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#111827] sm:text-4xl">
           Apply for wholesale pricing
         </h1>
@@ -185,7 +185,7 @@ export default function ApplyPage() {
 
           <button
             type="submit"
-            className="sm:col-span-2 mt-2 inline-flex items-center justify-center rounded-xl bg-[#1d4b43] px-5 py-2.5 text-sm font-semibold text-white"
+            className="sm:col-span-2 mt-2 inline-flex items-center justify-center rounded-xl bg-[#ea580c] px-5 py-2.5 text-sm font-semibold text-white"
           >
             Submit application
           </button>

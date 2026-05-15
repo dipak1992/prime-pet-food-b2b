@@ -18,7 +18,7 @@ export default function CTABlock({
   const wrapperClass = {
     dark: "rounded-2xl bg-[#111827] px-6 py-10 text-white",
     light: "rounded-2xl border border-[#e7e4dc] bg-white px-6 py-10",
-    green: "rounded-2xl border border-[#1d4b43]/20 bg-[#eef6f3] px-6 py-10",
+    green: "rounded-2xl border border-[#ea580c]/20 bg-[#fff7ed] px-6 py-10",
   }[variant];
 
   const headingClass = {
@@ -42,7 +42,7 @@ export default function CTABlock({
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         <Link
           href={primary.href}
-          className="inline-flex items-center justify-center rounded-xl bg-[#1d4b43] px-5 py-3 text-sm font-semibold text-white hover:bg-[#163d36]"
+          className="inline-flex items-center justify-center rounded-xl bg-[#ea580c] px-5 py-3 text-sm font-semibold text-white hover:bg-[#c2410c]"
         >
           {primary.label}
         </Link>

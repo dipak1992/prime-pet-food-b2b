@@ -98,7 +98,7 @@ export default async function ArticlePage({ params }: Props) {
                   key={item}
                   className="flex items-start gap-2 rounded-xl border border-[#e7e4dc] bg-[#fcfbf9] px-4 py-3 text-sm text-[#374151]"
                 >
-                  <span className="mt-0.5 shrink-0 text-[#1d4b43]">✓</span>
+                  <span className="mt-0.5 shrink-0 text-[#ea580c]">✓</span>
                   {item}
                 </li>
               ))}
@@ -165,14 +165,14 @@ export default async function ArticlePage({ params }: Props) {
                 <Link
                   key={rel.slug}
                   href={`/resources/${rel.slug}`}
-                  className="group rounded-2xl border border-[#e7e4dc] bg-white p-5 hover:border-[#1d4b43]/30 hover:bg-[#eef6f3]"
+                  className="group rounded-2xl border border-[#e7e4dc] bg-white p-5 hover:border-[#ea580c]/30 hover:bg-[#fff7ed]"
                 >
                   <span
                     className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${categoryColors[rel.category]}`}
                   >
                     {rel.categoryLabel}
                   </span>
-                  <p className="mt-2 text-sm font-semibold leading-snug text-[#111827] group-hover:text-[#1d4b43]">
+                  <p className="mt-2 text-sm font-semibold leading-snug text-[#111827] group-hover:text-[#ea580c]">
                     {rel.h1}
                   </p>
                   <p className="mt-1 text-xs text-[#9ca3af]">{rel.readTime}</p>

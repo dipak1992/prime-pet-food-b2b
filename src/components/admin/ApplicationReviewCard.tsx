@@ -82,7 +82,7 @@ export function ApplicationReviewCard({ application }: ApplicationCardProps) {
           rows={3}
           value={adminNotes}
           onChange={(event) => setAdminNotes(event.target.value)}
-          className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm outline-none focus:border-[#1d4b43]"
+          className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm outline-none focus:border-[#ea580c]"
           placeholder="Add notes about this decision"
         />
       </div>
@@ -93,7 +93,7 @@ export function ApplicationReviewCard({ application }: ApplicationCardProps) {
         <button
           onClick={() => runAction("approve")}
           disabled={loadingAction !== null}
-          className="rounded-lg bg-[#1d4b43] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          className="rounded-lg bg-[#ea580c] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
         >
           {loadingAction === "approve" ? "Approving..." : "Approve"}
         </button>

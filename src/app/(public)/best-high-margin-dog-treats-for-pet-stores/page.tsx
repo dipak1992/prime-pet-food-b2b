@@ -41,7 +41,7 @@ export default function BestHighMarginDogTreatsPage() {
             { label: "High-Margin Dog Treats" },
           ]}
         />
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#1d4b43]">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#ea580c]">
           Retailer Education
         </p>
         <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
@@ -61,7 +61,7 @@ export default function BestHighMarginDogTreatsPage() {
                 key={item}
                 className="flex items-start gap-2 rounded-xl border border-[#e7e4dc] bg-[#fcfbf9] px-4 py-3 text-sm text-[#374151]"
               >
-                <span className="mt-0.5 shrink-0 text-[#1d4b43]">✓</span>
+                <span className="mt-0.5 shrink-0 text-[#ea580c]">✓</span>
                 {item}
               </li>
             ))}

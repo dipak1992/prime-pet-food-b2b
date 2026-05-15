@@ -48,7 +48,7 @@ export default async function DownloadsPage() {
             <a
               href={asset.fileUrl}
               download
-              className="w-fit rounded border border-[#1d4b43] px-3 py-2 text-xs font-semibold text-[#1d4b43] hover:bg-[#f0f7f5]"
+              className="w-fit rounded border border-[#ea580c] px-3 py-2 text-xs font-semibold text-[#ea580c] hover:bg-[#f0f7f5]"
             >
               Download
             </a>

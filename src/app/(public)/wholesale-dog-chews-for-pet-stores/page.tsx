@@ -43,7 +43,7 @@ export default function WholesaleDogChewsForPetStoresPage() {
           ]}
         />
         <div className="max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#1d4b43]">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#ea580c]">
             For Independent Pet Stores
           </p>
           <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
@@ -54,7 +54,7 @@ export default function WholesaleDogChewsForPetStoresPage() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
               href={page.cta.primary.href}
-              className="inline-flex items-center justify-center rounded-xl bg-[#1d4b43] px-5 py-3 text-sm font-semibold text-white hover:bg-[#163d36]"
+              className="inline-flex items-center justify-center rounded-xl bg-[#ea580c] px-5 py-3 text-sm font-semibold text-white hover:bg-[#c2410c]"
             >
               {page.cta.primary.label}
             </Link>
@@ -71,7 +71,7 @@ export default function WholesaleDogChewsForPetStoresPage() {
       </section>
 
       {/* Margin highlight banner */}
-      <section className="border-y border-[#e7e4dc] bg-[#eef6f3]">
+      <section className="border-y border-[#e7e4dc] bg-[#fff7ed]">
         <div className="mx-auto grid max-w-6xl gap-6 px-6 py-8 sm:grid-cols-3">
           {[
             ["40–60%", "Gross margin at standard retail"],
@@ -79,7 +79,7 @@ export default function WholesaleDogChewsForPetStoresPage() {
             ["2–6 weeks", "Average customer reorder cycle"],
           ].map(([stat, label]) => (
             <div key={stat} className="text-center">
-              <p className="text-3xl font-bold text-[#1d4b43]">{stat}</p>
+              <p className="text-3xl font-bold text-[#ea580c]">{stat}</p>
               <p className="mt-1 text-sm text-[#4b5563]">{label}</p>
             </div>
           ))}

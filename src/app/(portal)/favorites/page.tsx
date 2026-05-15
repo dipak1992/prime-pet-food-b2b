@@ -75,7 +75,7 @@ export default function FavoritesPage() {
           <p className="text-sm text-[#4b5563] mb-4">No favorites yet.</p>
           <Link
             href="/products"
-            className="inline-block rounded-lg bg-[#1d4b43] px-4 py-2 text-sm font-semibold text-white hover:bg-[#163836]"
+            className="inline-block rounded-lg bg-[#ea580c] px-4 py-2 text-sm font-semibold text-white hover:bg-[#c2410c]"
           >
             Explore Products
           </Link>
@@ -107,7 +107,7 @@ export default function FavoritesPage() {
 
                 <div className="mb-3 pb-3 border-b border-[#e7e4dc]">
                   <div className="flex items-baseline gap-2">
-                    <span className="font-bold text-lg text-[#1d4b43]">
+                    <span className="font-bold text-lg text-[#ea580c]">
                       ${product.wholesalePrice.toFixed(2)}
                     </span>
                     {product.msrp && (
@@ -138,7 +138,7 @@ export default function FavoritesPage() {
                 </button>
                 <Link
                   href={`/products/${product.id}`}
-                  className="flex-1 rounded-lg bg-[#1d4b43] px-3 py-2 text-center text-sm font-semibold text-white hover:bg-[#163836]"
+                  className="flex-1 rounded-lg bg-[#ea580c] px-3 py-2 text-center text-sm font-semibold text-white hover:bg-[#c2410c]"
                 >
                   View
                 </Link>

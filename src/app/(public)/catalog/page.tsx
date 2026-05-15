@@ -68,14 +68,14 @@ export default async function CatalogPage() {
               {isApproved ? (
                 <Link
                   href="/products"
-                  className="rounded-xl bg-[#1d4b43] px-4 py-2 text-sm font-semibold text-white hover:bg-[#163d36]"
+                  className="rounded-xl bg-[#ea580c] px-4 py-2 text-sm font-semibold text-white hover:bg-[#c2410c]"
                 >
                   Go to wholesale portal →
                 </Link>
               ) : (
                 <Link
                   href="/apply"
-                  className="rounded-xl border border-[#1d4b43] px-4 py-2 text-sm font-semibold text-[#1d4b43] hover:bg-[#f0f7f5]"
+                  className="rounded-xl border border-[#ea580c] px-4 py-2 text-sm font-semibold text-[#ea580c] hover:bg-[#f0f7f5]"
                 >
                   Apply for wholesale
                 </Link>
@@ -115,7 +115,7 @@ export default async function CatalogPage() {
                     </div>
                   )}
                   {product.isBestSeller && (
-                    <span className="absolute left-2 top-2 rounded-full bg-[#1d4b43] px-2 py-0.5 text-xs font-semibold text-white">
+                    <span className="absolute left-2 top-2 rounded-full bg-[#ea580c] px-2 py-0.5 text-xs font-semibold text-white">
                       Best seller
                     </span>
                   )}
@@ -144,7 +144,7 @@ export default async function CatalogPage() {
                   {/* Price gate */}
                   <div className="mt-auto pt-3">
                     {isApproved ? (
-                      <span className="text-sm text-[#1d4b43] font-semibold">View wholesale pricing →</span>
+                      <span className="text-sm text-[#ea580c] font-semibold">View wholesale pricing →</span>
                     ) : isPending ? (
                       <ApprovalPendingPriceCard />
                     ) : (

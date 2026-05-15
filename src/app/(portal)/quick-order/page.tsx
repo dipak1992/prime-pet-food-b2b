@@ -167,7 +167,7 @@ export default function QuickOrderPage() {
                         {product.isBestSeller ? " · Best seller" : ""}
                       </p>
                     </td>
-                    <td className="px-3 py-3 text-right font-semibold text-[#1d4b43]">
+                    <td className="px-3 py-3 text-right font-semibold text-[#ea580c]">
                       ${product.wholesalePrice.toFixed(2)}
                     </td>
                     <td className="px-3 py-3 text-right text-[#374151]">
@@ -218,7 +218,7 @@ export default function QuickOrderPage() {
                     <p className="font-semibold text-[#111827]">{product.title}</p>
                     <p className="text-xs text-[#6b7280]">SKU: {product.sku || "-"}</p>
                   </div>
-                  <p className="font-semibold text-[#1d4b43]">${product.wholesalePrice.toFixed(2)}</p>
+                  <p className="font-semibold text-[#ea580c]">${product.wholesalePrice.toFixed(2)}</p>
                 </div>
                 <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-[#4b5563]">
                   <p>MOQ {product.moq}</p>
@@ -255,7 +255,7 @@ export default function QuickOrderPage() {
           <button
             onClick={addSelectedToCart}
             disabled={selected.length === 0 || submitting}
-            className="rounded-lg bg-[#1d4b43] px-4 py-2 text-sm font-semibold text-white hover:bg-[#163836] disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-[#ea580c] px-4 py-2 text-sm font-semibold text-white hover:bg-[#c2410c] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {submitting ? "Adding..." : "Add Selected to Cart"}
           </button>

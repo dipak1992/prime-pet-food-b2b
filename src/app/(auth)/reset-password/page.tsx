@@ -68,7 +68,7 @@ export default function ResetPasswordPage() {
           />
         </div>
 
-        <h1 className="text-2xl font-semibold tracking-tight text-[#1d4b43]">Set new password</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-[#ea580c]">Set new password</h1>
         <p className="mt-2 text-sm text-[#6b7280]">
           Enter a new password for your account.
         </p>
@@ -89,7 +89,7 @@ export default function ResetPasswordPage() {
           <button
             type="button"
             onClick={() => setShowNewPassword((prev) => !prev)}
-            className="text-left text-xs font-medium text-[#1d4b43] hover:underline"
+            className="text-left text-xs font-medium text-[#ea580c] hover:underline"
           >
             {showNewPassword ? "Hide new password" : "Show new password"}
           </button>
@@ -109,7 +109,7 @@ export default function ResetPasswordPage() {
           <button
             type="button"
             onClick={() => setShowConfirmPassword((prev) => !prev)}
-            className="text-left text-xs font-medium text-[#1d4b43] hover:underline"
+            className="text-left text-xs font-medium text-[#ea580c] hover:underline"
           >
             {showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
           </button>
@@ -117,7 +117,7 @@ export default function ResetPasswordPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="inline-flex w-full items-center justify-center rounded-xl bg-[#1d4b43] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+            className="inline-flex w-full items-center justify-center rounded-xl bg-[#ea580c] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
           >
             {isLoading ? "Updating..." : "Update password"}
           </button>
@@ -127,7 +127,7 @@ export default function ResetPasswordPage() {
         {error ? <p className="mt-4 text-sm text-red-700">{error}</p> : null}
 
         <div className="mt-6 border-t border-[#e7e4dc] pt-4">
-          <Link href="/login" className="text-sm text-[#1d4b43] hover:underline">
+          <Link href="/login" className="text-sm text-[#ea580c] hover:underline">
             Back to login
           </Link>
         </div>

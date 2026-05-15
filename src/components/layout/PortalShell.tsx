@@ -23,11 +23,11 @@ export function PortalShell({ children, profile }: PortalShellProps) {
               height={40}
               className="h-10 w-10 object-contain"
             />
-            <Link href="/dashboard" className="text-lg font-semibold tracking-tight text-[#1d4b43]">
+            <Link href="/dashboard" className="text-lg font-semibold tracking-tight text-[#ea580c]">
               Prime Pet Wholesale
             </Link>
           </div>
-          <Link href="/products" className="rounded-full bg-[#1d4b43] px-4 py-2 text-sm font-medium text-white">
+          <Link href="/products" className="rounded-full bg-[#ea580c] px-4 py-2 text-sm font-medium text-white">
             Quick Order
           </Link>
         </div>

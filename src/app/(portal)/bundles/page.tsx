@@ -106,7 +106,7 @@ export default function BundlesPage() {
                 <div className="mb-4 pb-4 border-b border-[#e7e4dc]">
                   <div className="mb-2">
                     <p className="text-xs text-[#4b5563] uppercase font-semibold mb-1">Bundle Price</p>
-                    <p className="text-2xl font-bold text-[#1d4b43]">
+                    <p className="text-2xl font-bold text-[#ea580c]">
                       ${bundle.bundlePrice.toFixed(2)}
                     </p>
                   </div>
@@ -135,7 +135,7 @@ export default function BundlesPage() {
                 </div>
               </div>
 
-              <button className="w-full rounded-lg bg-[#1d4b43] px-4 py-2 text-sm font-semibold text-white hover:bg-[#163836]">
+              <button className="w-full rounded-lg bg-[#ea580c] px-4 py-2 text-sm font-semibold text-white hover:bg-[#c2410c]">
                 Add to Cart
               </button>
             </div>

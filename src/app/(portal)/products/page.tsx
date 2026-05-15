@@ -164,7 +164,7 @@ export default function ProductsPage() {
             {filteredProducts.map((product) => (
               <div
                 key={product.id}
-                className="rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-4 flex flex-col hover:border-[#1d4b43] hover:shadow-sm transition-all"
+                className="rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-4 flex flex-col hover:border-[#ea580c] hover:shadow-sm transition-all"
               >
                 <div className="relative mb-3 aspect-[4/3] overflow-hidden rounded-lg bg-white">
                   {product.imageUrl ? (
@@ -183,7 +183,7 @@ export default function ProductsPage() {
                   )}
                   <div className="absolute left-2 top-2 flex flex-wrap gap-1">
                     {product.isBestSeller && (
-                      <span className="rounded-full bg-[#1d4b43] px-2 py-0.5 text-xs font-semibold text-white">
+                      <span className="rounded-full bg-[#ea580c] px-2 py-0.5 text-xs font-semibold text-white">
                         Best seller
                       </span>
                     )}
@@ -212,7 +212,7 @@ export default function ProductsPage() {
                   {/* Pricing */}
                   <div className="mb-3 pb-3 border-b border-[#e7e4dc]">
                     <div className="flex items-baseline gap-2">
-                      <span className="font-bold text-lg text-[#1d4b43]">
+                      <span className="font-bold text-lg text-[#ea580c]">
                         ${product.wholesalePrice.toFixed(2)}
                       </span>
                       <span className="text-xs text-[#4b5563]">wholesale</span>
@@ -267,7 +267,7 @@ export default function ProductsPage() {
                 <button
                   onClick={() => handleAddToCart(product)}
                   disabled={addingProductId === product.id}
-                  className="w-full rounded-lg bg-[#1d4b43] text-white text-sm font-semibold py-2 hover:bg-[#163836] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full rounded-lg bg-[#ea580c] text-white text-sm font-semibold py-2 hover:bg-[#c2410c] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {addingProductId === product.id
                     ? "Adding..."

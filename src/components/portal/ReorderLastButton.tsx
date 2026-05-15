@@ -33,7 +33,7 @@ export function ReorderLastButton({ orderId }: { orderId: string }) {
       <button
         onClick={reorder}
         disabled={loading}
-        className="w-full rounded-lg bg-[#1d4b43] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#163836] disabled:opacity-50"
+        className="w-full rounded-lg bg-[#ea580c] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#c2410c] disabled:opacity-50"
       >
         {loading ? "Adding..." : "Reorder Last Order"}
       </button>

@@ -173,7 +173,7 @@ export default function InvoicesPage() {
                       <button
                         onClick={() => handleDownload(invoice.id)}
                         disabled={downloadingId === invoice.id}
-                        className="text-xs font-semibold text-[#1d4b43] hover:underline disabled:opacity-50"
+                        className="text-xs font-semibold text-[#ea580c] hover:underline disabled:opacity-50"
                       >
                         {downloadingId === invoice.id ? "Downloading..." : "Download PDF"}
                       </button>
@@ -209,7 +209,7 @@ export default function InvoicesPage() {
                 <button
                   onClick={() => handleDownload(invoice.id)}
                   disabled={downloadingId === invoice.id}
-                  className="mt-3 w-full rounded-lg border border-[#1d4b43] px-3 py-2 text-xs font-semibold text-[#1d4b43] disabled:opacity-50"
+                  className="mt-3 w-full rounded-lg border border-[#ea580c] px-3 py-2 text-xs font-semibold text-[#ea580c] disabled:opacity-50"
                 >
                   {downloadingId === invoice.id ? "Downloading..." : "Download PDF"}
                 </button>

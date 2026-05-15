@@ -19,7 +19,7 @@ export function CartBadge() {
   if (!count) return null;
 
   return (
-    <span className="ml-auto flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#1d4b43] px-1 text-[10px] font-bold text-white">
+    <span className="ml-auto flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#ea580c] px-1 text-[10px] font-bold text-white">
       {count > 99 ? "99+" : count}
     </span>
   );

@@ -11,7 +11,7 @@ export default function Home() {
       <Link
         href="/admin/login"
         aria-label="Admin login"
-        className="fixed right-4 top-4 z-50 rounded-full border border-[#1d4b43]/10 bg-white/40 p-2 text-[#1d4b43]/20 shadow-sm backdrop-blur-sm transition hover:border-[#1d4b43]/20 hover:bg-white hover:text-[#1d4b43] focus:outline-none focus:ring-2 focus:ring-[#1d4b43]/30 focus:text-[#1d4b43]"
+        className="fixed right-4 top-4 z-50 rounded-full border border-[#ea580c]/10 bg-white/40 p-2 text-[#ea580c]/20 shadow-sm backdrop-blur-sm transition hover:border-[#ea580c]/20 hover:bg-white hover:text-[#ea580c] focus:outline-none focus:ring-2 focus:ring-[#1d4b43]/30 focus:text-[#ea580c]"
       >
         <Lock className="h-4 w-4" />
       </Link>
@@ -26,7 +26,7 @@ export default function Home() {
             height={120}
             className="mb-6 h-24 w-24 object-contain"
           />
-          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#1d4b43]">Prime Pet Food</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#ea580c]">Prime Pet Food</p>
           <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-[#111827] sm:text-5xl">
             Wholesale Himalayan Yak Chews built for retail margins.
           </h1>
@@ -37,7 +37,7 @@ export default function Home() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/apply"
-              className="inline-flex items-center justify-center rounded-xl bg-[#1d4b43] px-5 py-3 text-sm font-semibold text-white"
+              className="inline-flex items-center justify-center rounded-xl bg-[#ea580c] px-5 py-3 text-sm font-semibold text-white"
             >
               Apply for wholesale
             </Link>
@@ -83,8 +83,8 @@ export default function Home() {
               { label: "Clear case economics", detail: "Approved buyers see MOQ, case packs, MSRP, and wholesale unit pricing before ordering." },
               { label: "Invoice-first ordering", detail: "Submit order requests online; our team confirms availability and follows up with invoice details." },
             ].map(({ label, detail }) => (
-              <div key={label} className="border-l-2 border-[#1d4b43] pl-4">
-                <p className="font-semibold text-[#1d4b43]">{label}</p>
+              <div key={label} className="border-l-2 border-[#ea580c] pl-4">
+                <p className="font-semibold text-[#ea580c]">{label}</p>
                 <p className="mt-1 text-sm text-[#6b7280]">{detail}</p>
               </div>
             ))}
@@ -99,7 +99,7 @@ export default function Home() {
         <div className="mt-16">
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#1d4b43]">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#ea580c]">
                 Retailer Resources
               </p>
               <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[#111827]">
@@ -111,7 +111,7 @@ export default function Home() {
             </div>
             <Link
               href="/resources"
-              className="hidden shrink-0 text-sm font-semibold text-[#1d4b43] hover:underline sm:block"
+              className="hidden shrink-0 text-sm font-semibold text-[#ea580c] hover:underline sm:block"
             >
               View all articles →
             </Link>
@@ -131,7 +131,7 @@ export default function Home() {
                   </span>
                   <span className="text-xs text-[#9ca3af]">{article.readTime}</span>
                 </div>
-                <h3 className="mt-3 flex-1 text-sm font-semibold leading-snug text-[#111827] group-hover:text-[#1d4b43]">
+                <h3 className="mt-3 flex-1 text-sm font-semibold leading-snug text-[#111827] group-hover:text-[#ea580c]">
                   <Link href={`/resources/${article.slug}`}>{article.h1}</Link>
                 </h3>
                 <p className="mt-2 text-xs leading-5 text-[#6b7280] line-clamp-2">{article.excerpt}</p>
@@ -139,7 +139,7 @@ export default function Home() {
                   <span className="text-xs text-[#9ca3af]">{formatArticleDate(article.publishedAt)}</span>
                   <Link
                     href={`/resources/${article.slug}`}
-                    className="text-xs font-semibold text-[#1d4b43] hover:underline"
+                    className="text-xs font-semibold text-[#ea580c] hover:underline"
                   >
                     Read →
                   </Link>
@@ -151,7 +151,7 @@ export default function Home() {
           <div className="mt-6 sm:hidden">
             <Link
               href="/resources"
-              className="inline-flex items-center text-sm font-semibold text-[#1d4b43] hover:underline"
+              className="inline-flex items-center text-sm font-semibold text-[#ea580c] hover:underline"
             >
               View all articles →
             </Link>
@@ -159,9 +159,9 @@ export default function Home() {
         </div>
 
         {/* Profit Calculator CTA */}
-        <div className="mt-10 mb-16 rounded-2xl border border-[#1d4b43]/20 bg-[#eef6f3] p-6 sm:flex sm:items-center sm:justify-between">
+        <div className="mt-10 mb-16 rounded-2xl border border-[#ea580c]/20 bg-[#fff7ed] p-6 sm:flex sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#1d4b43]">Free Tool</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#ea580c]">Free Tool</p>
             <h2 className="mt-1 text-xl font-semibold text-[#111827]">Dog Treat Profit Calculator</h2>
             <p className="mt-2 text-sm text-[#4b5563]">
               See your exact gross margin on yak chews before you place a wholesale order.
@@ -170,7 +170,7 @@ export default function Home() {
           <div className="mt-4 shrink-0 sm:mt-0 sm:ml-6">
             <Link
               href="/dog-treat-profit-calculator"
-              className="inline-flex items-center justify-center rounded-xl bg-[#1d4b43] px-5 py-3 text-sm font-semibold text-white hover:bg-[#163d36]"
+              className="inline-flex items-center justify-center rounded-xl bg-[#ea580c] px-5 py-3 text-sm font-semibold text-white hover:bg-[#c2410c]"
             >
               Calculate your margin →
             </Link>

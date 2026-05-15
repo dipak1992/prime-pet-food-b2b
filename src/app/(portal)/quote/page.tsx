@@ -171,7 +171,7 @@ export default function QuoteRequestPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="md:col-span-2 rounded-lg bg-[#1d4b43] px-4 py-3 text-sm font-semibold text-white hover:bg-[#163836] disabled:opacity-50"
+            className="md:col-span-2 rounded-lg bg-[#ea580c] px-4 py-3 text-sm font-semibold text-white hover:bg-[#c2410c] disabled:opacity-50"
           >
             {submitting ? "Submitting..." : "Submit Request"}
           </button>

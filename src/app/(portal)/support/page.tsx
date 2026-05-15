@@ -138,7 +138,7 @@ export default function SupportPage() {
           </p>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="rounded-lg bg-[#1d4b43] px-4 py-2 text-sm font-semibold text-white hover:bg-[#163836]"
+            className="rounded-lg bg-[#ea580c] px-4 py-2 text-sm font-semibold text-white hover:bg-[#c2410c]"
           >
             {showForm ? "Cancel" : "New Ticket"}
           </button>
@@ -202,7 +202,7 @@ export default function SupportPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="flex-1 rounded-lg bg-[#1d4b43] px-4 py-2 text-sm font-semibold text-white hover:bg-[#163836] disabled:opacity-50"
+                className="flex-1 rounded-lg bg-[#ea580c] px-4 py-2 text-sm font-semibold text-white hover:bg-[#c2410c] disabled:opacity-50"
               >
                 {submitting ? "Submitting..." : "Submit Ticket"}
               </button>

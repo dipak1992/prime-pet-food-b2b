@@ -43,7 +43,7 @@ export default function DistributorProgramPage() {
           ]}
         />
         <div className="max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#1d4b43]">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#ea580c]">
             Distributor &amp; High-Volume Partners
           </p>
           <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
@@ -54,7 +54,7 @@ export default function DistributorProgramPage() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
               href={page.cta.primary.href}
-              className="inline-flex items-center justify-center rounded-xl bg-[#1d4b43] px-5 py-3 text-sm font-semibold text-white hover:bg-[#163d36]"
+              className="inline-flex items-center justify-center rounded-xl bg-[#ea580c] px-5 py-3 text-sm font-semibold text-white hover:bg-[#c2410c]"
             >
               {page.cta.primary.label}
             </Link>
@@ -108,7 +108,7 @@ export default function DistributorProgramPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {page.processSteps.map((step) => (
               <div key={step.step} className="rounded-xl border border-[#e7e4dc] bg-[#fcfbf9] p-5">
-                <p className="text-xs font-bold uppercase tracking-wide text-[#1d4b43]">
+                <p className="text-xs font-bold uppercase tracking-wide text-[#ea580c]">
                   Step {step.step}
                 </p>
                 <p className="mt-2 text-sm font-semibold text-[#111827]">{step.title}</p>

@@ -47,8 +47,8 @@ export function PortalNavLinks() {
             href={href}
             className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
               isActive
-                ? "bg-[#1d4b43]/10 text-[#1d4b43]"
-                : "text-[#374151] hover:bg-[#f8f7f4] hover:text-[#1d4b43]"
+                ? "bg-[#ea580c]/10 text-[#ea580c]"
+                : "text-[#374151] hover:bg-[#f8f7f4] hover:text-[#ea580c]"
             }`}
           >
             <Icon className="size-4 shrink-0" />

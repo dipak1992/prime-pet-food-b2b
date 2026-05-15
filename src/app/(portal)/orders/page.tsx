@@ -108,7 +108,7 @@ export default function OrdersPage() {
           <p className="text-sm text-[#4b5563] mb-4">No orders yet.</p>
           <Link
             href="/products"
-            className="inline-block rounded-lg bg-[#1d4b43] px-4 py-2 text-sm font-semibold text-white hover:bg-[#163836]"
+            className="inline-block rounded-lg bg-[#ea580c] px-4 py-2 text-sm font-semibold text-white hover:bg-[#c2410c]"
           >
             Start Shopping
           </Link>
@@ -184,7 +184,7 @@ export default function OrdersPage() {
                 <button
                   onClick={() => handleReorder(order.id)}
                   disabled={reorderingId === order.id}
-                  className="flex-1 rounded-lg border border-[#1d4b43] px-3 py-2 text-sm font-semibold text-[#1d4b43] hover:bg-[#f5f3f0] disabled:opacity-50"
+                  className="flex-1 rounded-lg border border-[#ea580c] px-3 py-2 text-sm font-semibold text-[#ea580c] hover:bg-[#f5f3f0] disabled:opacity-50"
                 >
                   {reorderingId === order.id ? "Reordering..." : "Reorder"}
                 </button>

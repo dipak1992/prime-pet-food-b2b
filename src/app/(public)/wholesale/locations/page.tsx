@@ -31,7 +31,7 @@ export default function WholesaleLocationsPage() {
             { label: "Locations" },
           ]}
         />
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#1d4b43]">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#ea580c]">
           Wholesale Locations
         </p>
         <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
@@ -43,7 +43,7 @@ export default function WholesaleLocationsPage() {
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <Link
             href="/apply"
-            className="inline-flex items-center justify-center rounded-xl bg-[#1d4b43] px-5 py-3 text-sm font-semibold text-white hover:bg-[#163d36]"
+            className="inline-flex items-center justify-center rounded-xl bg-[#ea580c] px-5 py-3 text-sm font-semibold text-white hover:bg-[#c2410c]"
           >
             Apply for wholesale pricing
           </Link>
@@ -67,18 +67,18 @@ export default function WholesaleLocationsPage() {
               <Link
                 key={state.slug}
                 href={`/wholesale/locations/${state.slug}`}
-                className="group rounded-2xl border border-[#e7e4dc] bg-[#fcfbf9] p-5 hover:border-[#1d4b43]/30 hover:bg-[#eef6f3]"
+                className="group rounded-2xl border border-[#e7e4dc] bg-[#fcfbf9] p-5 hover:border-[#ea580c]/30 hover:bg-[#fff7ed]"
               >
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
                       {state.code}
                     </p>
-                    <p className="mt-1 text-base font-semibold text-[#111827] group-hover:text-[#1d4b43]">
+                    <p className="mt-1 text-base font-semibold text-[#111827] group-hover:text-[#ea580c]">
                       {state.name}
                     </p>
                   </div>
-                  <span className="text-[#c7c2b5] group-hover:text-[#1d4b43]">→</span>
+                  <span className="text-[#c7c2b5] group-hover:text-[#ea580c]">→</span>
                 </div>
                 <p className="mt-2 text-xs text-[#6b7280]">Ships in {state.shippingDays}</p>
                 <p className="mt-1 text-xs text-[#6b7280]">
@@ -98,7 +98,7 @@ export default function WholesaleLocationsPage() {
             </p>
             <Link
               href="/apply"
-              className="mt-4 inline-flex items-center justify-center rounded-xl bg-[#1d4b43] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#163d36]"
+              className="mt-4 inline-flex items-center justify-center rounded-xl bg-[#ea580c] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#c2410c]"
             >
               Apply for wholesale account
             </Link>

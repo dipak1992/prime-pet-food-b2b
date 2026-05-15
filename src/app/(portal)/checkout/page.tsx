@@ -128,7 +128,7 @@ export default function CheckoutPage() {
           <p className="text-sm text-[#4b5563] mb-4">Your cart is empty.</p>
           <Link
             href="/products"
-            className="inline-block rounded-lg bg-[#1d4b43] px-4 py-2 text-sm font-semibold text-white hover:bg-[#163836]"
+            className="inline-block rounded-lg bg-[#ea580c] px-4 py-2 text-sm font-semibold text-white hover:bg-[#c2410c]"
           >
             Continue Shopping
           </Link>
@@ -284,7 +284,7 @@ export default function CheckoutPage() {
                 maxLength={500}
                 rows={4}
                 placeholder="Add any special instructions, delivery notes, or comments..."
-                className="w-full rounded border border-[#e7e4dc] p-3 text-sm text-[#111827] placeholder-[#9ca3af] focus:border-[#1d4b43] focus:outline-none focus:ring-1 focus:ring-[#1d4b43]"
+                className="w-full rounded border border-[#e7e4dc] p-3 text-sm text-[#111827] placeholder-[#9ca3af] focus:border-[#ea580c] focus:outline-none focus:ring-1 focus:ring-[#1d4b43]"
               />
               <p className="text-xs text-[#4b5563] mt-1">{notes.length}/500 characters</p>
             </div>
@@ -296,11 +296,11 @@ export default function CheckoutPage() {
                   type="checkbox"
                   id="terms"
                   required
-                  className="mt-1 h-4 w-4 rounded border-[#d1d5db] text-[#1d4b43] focus:ring-[#1d4b43]"
+                  className="mt-1 h-4 w-4 rounded border-[#d1d5db] text-[#ea580c] focus:ring-[#1d4b43]"
                 />
                 <label htmlFor="terms" className="text-sm text-[#4b5563]">
                   I agree to the{" "}
-                  <span className="font-semibold text-[#1d4b43]">
+                  <span className="font-semibold text-[#ea580c]">
                     wholesale terms and conditions
                   </span>
                 </label>
@@ -322,7 +322,7 @@ export default function CheckoutPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="flex-1 rounded-lg bg-[#1d4b43] px-4 py-3 text-center text-sm font-semibold text-white hover:bg-[#163836] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 rounded-lg bg-[#ea580c] px-4 py-3 text-center text-sm font-semibold text-white hover:bg-[#c2410c] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? "Submitting..." : "Submit Order Request"}
               </button>

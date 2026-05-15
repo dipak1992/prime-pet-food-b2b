@@ -26,7 +26,7 @@ export default function BenefitGrid({
 
   const cardClass =
     variant === "green"
-      ? "rounded-xl border border-[#1d4b43]/20 bg-[#eef6f3] p-5"
+      ? "rounded-xl border border-[#ea580c]/20 bg-[#fff7ed] p-5"
       : "rounded-xl border border-[#e7e4dc] bg-white p-5 shadow-sm";
 
   return (

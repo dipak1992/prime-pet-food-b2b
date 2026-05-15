@@ -52,7 +52,7 @@ export default function ForgotPasswordPage() {
           />
         </div>
 
-        <h1 className="text-2xl font-semibold tracking-tight text-[#1d4b43]">Reset password</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-[#ea580c]">Reset password</h1>
         <p className="mt-2 text-sm text-[#6b7280]">
           Enter your account email and we will send you a password reset link.
         </p>
@@ -73,7 +73,7 @@ export default function ForgotPasswordPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="inline-flex w-full items-center justify-center rounded-xl bg-[#1d4b43] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+            className="inline-flex w-full items-center justify-center rounded-xl bg-[#ea580c] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
           >
             {isLoading ? "Sending..." : "Send reset email"}
           </button>
@@ -83,7 +83,7 @@ export default function ForgotPasswordPage() {
         {error ? <p className="mt-4 text-sm text-red-700">{error}</p> : null}
 
         <div className="mt-6 border-t border-[#e7e4dc] pt-4">
-          <Link href="/login" className="text-sm text-[#1d4b43] hover:underline">
+          <Link href="/login" className="text-sm text-[#ea580c] hover:underline">
             Back to login
           </Link>
         </div>
