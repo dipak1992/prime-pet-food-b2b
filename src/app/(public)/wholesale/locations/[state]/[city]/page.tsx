@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/site-url";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { stateData } from "@/content/seo/locationPages";
@@ -8,7 +9,7 @@ import FAQAccordion from "@/components/seo/FAQAccordion";
 import RelatedLinks from "@/components/seo/RelatedLinks";
 import SchemaMarkup from "@/components/seo/SchemaMarkup";
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wholesale.theprimepetfood.com";
+const BASE_URL = SITE_URL;
 
 // City slug → display name mapping per state
 const cityMap: Record<string, Record<string, { name: string; note: string }>> = {

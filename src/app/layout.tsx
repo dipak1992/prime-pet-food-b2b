@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/site-url";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/providers/ToastProvider";
@@ -14,6 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  applicationName: "Prime Pet Food Wholesale",
   title: {
     default: "Prime Pet Food | Wholesale Portal",
     template: "%s | Prime Pet Food Wholesale",
@@ -32,9 +34,10 @@ export const metadata: Metadata = {
   authors: [{ name: "Prime Pet Food" }],
   creator: "Prime Pet Food",
   publisher: "Prime Pet Food",
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://wholesale.primepetfood.com"
-  ),
+  metadataBase: new URL(SITE_URL),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -43,29 +46,17 @@ export const metadata: Metadata = {
     title: "Prime Pet Food | Wholesale Portal",
     description:
       "Exclusive B2B wholesale portal for approved Prime Pet Food retailers. Premium yak cheese chews, natural treats & pet nutrition at wholesale prices.",
-    images: [
-      {
-        url: "/og-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Prime Pet Food — Wholesale Portal",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Prime Pet Food | Wholesale Portal",
     description:
       "Exclusive B2B wholesale portal for approved Prime Pet Food retailers.",
-    images: ["/og-image.jpg"],
   },
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/icon.png", type: "image/png", sizes: "32x32" },
-    ],
-    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
-    shortcut: "/favicon.ico",
+  appleWebApp: {
+    title: "Prime Pet Food",
+    capable: true,
+    statusBarStyle: "default",
   },
   robots: {
     // SEO landing pages are public; the portal itself is gated by middleware

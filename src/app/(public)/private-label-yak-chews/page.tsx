@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/site-url";
 import Link from "next/link";
 import { distributorPages } from "@/content/seo/distributorPages";
 import BreadcrumbNav from "@/components/seo/BreadcrumbNav";
@@ -9,7 +10,7 @@ import RelatedLinks from "@/components/seo/RelatedLinks";
 import SchemaMarkup from "@/components/seo/SchemaMarkup";
 
 const page = distributorPages.find((p) => p.slug === "private-label-yak-chews")!;
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wholesale.theprimepetfood.com";
+const BASE_URL = SITE_URL;
 
 export const metadata: Metadata = {
   title: page.seoTitle,

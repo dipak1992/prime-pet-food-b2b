@@ -1,4 +1,5 @@
 import { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/site-url";
 import { wholesaleIntentPages } from "@/content/seo/wholesaleIntentPages";
 import { retailerGuides } from "@/content/seo/retailerGuides";
 import { comparisonPages } from "@/content/seo/comparisonPages";
@@ -6,8 +7,7 @@ import { distributorPages } from "@/content/seo/distributorPages";
 import { stateData } from "@/content/seo/locationPages";
 import { blogArticles } from "@/content/seo/blogArticles";
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://wholesale.theprimepetfood.com";
+const BASE_URL = SITE_URL;
 
 // City slug map (mirrors the city-level page)
 const cityMap: Record<string, string[]> = {

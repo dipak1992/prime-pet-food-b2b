@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/site-url";
 import Link from "next/link";
 import { retailerGuides } from "@/content/seo/retailerGuides";
 import BreadcrumbNav from "@/components/seo/BreadcrumbNav";
@@ -8,7 +9,7 @@ import RelatedLinks from "@/components/seo/RelatedLinks";
 import SchemaMarkup from "@/components/seo/SchemaMarkup";
 
 const page = retailerGuides.find((p) => p.slug === "best-high-margin-dog-treats-for-pet-stores")!;
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wholesale.theprimepetfood.com";
+const BASE_URL = SITE_URL;
 
 export const metadata: Metadata = {
   title: page.seoTitle,

@@ -1,3 +1,5 @@
+import { SITE_URL } from "@/lib/site-url";
+
 interface OrganizationSchemaProps {
   type: "Organization";
 }
@@ -32,8 +34,7 @@ type SchemaProps =
   | ArticleSchemaProps
   | WebPageSchemaProps;
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://wholesale.theprimepetfood.com";
+const BASE_URL = SITE_URL;
 
 function buildOrganizationSchema() {
   return {

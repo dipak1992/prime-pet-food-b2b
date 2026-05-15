@@ -1,8 +1,8 @@
 import { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/site-url";
 
 export default function robots(): MetadataRoute.Robots {
-  const BASE_URL =
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://wholesale.theprimepetfood.com";
+  const BASE_URL = SITE_URL;
 
   return {
     rules: [

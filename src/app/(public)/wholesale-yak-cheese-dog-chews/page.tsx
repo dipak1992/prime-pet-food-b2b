@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/site-url";
 import Link from "next/link";
 import Image from "next/image";
 import { wholesaleIntentPages } from "@/content/seo/wholesaleIntentPages";
@@ -10,7 +11,7 @@ import RelatedLinks from "@/components/seo/RelatedLinks";
 import SchemaMarkup from "@/components/seo/SchemaMarkup";
 
 const page = wholesaleIntentPages.find((p) => p.slug === "wholesale-yak-cheese-dog-chews")!;
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wholesale.theprimepetfood.com";
+const BASE_URL = SITE_URL;
 
 export const metadata: Metadata = {
   title: page.seoTitle,

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/site-url";
 import Link from "next/link";
 import {
   blogArticles,
@@ -9,7 +10,7 @@ import {
 import BreadcrumbNav from "@/components/seo/BreadcrumbNav";
 import SchemaMarkup from "@/components/seo/SchemaMarkup";
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wholesale.theprimepetfood.com";
+const BASE_URL = SITE_URL;
 
 export const metadata: Metadata = {
   title: "Wholesale Resources & Retailer Guides | Prime Pet Food Blog",
