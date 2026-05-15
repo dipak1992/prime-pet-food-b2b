@@ -68,8 +68,9 @@ export const metadata: Metadata = {
     shortcut: "/favicon.ico",
   },
   robots: {
-    index: false, // wholesale portal — keep out of public search
-    follow: false,
+    // SEO landing pages are public; the portal itself is gated by middleware
+    index: true,
+    follow: true,
   },
 };
 
