@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { notFound } from "next/navigation";
 import { SectionCard } from "@/components/ui/SectionCard";
 
@@ -23,11 +23,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const [isFavorite, setIsFavorite] = useState(false);
   const [quantity, setQuantity] = useState<number>(1);
 
-  useEffect(() => {
-    fetchProduct();
-  }, [params.id]);
-
-  async function fetchProduct() {
+  const fetchProduct = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch(`/api/products/${params.id}`);
@@ -41,7 +37,11 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
     } finally {
       setLoading(false);
     }
-  }
+  }, [params.id]);
+
+  useEffect(() => {
+    fetchProduct();
+  }, [fetchProduct]);
 
   async function handleToggleFavorite() {
     if (!product) return;

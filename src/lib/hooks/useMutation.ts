@@ -3,20 +3,20 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 
-interface UseMutationOptions {
-  onSuccess?: (data: any) => void;
+interface UseMutationOptions<TResult = unknown> {
+  onSuccess?: (data: TResult) => void;
   onError?: (error: Error) => void;
 }
 
-export function useMutation(
-  fn: (data: any) => Promise<Response>,
-  options?: UseMutationOptions
+export function useMutation<TInput = unknown, TResult = unknown>(
+  fn: (data: TInput) => Promise<Response>,
+  options?: UseMutationOptions<TResult>
 ) {
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const mutate = async (
-    data: any,
+    data: TInput,
     successMessage?: string,
     errorMessage?: string
   ) => {
@@ -36,9 +36,9 @@ export function useMutation(
       const result = await response.json();
 
       toast.success(successMessage || "Success!", { id: toastId });
-      options?.onSuccess?.(result.data);
+      options?.onSuccess?.(result.data as TResult);
 
-      return result.data;
+      return result.data as TResult;
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Unknown error");
       setError(error);

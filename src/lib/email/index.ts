@@ -1,4 +1,5 @@
 export type EmailTemplate = 
+  | "application-received"
   | "application-approved"
   | "application-rejected"
   | "order-submitted"
@@ -38,6 +39,14 @@ function textToHtml(text: string) {
 }
 
 export function renderEmailBody(payload: EmailPayload): { subject: string; text: string; html: string } {
+  if (payload.template === "application-received") {
+    const businessName = getStringVariable(payload.variables, "businessName", "your business");
+    const subject = "We received your Prime Pet wholesale application";
+    const text = `Thanks for applying for Prime Pet wholesale access for ${businessName}. Our team reviews most complete applications within one business day. If approved, you will receive portal access for protected pricing, case packs, invoices, and reorders.`;
+    const html = `<p>Thanks for applying for Prime Pet wholesale access for <strong>${businessName}</strong>.</p><p>Our team reviews most complete applications within one business day.</p><p>If approved, you will receive portal access for protected pricing, case packs, invoices, and reorders.</p>`;
+    return { subject, text, html };
+  }
+
   if (payload.template === "application-approved") {
     const businessName = getStringVariable(payload.variables, "businessName", "your business");
     const loginUrl = getStringVariable(payload.variables, "loginUrl", process.env.NEXT_PUBLIC_APP_URL || "");
@@ -159,6 +168,10 @@ export async function sendEmail(payload: EmailPayload) {
 }
 
 export const emailTemplates: Record<EmailTemplate, { subject: string; preview: string }> = {
+  "application-received": {
+    subject: "We Received Your Wholesale Application",
+    preview: "Your Prime Pet wholesale application has been received.",
+  },
   "application-approved": {
     subject: "Your Prime Pet Wholesale Application is Approved!",
     preview: "Welcome to Prime Pet Wholesale! Your application has been approved.",

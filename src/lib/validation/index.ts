@@ -18,7 +18,7 @@ export const validators = {
     return null;
   },
 
-  required: (value: any, fieldName: string): ValidationError | null => {
+  required: (value: unknown, fieldName: string): ValidationError | null => {
     if (!value || (typeof value === "string" && value.trim().length === 0)) {
       return { field: fieldName, message: `${fieldName} is required` };
     }
@@ -58,9 +58,9 @@ export const validators = {
     }
   },
 
-  number: (value: any, fieldName: string): ValidationError | null => {
+  number: (value: unknown, fieldName: string): ValidationError | null => {
     if (value === null || value === undefined || value === "") return null;
-    if (isNaN(value)) {
+    if (Number.isNaN(Number(value))) {
       return { field: fieldName, message: `${fieldName} must be a number` };
     }
     return null;
@@ -68,8 +68,8 @@ export const validators = {
 };
 
 export function validateForm(
-  data: Record<string, any>,
-  rules: Record<string, ((value: any) => ValidationError | null)[]>
+  data: Record<string, unknown>,
+  rules: Record<string, ((value: unknown) => ValidationError | null)[]>
 ): ValidationResult {
   const errors: ValidationError[] = [];
 

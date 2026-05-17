@@ -19,6 +19,8 @@ interface Product {
   moq: number;
   casePack: number;
   isActive: boolean;
+  isFavorite?: boolean;
+  previouslyOrdered?: boolean;
 }
 
 interface ProductsResponse {
@@ -33,6 +35,7 @@ export default function ProductsPage() {
   const [successMessage, setSuccessMessage] = useState<string>("");
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState<"title" | "price_asc" | "price_desc">("title");
+  const [filterBy, setFilterBy] = useState<"all" | "previous" | "favorites" | "best_sellers">("all");
 
   async function fetchProducts() {
     try {
@@ -80,6 +83,27 @@ export default function ProductsPage() {
     }
   }
 
+  async function handleToggleFavorite(product: Product) {
+    try {
+      const res = await fetch("/api/favorites", {
+        method: product.isFavorite ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: product.id }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Could not update favorite");
+      }
+      setProducts((prev) =>
+        prev.map((item) =>
+          item.id === product.id ? { ...item, isFavorite: !item.isFavorite } : item
+        )
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not update favorite");
+    }
+  }
+
   if (loading) {
     return (
       <SectionCard
@@ -106,6 +130,9 @@ export default function ProductsPage() {
 
   const filteredProducts = products
     .filter((product) => {
+      if (filterBy === "previous" && !product.previouslyOrdered) return false;
+      if (filterBy === "favorites" && !product.isFavorite) return false;
+      if (filterBy === "best_sellers" && !product.isBestSeller) return false;
       const search = query.trim().toLowerCase();
       if (!search) return true;
       return (
@@ -133,7 +160,7 @@ export default function ProductsPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <input
             type="text"
             value={query}
@@ -141,6 +168,16 @@ export default function ProductsPage() {
             placeholder="Search by title, SKU, or description"
             className="md:col-span-2 rounded-lg border border-[#e7e4dc] bg-white px-3 py-2 text-sm text-[#111827]"
           />
+          <select
+            value={filterBy}
+            onChange={(e) => setFilterBy(e.target.value as "all" | "previous" | "favorites" | "best_sellers")}
+            className="rounded-lg border border-[#e7e4dc] bg-white px-3 py-2 text-sm text-[#111827]"
+          >
+            <option value="all">Filter: All products</option>
+            <option value="previous">Previously ordered</option>
+            <option value="favorites">Favorites</option>
+            <option value="best_sellers">Best sellers</option>
+          </select>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as "title" | "price_asc" | "price_desc")}
@@ -193,6 +230,14 @@ export default function ProductsPage() {
                       </span>
                     )}
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFavorite(product)}
+                    className="absolute right-2 top-2 rounded-full bg-white/95 px-2 py-1 text-xs font-semibold text-[#1f2937] shadow-sm hover:bg-[#fff7ed]"
+                    aria-label={product.isFavorite ? "Remove favorite" : "Add favorite"}
+                  >
+                    {product.isFavorite ? "Saved" : "Save"}
+                  </button>
                 </div>
 
                 {/* Product Header */}
@@ -201,6 +246,11 @@ export default function ProductsPage() {
                     {product.title}
                   </h3>
                   <p className="text-xs text-[#4b5563] mb-3">SKU: {product.sku}</p>
+                  {product.previouslyOrdered ? (
+                    <p className="mb-2 inline-flex rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">
+                      Previously ordered
+                    </p>
+                  ) : null}
 
                   {/* Description */}
                   {product.description && (

@@ -61,6 +61,9 @@ export default async function AdminAnalyticsPage() {
     recentSyncJobs,
     openInvoices,
     approvedCustomers,
+    productVelocity,
+    activeProducts,
+    leadSourceRows,
   ] = await Promise.all([
     prisma.order.count({ where: { createdAt: { gte: todayStart } } }),
     prisma.order.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
@@ -122,6 +125,24 @@ export default async function AdminAnalyticsPage() {
         },
       },
     }),
+    prisma.orderItem.groupBy({
+      by: ["productId"],
+      where: { order: { createdAt: { gte: thirtyDaysAgo } } },
+      _sum: { quantity: true, totalPrice: true },
+      _count: { _all: true },
+      orderBy: { _sum: { totalPrice: "desc" } },
+      take: 8,
+    }),
+    prisma.product.findMany({
+      where: { isActive: true },
+      select: { id: true, title: true, sku: true, inventoryQty: true, stockStatus: true },
+    }),
+    prisma.lead.groupBy({
+      by: ["source"],
+      _count: { _all: true },
+      orderBy: { _count: { source: "desc" } },
+      take: 8,
+    }),
   ]);
 
   const typedStatusCounts = statusCounts as StatusCountRow[];
@@ -176,6 +197,24 @@ export default async function AdminAnalyticsPage() {
     .filter((customer) => customer.metrics.daysSinceLastOrder !== null)
     .sort((a, b) => (a.metrics.healthScore - b.metrics.healthScore))
     .slice(0, 5);
+  const productById = new Map(activeProducts.map((product) => [product.id, product]));
+  const productVelocityRows = productVelocity.map((row) => {
+    const product = productById.get(row.productId);
+    const units = row._sum.quantity || 0;
+    const inventoryQty = product?.inventoryQty ?? null;
+    return {
+      productId: row.productId,
+      title: product?.title || "Unknown product",
+      sku: product?.sku || "-",
+      units,
+      revenue: Number(row._sum.totalPrice || 0),
+      orderLines: row._count._all,
+      inventoryQty,
+      daysOfCover: inventoryQty == null || units === 0 ? null : Math.floor(inventoryQty / (units / 30)),
+      stockStatus: product?.stockStatus || "UNKNOWN",
+    };
+  });
+  const inventoryRisks = productVelocityRows.filter((row) => row.daysOfCover !== null && row.daysOfCover <= 21);
 
   return (
     <div className="space-y-6">
@@ -304,6 +343,54 @@ export default async function AdminAnalyticsPage() {
             ))}
             <Link href="/admin/invoices" className="inline-block text-xs font-semibold text-[#1d4b43] hover:underline">
               Open invoice queue →
+            </Link>
+          </div>
+        </SectionCard>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <SectionCard title="Product Velocity & Inventory Forecast">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded border border-[#e7e4dc] bg-[#fcfbf9] p-3">
+              <p className="text-xs uppercase text-[#4b5563]">SKUs with ≤21 days cover</p>
+              <p className="mt-1 text-2xl font-bold text-red-700">{inventoryRisks.length}</p>
+            </div>
+            <div className="rounded border border-[#e7e4dc] bg-[#fcfbf9] p-3">
+              <p className="text-xs uppercase text-[#4b5563]">Tracked active SKUs</p>
+              <p className="mt-1 text-2xl font-bold text-[#1d4b43]">{activeProducts.length}</p>
+            </div>
+          </div>
+          <div className="mt-4 space-y-2 text-sm">
+            {productVelocityRows.map((row) => (
+              <div key={row.productId} className="rounded border border-[#e7e4dc] bg-[#fcfbf9] p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-[#111827]">{row.title}</p>
+                    <p className="text-xs text-[#6b7280]">
+                      SKU {row.sku} · {row.units} units · ${row.revenue.toFixed(2)} revenue
+                    </p>
+                  </div>
+                  <p className="text-xs font-semibold text-[#1d4b43]">
+                    {row.daysOfCover == null ? row.stockStatus : `${row.daysOfCover}d cover`}
+                  </p>
+                </div>
+              </div>
+            ))}
+            {productVelocityRows.length === 0 && <p className="text-[#4b5563]">No product velocity in this window.</p>}
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Campaign & Source Reporting">
+          <div className="space-y-2 text-sm">
+            {leadSourceRows.map((row) => (
+              <div key={row.source} className="flex items-center justify-between rounded border border-[#e7e4dc] bg-[#fcfbf9] p-3">
+                <span className="font-semibold text-[#111827]">{row.source || "unknown"}</span>
+                <span className="font-semibold text-[#1d4b43]">{row._count._all} leads</span>
+              </div>
+            ))}
+            {leadSourceRows.length === 0 && <p className="text-[#4b5563]">No source attribution yet.</p>}
+            <Link href="/admin/outreach" className="inline-block text-xs font-semibold text-[#1d4b43] hover:underline">
+              Open outreach pipeline →
             </Link>
           </div>
         </SectionCard>

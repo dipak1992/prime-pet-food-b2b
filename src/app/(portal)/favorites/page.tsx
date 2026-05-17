@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { SectionCard } from "@/components/ui/SectionCard";
 
@@ -24,11 +24,7 @@ export default function FavoritesPage() {
   const [error, setError] = useState<string>("");
   const [removingId, setRemovingId] = useState<string>("");
 
-  useEffect(() => {
-    fetchFavorites();
-  }, []);
-
-  async function fetchFavorites() {
+  const fetchFavorites = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch("/api/favorites");
@@ -40,7 +36,11 @@ export default function FavoritesPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    fetchFavorites();
+  }, [fetchFavorites]);
 
   async function handleRemove(productId: string) {
     setRemovingId(productId);

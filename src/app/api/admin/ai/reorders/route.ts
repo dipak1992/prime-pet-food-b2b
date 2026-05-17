@@ -4,9 +4,13 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/auth/guards";
+import { sendEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
+  await requireAdmin();
+
   try {
     const rawPredictions = await prisma.reorderPrediction.findMany({
       where: { status: { in: ["pending", "notified"] } },
@@ -73,6 +77,8 @@ export async function GET() {
 }
 
 export async function PATCH(request: NextRequest) {
+  await requireAdmin();
+
   try {
     const body = await request.json();
     const { predictionId, action } = body as {
@@ -99,6 +105,35 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (action === "notify") {
+      const customer = await prisma.customer.findUnique({
+        where: { id: prediction.customerId },
+        include: { user: { select: { email: true } } },
+      });
+
+      if (!customer?.user?.email) {
+        return NextResponse.json({ error: "Customer email not found" }, { status: 400 });
+      }
+
+      const suggestedProducts = Array.isArray(prediction.suggestedProducts)
+        ? prediction.suggestedProducts.filter((item): item is string => typeof item === "string")
+        : [];
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+
+      await sendEmail({
+        to: customer.user.email,
+        template: "reorder-reminder",
+        variables: {
+          businessName: customer.businessName,
+          products: suggestedProducts.join(", ") || "your previous best sellers",
+          productLines: suggestedProducts.join("\n") || "Your previous best sellers",
+          reorderUrl: appUrl ? `${appUrl}/quick-order` : "/quick-order",
+          subject: "Recommended reorder for your yak chew assortment",
+          bodyText:
+            prediction.reasoning ||
+            "Based on your previous order cadence, your yak chew assortment may be ready for replenishment.",
+        },
+      });
+
       await prisma.reorderPrediction.update({
         where: { id: predictionId },
         data: {
@@ -106,10 +141,6 @@ export async function PATCH(request: NextRequest) {
           notifiedAt: new Date(),
         },
       });
-
-      // TODO: Actually send reorder reminder email via Resend
-      // const customer = await prisma.customer.findUnique({ where: { id: prediction.customerId }, include: { user: true } });
-      // await sendReorderReminder(customer.user.email, ...);
 
       return NextResponse.json({
         success: true,

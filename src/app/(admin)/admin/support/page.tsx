@@ -26,9 +26,13 @@ function daysOpen(createdAt: string) {
 }
 
 function getPipelineLabel(type: string) {
+  const requestType = type.toUpperCase();
+  if (requestType.includes("DISTRIBUTOR")) return "Distributor";
+  if (requestType.includes("PRIVATE_LABEL")) return "Private label";
   if (type === "CUSTOM_PRICING") return "Quote";
   if (type === "SAMPLE_REQUEST") return "Sample";
   if (type === "SALES_REP") return "Sales";
+  if (type === "GENERAL") return "Support";
   return "Support";
 }
 
@@ -43,6 +47,27 @@ function getSlaStatus(req: SupportRequest) {
 function extractLine(message: string, label: string) {
   const line = message.split("\n").find((entry) => entry.toLowerCase().startsWith(label.toLowerCase()));
   return line?.split(":").slice(1).join(":").trim() || "";
+}
+
+function generateQuoteSummary(req: SupportRequest) {
+  const requestType = extractLine(req.message, "Request type") || req.type;
+  const need = extractLine(req.message, "Business need") || req.subject;
+  const volume = extractLine(req.message, "Expected monthly volume") || "volume not provided";
+  const timeline = extractLine(req.message, "Timeline") || "timeline not provided";
+  const skus = extractLine(req.message, "Target SKUs / products") || "assortment not specified";
+  return `${requestType} request from ${req.customer.businessName}. Need: ${need}. Volume: ${volume}. Timeline: ${timeline}. Products: ${skus}.`;
+}
+
+function generateReplyDraft(req: SupportRequest) {
+  const need = extractLine(req.message, "Business need") || "your request";
+  const timeline = extractLine(req.message, "Timeline") || "your timeline";
+  if (req.type === "SAMPLE_REQUEST") {
+    return `Hi ${req.customer.user.name},\n\nThanks for the sample request. We reviewed the note about ${need}. We can help with a sample pack and will confirm the best shipping path for ${timeline}.\n\nCan you confirm the best shipping contact and whether this is for retail resale, daycare use, or customer samples?\n\nPrime Pet Food Wholesale`;
+  }
+  if (req.type === "CUSTOM_PRICING") {
+    return `Hi ${req.customer.user.name},\n\nThanks for the custom pricing request. Based on your note about ${need}, we can review a volume quote and recommended case mix.\n\nCan you confirm your expected monthly case volume and whether you want best sellers only or a mixed assortment?\n\nPrime Pet Food Wholesale`;
+  }
+  return `Hi ${req.customer.user.name},\n\nThanks for reaching out. We reviewed your request about ${need} and will follow up with next steps.\n\nPrime Pet Food Wholesale`;
 }
 
 export default function AdminSupportPage() {
@@ -163,6 +188,18 @@ export default function AdminSupportPage() {
                       ))}
                     </div>
                     <p className="mt-3 whitespace-pre-wrap text-sm text-[#4b5563]">{req.message}</p>
+                    {["SAMPLE_REQUEST", "CUSTOM_PRICING", "SALES_REP"].includes(req.type) ? (
+                      <div className="mt-3 grid gap-3 lg:grid-cols-2">
+                        <div className="rounded-lg border border-[#dbeafe] bg-blue-50 p-3">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-blue-800">AI-style summary</p>
+                          <p className="mt-1 text-xs leading-5 text-blue-900">{generateQuoteSummary(req)}</p>
+                        </div>
+                        <div className="rounded-lg border border-[#dcfce7] bg-green-50 p-3">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-green-800">Reply draft</p>
+                          <pre className="mt-1 whitespace-pre-wrap text-xs leading-5 text-green-900">{generateReplyDraft(req)}</pre>
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                   <div className="space-y-2">
                     <span className="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">

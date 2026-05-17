@@ -28,7 +28,7 @@ export async function PATCH(
     },
   });
 
-  if ((status === "SENT" || status === "PAID") && updated.order.customer.user.email) {
+  if (status === "SENT" && updated.order.customer.user.email) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
     await sendEmail({
       to: updated.order.customer.user.email,
@@ -40,6 +40,26 @@ export async function PATCH(
     }).catch((error) => {
       console.error("Failed to send invoice email", error);
     });
+  }
+
+  if (status === "PAID") {
+    await prisma.order.update({
+      where: { id: updated.orderId },
+      data: { paymentStatus: "PAID", status: "CONFIRMED" },
+    });
+
+    if (updated.order.customer.user.email) {
+      await sendEmail({
+        to: updated.order.customer.user.email,
+        template: "order-confirmed",
+        variables: {
+          orderNumber: updated.order.orderNumber,
+          amount: Number(updated.amount).toFixed(2),
+        },
+      }).catch((error) => {
+        console.error("Failed to send payment confirmation email", error);
+      });
+    }
   }
 
   return NextResponse.json({ invoice: { ...updated, amount: Number(updated.amount) } });

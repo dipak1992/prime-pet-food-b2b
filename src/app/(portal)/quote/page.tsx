@@ -93,6 +93,8 @@ export default function QuoteRequestPage() {
               <option value="CUSTOM_PRICING">Custom pricing / volume quote</option>
               <option value="SAMPLE_REQUEST">Sample pack</option>
               <option value="SALES_REP">Talk to sales</option>
+              <option value="DISTRIBUTOR">Distributor opportunity</option>
+              <option value="PRIVATE_LABEL">Private label inquiry</option>
             </select>
           </label>
 

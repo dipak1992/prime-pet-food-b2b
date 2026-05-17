@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { sendEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { wholesaleApplicationSchema } from "@/lib/validations/wholesaleApplication";
 
@@ -78,6 +79,16 @@ export async function POST(request: Request) {
     }
 
     return created;
+  });
+
+  await sendEmail({
+    to: email,
+    template: "application-received",
+    variables: {
+      businessName: application.businessName,
+    },
+  }).catch((error) => {
+    console.error("Failed to send application confirmation email", error);
   });
 
   return NextResponse.json({ id: application.id }, { status: 201 });

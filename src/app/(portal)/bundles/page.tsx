@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { SectionCard } from "@/components/ui/SectionCard";
 
 interface BundleItem {
@@ -31,12 +30,10 @@ export default function BundlesPage() {
   const [bundles, setBundles] = useState<Bundle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
+  const [businessType, setBusinessType] = useState("pet_store");
+  const [budget, setBudget] = useState("500");
 
-  useEffect(() => {
-    fetchBundles();
-  }, []);
-
-  async function fetchBundles() {
+  const fetchBundles = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch("/api/bundles");
@@ -48,17 +45,19 @@ export default function BundlesPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  const calculateSavings = (bundle: Bundle) => {
-    // Calculate what items would cost individually
-    let individualPrice = 0;
-    bundle.items.forEach((item) => {
-      // This would need actual product prices, for now just a placeholder
-      individualPrice += 100 * item.quantity; // Placeholder
-    });
-    return Math.max(0, individualPrice - bundle.bundlePrice);
-  };
+  useEffect(() => {
+    fetchBundles();
+  }, [fetchBundles]);
+
+  const starterRecommendation = useMemo(() => {
+    const maxBudget = Number(budget);
+    const affordable = bundles
+      .filter((bundle) => bundle.bundlePrice <= maxBudget)
+      .sort((a, b) => b.bundlePrice - a.bundlePrice);
+    return affordable[0] || bundles[0] || null;
+  }, [budget, bundles]);
 
   if (loading) {
     return (
@@ -70,20 +69,66 @@ export default function BundlesPage() {
 
   if (bundles.length === 0) {
     return (
-      <SectionCard title="Bundles" description="Pre-built product bundles at special pricing.">
-        <p className="text-center text-sm text-[#4b5563] py-8">No bundles available yet.</p>
+      <SectionCard title="Starter assortment builder" description="Recommended case mixes for first wholesale orders.">
+        <div className="rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-4">
+          <p className="text-sm font-semibold text-[#111827]">No saved bundles are available yet.</p>
+          <p className="mt-2 text-sm text-[#4b5563]">
+            Add bundles in admin to turn this into a guided starter-order builder by buyer type and budget.
+          </p>
+        </div>
       </SectionCard>
     );
   }
 
   return (
-    <SectionCard title="Bundles" description="Pre-built product bundles at special pricing.">
+    <SectionCard title="Starter assortment builder" description="Pre-built case mixes for faster first orders and cleaner reorders.">
       <div className="space-y-4">
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             {error}
           </div>
         )}
+
+        <div className="rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-4">
+          <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
+            <label className="flex flex-col gap-1 text-sm font-semibold text-[#111827]">
+              Buyer type
+              <select
+                value={businessType}
+                onChange={(event) => setBusinessType(event.target.value)}
+                className="rounded-lg border border-[#d1cec4] bg-white px-3 py-2 text-sm"
+              >
+                <option value="pet_store">Pet store</option>
+                <option value="groomer">Groomer</option>
+                <option value="daycare">Daycare / boarding</option>
+                <option value="vet">Vet clinic</option>
+                <option value="distributor">Distributor</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-sm font-semibold text-[#111827]">
+              Starter budget
+              <select
+                value={budget}
+                onChange={(event) => setBudget(event.target.value)}
+                className="rounded-lg border border-[#d1cec4] bg-white px-3 py-2 text-sm"
+              >
+                <option value="250">Under $250</option>
+                <option value="500">$250-$500</option>
+                <option value="1000">$500-$1,000</option>
+                <option value="2000">$1,000+</option>
+              </select>
+            </label>
+            <div className="rounded-lg border border-[#dbeafe] bg-blue-50 px-3 py-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-blue-800">Recommended</p>
+              <p className="mt-1 text-sm font-semibold text-blue-950">
+                {starterRecommendation ? starterRecommendation.name : "No fit yet"}
+              </p>
+            </div>
+          </div>
+          <p className="mt-3 text-xs leading-5 text-[#6b7280]">
+            Recommendation uses current bundle price and budget. Buyer type is captured now so future assortments can be tuned by channel.
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {bundles.map((bundle) => (

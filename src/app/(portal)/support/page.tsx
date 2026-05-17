@@ -38,6 +38,8 @@ export default function SupportPage() {
     message: "",
   });
   const [submitting, setSubmitting] = useState(false);
+  const [assistantQuestion, setAssistantQuestion] = useState("");
+  const [assistantAnswer, setAssistantAnswer] = useState("");
 
   useEffect(() => {
     fetchTickets();
@@ -115,6 +117,28 @@ export default function SupportPage() {
     return colors[status] || "bg-gray-100 text-gray-700";
   };
 
+  function handleAssistantAsk() {
+    const question = assistantQuestion.toLowerCase();
+    if (!question.trim()) return;
+    if (question.includes("price") || question.includes("pricing") || question.includes("discount")) {
+      setAssistantAnswer("Wholesale pricing is gated by approved account terms. Use Quote & sample request for custom pricing, and the wholesale team will review volume, case mix, and timeline before confirming anything.");
+      return;
+    }
+    if (question.includes("sample")) {
+      setAssistantAnswer("Samples should be requested through Quote & sample request. Include your business use case, expected monthly volume, and shipping ZIP so the wholesale team can qualify and route it correctly.");
+      return;
+    }
+    if (question.includes("invoice") || question.includes("ach") || question.includes("payment")) {
+      setAssistantAnswer("Invoice and ACH are preferred for approved wholesale accounts. For invoice-specific questions, open a support ticket so the team can review your account and order details.");
+      return;
+    }
+    if (question.includes("tracking") || question.includes("ship")) {
+      setAssistantAnswer("Order tracking appears on your order details once added by the fulfillment team. For urgent shipping questions, open a support ticket with the order number.");
+      return;
+    }
+    setAssistantAnswer("I can help with general portal guidance, samples, invoices, tracking, and reorder questions. I do not confirm pricing, credit terms, or account approvals. For account-specific help, open a ticket and the wholesale team will respond.");
+  }
+
   if (loading) {
     return (
       <SectionCard title="Support center" description="Request samples, custom pricing, or sales help.">
@@ -142,6 +166,33 @@ export default function SupportPage() {
           >
             {showForm ? "Cancel" : "New Ticket"}
           </button>
+        </div>
+
+        <div className="rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-4">
+          <p className="text-sm font-semibold text-[#111827]">Wholesale support assistant</p>
+          <p className="mt-1 text-xs leading-5 text-[#6b7280]">
+            Guardrailed help for portal questions. Pricing, account approvals, payment terms, and order exceptions stay with the wholesale team.
+          </p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+            <input
+              value={assistantQuestion}
+              onChange={(event) => setAssistantQuestion(event.target.value)}
+              className="rounded-lg border border-[#d1cec4] bg-white px-3 py-2 text-sm"
+              placeholder="Ask about samples, invoices, tracking, or reorders"
+            />
+            <button
+              type="button"
+              onClick={handleAssistantAsk}
+              className="rounded-lg border border-[#1d4b43] px-4 py-2 text-sm font-semibold text-[#1d4b43] hover:bg-[#f0f7f5]"
+            >
+              Ask
+            </button>
+          </div>
+          {assistantAnswer ? (
+            <div className="mt-3 rounded-lg border border-[#dbeafe] bg-blue-50 p-3 text-sm leading-6 text-blue-900">
+              {assistantAnswer}
+            </div>
+          ) : null}
         </div>
 
         {showForm && (
