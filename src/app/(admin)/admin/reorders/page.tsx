@@ -13,7 +13,18 @@ type ReorderCandidate = {
   avgIntervalDays: number;
   suggestedReorderDate: string;
   daysSinceLastOrder: number;
+  confidence: number | null;
+  reasoning: string | null;
+  suggestedProducts: string[];
+  estimatedOrderValue: number | null;
+  urgency: "LOW" | "MEDIUM" | "HIGH";
 };
+
+function urgencyClass(urgency: string) {
+  if (urgency === "HIGH") return "bg-red-100 text-red-700";
+  if (urgency === "MEDIUM") return "bg-amber-100 text-amber-700";
+  return "bg-green-100 text-green-700";
+}
 
 export default function AdminReordersPage() {
   const [rows, setRows] = useState<ReorderCandidate[]>([]);
@@ -60,7 +71,7 @@ export default function AdminReordersPage() {
   return (
     <SectionCard
       title="Reorder Opportunities"
-      description="Customers with 2+ orders and no purchase in the last 30 days."
+      description="Customers with 2+ orders, reorder timing, suggested products, and one-click reminders."
     >
       {message && (
         <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700">
@@ -88,6 +99,7 @@ export default function AdminReordersPage() {
                 <th className="px-3 py-2 text-left">Last Order</th>
                 <th className="px-3 py-2 text-right">Avg Cycle</th>
                 <th className="px-3 py-2 text-right">Days Since</th>
+                <th className="px-3 py-2 text-left">Recommendation</th>
                 <th className="px-3 py-2 text-right">Action</th>
               </tr>
             </thead>
@@ -102,7 +114,21 @@ export default function AdminReordersPage() {
                     {new Date(row.lastOrderDate).toLocaleDateString()}
                   </td>
                   <td className="px-3 py-3 text-right">{Math.round(row.avgIntervalDays || 0)}d</td>
-                  <td className="px-3 py-3 text-right">{row.daysSinceLastOrder}d</td>
+                  <td className="px-3 py-3 text-right">
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${urgencyClass(row.urgency)}`}>
+                      {row.daysSinceLastOrder}d
+                    </span>
+                  </td>
+                  <td className="px-3 py-3">
+                    <p className="text-xs font-semibold text-[#111827]">
+                      {row.suggestedProducts?.slice(0, 2).join(", ") || "Previous best sellers"}
+                    </p>
+                    <p className="mt-1 text-[11px] text-[#6b7280]">
+                      Due {new Date(row.suggestedReorderDate).toLocaleDateString()}
+                      {row.confidence ? ` · ${Math.round(row.confidence * 100)}% confidence` : ""}
+                      {row.estimatedOrderValue ? ` · $${Number(row.estimatedOrderValue).toFixed(0)} est.` : ""}
+                    </p>
+                  </td>
                   <td className="px-3 py-3 text-right">
                     <button
                       onClick={() => sendReminder(row)}

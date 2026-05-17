@@ -87,6 +87,47 @@ export async function POST(
       },
     });
 
+    const matchedLead = await tx.lead.findFirst({
+      where: {
+        OR: [
+          { email: { equals: email, mode: "insensitive" } },
+          { businessName: { equals: application.businessName, mode: "insensitive" } },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (matchedLead) {
+      await tx.lead.update({
+        where: { id: matchedLead.id },
+        data: {
+          status: "CONVERTED",
+          contactedAt: matchedLead.contactedAt ?? new Date(),
+        },
+      });
+
+      await tx.leadActivity.create({
+        data: {
+          leadId: matchedLead.id,
+          type: "CONVERSION",
+          title: "Lead converted to approved wholesale customer",
+          detail: `${application.businessName} was approved from wholesale application ${application.id}.`,
+        },
+      });
+
+      const openDeal = await tx.leadDeal.findFirst({
+        where: { leadId: matchedLead.id, status: "OPEN" },
+        orderBy: { createdAt: "desc" },
+      });
+
+      if (openDeal) {
+        await tx.leadDeal.update({
+          where: { id: openDeal.id },
+          data: { status: "WON", closedAt: new Date() },
+        });
+      }
+    }
+
     return application;
   });
 

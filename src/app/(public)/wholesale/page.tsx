@@ -26,6 +26,26 @@ const economics = [
 
 const featuredArticles = getFeaturedArticles(3);
 
+const trustSignals = [
+  ["Retail-ready margin", "Approved buyers see wholesale price, MSRP guidance, case cost, and gross profit per case inside the portal."],
+  ["Low-friction replenishment", "Quick order, favorites, reorder history, and invoice status help teams reorder without rebuilding carts from scratch."],
+  ["Sales support", "Samples, custom volume quotes, and sales requests are routed to the wholesale team with clear follow-up expectations."],
+];
+
+const objectionHandlers = [
+  ["MOQ and case packs", "Every product shows minimum order and case-pack rules before checkout."],
+  ["Payment terms", "Invoice workflow is built in, with ACH preferred for approved wholesale accounts."],
+  ["Private pricing", "Wholesale pricing stays gated so retail partners can protect shelf margin."],
+  ["Reorder planning", "Buyers can use order history and quick order tools to keep best sellers in stock."],
+];
+
+const businessUseCases = [
+  ["Independent pet stores", "Use yak chews as a premium natural chew line with strong shelf and counter appeal."],
+  ["Groomers and salons", "Offer an easy add-on after appointments without carrying a complex treat catalog."],
+  ["Dog daycare and boarding", "Use case packs for enrichment, retail add-ons, and take-home purchases."],
+  ["Distributors", "Request volume pricing, regional opportunities, and larger recurring order support."],
+];
+
 export default function WholesalePage() {
   return (
     <main className="min-h-screen bg-[#f8f7f4] text-[#111827]">
@@ -141,6 +161,59 @@ export default function WholesalePage() {
           >
             Start wholesale application
           </Link>
+        </div>
+      </section>
+
+      <section className="border-y border-[#e7e4dc] bg-white py-12">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#ea580c]">Trust & conversion proof</p>
+              <h2 className="mt-2 text-3xl font-semibold tracking-tight">Give buyers the proof they need before they apply.</h2>
+              <p className="mt-4 text-sm leading-6 text-[#4b5563]">
+                Prime Pet Food wholesale is positioned around retailer economics, reorder reliability, and practical sales support. The portal should make those advantages visible before pricing is unlocked.
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {trustSignals.map(([title, copy]) => (
+                <article key={title} className="rounded-xl border border-[#e7e4dc] bg-[#fcfbf9] p-4">
+                  <h3 className="text-sm font-semibold text-[#111827]">{title}</h3>
+                  <p className="mt-2 text-xs leading-5 text-[#6b7280]">{copy}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-4">
+            {objectionHandlers.map(([title, copy]) => (
+              <div key={title} className="rounded-xl border border-[#e7e4dc] p-4">
+                <p className="text-sm font-semibold text-[#ea580c]">{title}</p>
+                <p className="mt-2 text-xs leading-5 text-[#6b7280]">{copy}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-6 py-12">
+        <div className="rounded-2xl border border-[#e7e4dc] bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#ea580c]">Retailer fit</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight">Where yak chews fit in a wholesale assortment</h2>
+            </div>
+            <Link href="/dog-treat-profit-calculator" className="text-sm font-semibold text-[#ea580c] hover:underline">
+              Calculate margin →
+            </Link>
+          </div>
+          <div className="mt-6 grid gap-4 md:grid-cols-4">
+            {businessUseCases.map(([title, copy]) => (
+              <article key={title} className="rounded-xl bg-[#fcfbf9] p-4">
+                <h3 className="text-sm font-semibold text-[#111827]">{title}</h3>
+                <p className="mt-2 text-xs leading-5 text-[#6b7280]">{copy}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 

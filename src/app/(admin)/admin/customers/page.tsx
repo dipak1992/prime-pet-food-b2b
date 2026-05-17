@@ -82,6 +82,10 @@ export default function AdminCustomersPage() {
 
     return matchesTier && matchesStatus && matchesSearch;
   });
+  const atRiskCount = customers.filter((customer) => customer.metrics.healthLabel === "At Risk").length;
+  const watchCount = customers.filter((customer) => customer.metrics.healthLabel === "Watch").length;
+  const highReorderRiskCount = customers.filter((customer) => customer.metrics.reorderRisk === "HIGH").length;
+  const attributedCount = customers.filter((customer) => customer.attribution).length;
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "—";
@@ -138,6 +142,25 @@ export default function AdminCustomersPage() {
         )}
 
         {/* Filters */}
+        <div className="grid gap-3 md:grid-cols-4">
+          <div className="rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-3">
+            <p className="text-xs uppercase tracking-wide text-[#6b7280]">At-risk customers</p>
+            <p className="mt-1 text-2xl font-bold text-red-700">{atRiskCount}</p>
+          </div>
+          <div className="rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-3">
+            <p className="text-xs uppercase tracking-wide text-[#6b7280]">Watch list</p>
+            <p className="mt-1 text-2xl font-bold text-amber-700">{watchCount}</p>
+          </div>
+          <div className="rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-3">
+            <p className="text-xs uppercase tracking-wide text-[#6b7280]">High reorder risk</p>
+            <p className="mt-1 text-2xl font-bold text-red-700">{highReorderRiskCount}</p>
+          </div>
+          <div className="rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-3">
+            <p className="text-xs uppercase tracking-wide text-[#6b7280]">Attributed accounts</p>
+            <p className="mt-1 text-2xl font-bold text-[#1d4b43]">{attributedCount}</p>
+          </div>
+        </div>
+
         <div className="grid gap-3 grid-cols-1 md:grid-cols-4">
           <input
             type="text"

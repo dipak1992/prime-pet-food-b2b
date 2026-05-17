@@ -5,6 +5,26 @@ import { getFeaturedArticles, formatArticleDate, categoryColors } from "@/conten
 
 const featuredArticles = getFeaturedArticles(3);
 
+const proofPoints = [
+  ["Retail margin story", "Show MSRP, wholesale cost, case economics, and gross profit before buyers commit."],
+  ["Wholesale-first workflow", "Applications, protected pricing, PO-friendly checkout, invoices, and reorder tools are built around B2B buying."],
+  ["Retailer enablement", "Approved buyers get sell sheets, shelf talker copy, brand assets, and practical merchandising guidance."],
+];
+
+const retailerProof = [
+  ["Pet stores", "Natural chew assortment, shelf appeal, and clear margin math for repeat retail sales."],
+  ["Groomers", "Counter-friendly premium chews customers can add after appointments."],
+  ["Daycare & boarding", "Replenishment-friendly case packs for enrichment, retail add-ons, and take-home sales."],
+  ["Vet clinics", "Simple ingredient positioning and education assets for staff-led recommendations."],
+];
+
+const wholesaleFaqs = [
+  ["When do I see pricing?", "Wholesale pricing is visible after your business account is approved."],
+  ["How quickly are applications reviewed?", "Most complete applications are reviewed within one business day."],
+  ["How does payment work?", "Orders can be submitted online; invoice and ACH are preferred for approved accounts."],
+  ["Can I request samples or volume pricing?", "Approved buyers can request samples, custom pricing, or sales help from the portal."],
+];
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_10%_10%,#f9f2df_0%,#f8f7f4_45%,#eef6f3_100%)]">
@@ -94,6 +114,55 @@ export default function Home() {
             Apply for wholesale access to review pricing, build a case-pack order, and request support from the Prime Pet Food team.
           </p>
         </div>
+
+        {/* Conversion proof */}
+        <div className="mt-10 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+          <section className="rounded-2xl border border-[#e5e7eb] bg-white p-6 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#ea580c]">Wholesale proof</p>
+            <h2 className="mt-2 text-2xl font-semibold text-[#111827]">Built for retailer confidence before the first order.</h2>
+            <div className="mt-5 space-y-4">
+              {proofPoints.map(([title, copy]) => (
+                <div key={title} className="border-l-2 border-[#1d4b43] pl-4">
+                  <p className="text-sm font-semibold text-[#111827]">{title}</p>
+                  <p className="mt-1 text-sm leading-6 text-[#6b7280]">{copy}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-[#e5e7eb] bg-white p-6 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#ea580c]">Who it serves</p>
+            <h2 className="mt-2 text-2xl font-semibold text-[#111827]">One yak chew line, several B2B use cases.</h2>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {retailerProof.map(([title, copy]) => (
+                <div key={title} className="rounded-xl border border-[#e7e4dc] bg-[#fcfbf9] p-4">
+                  <p className="text-sm font-semibold text-[#111827]">{title}</p>
+                  <p className="mt-2 text-xs leading-5 text-[#6b7280]">{copy}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <section className="mt-10 rounded-2xl border border-[#e5e7eb] bg-white p-6 shadow-sm">
+          <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#ea580c]">Buyer questions</p>
+              <h2 className="mt-2 text-2xl font-semibold text-[#111827]">Remove uncertainty before applying.</h2>
+              <p className="mt-3 text-sm leading-6 text-[#6b7280]">
+                Wholesale buyers need clarity on pricing access, review time, payment, and sample support before they invest time in an application.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {wholesaleFaqs.map(([question, answer]) => (
+                <div key={question} className="rounded-xl bg-[#fcfbf9] p-4">
+                  <p className="text-sm font-semibold text-[#111827]">{question}</p>
+                  <p className="mt-2 text-xs leading-5 text-[#6b7280]">{answer}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
         {/* Blog / Resources Section */}
         <div className="mt-16">

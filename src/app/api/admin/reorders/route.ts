@@ -16,10 +16,33 @@ export async function GET() {
       user: { select: { email: true, name: true } },
       orders: {
         orderBy: { createdAt: "desc" },
-        select: { id: true, grandTotal: true, createdAt: true },
+        select: {
+          id: true,
+          grandTotal: true,
+          createdAt: true,
+          items: {
+            orderBy: { totalPrice: "desc" },
+            take: 3,
+            select: { productTitleSnapshot: true, quantity: true },
+          },
+        },
       },
     },
   });
+
+  const predictions = await prisma.reorderPrediction.findMany({
+    where: {
+      customerId: { in: customers.map((customer) => customer.id) },
+      status: { in: ["pending", "notified"] },
+    },
+    orderBy: [{ predictedDate: "asc" }, { createdAt: "desc" }],
+  });
+  const predictionByCustomer = new Map<string, (typeof predictions)[number]>();
+  for (const prediction of predictions) {
+    if (!predictionByCustomer.has(prediction.customerId)) {
+      predictionByCustomer.set(prediction.customerId, prediction);
+    }
+  }
 
   const reorders = customers
     .filter((c) => c.orders.length >= 2)
@@ -50,6 +73,10 @@ export async function GET() {
       const daysSinceLastOrder = Math.floor(
         (Date.now() - lastOrderDate.getTime()) / (1000 * 60 * 60 * 24)
       );
+      const prediction = predictionByCustomer.get(c.id);
+      const suggestedProducts = Array.isArray(prediction?.suggestedProducts)
+        ? prediction.suggestedProducts.filter((item): item is string => typeof item === "string")
+        : lastOrder.items.map((item) => item.productTitleSnapshot);
 
       return {
         id: c.id,
@@ -60,8 +87,18 @@ export async function GET() {
         lifetimeValue,
         lastOrderDate: lastOrder.createdAt,
         avgIntervalDays,
-        suggestedReorderDate,
+        suggestedReorderDate: prediction?.predictedDate ?? suggestedReorderDate,
         daysSinceLastOrder,
+        confidence: prediction?.confidence ?? null,
+        reasoning: prediction?.reasoning ?? null,
+        suggestedProducts,
+        estimatedOrderValue: prediction?.estimatedOrderValue ?? null,
+        urgency:
+          daysSinceLastOrder > Math.max(45, avgIntervalDays + 14)
+            ? "HIGH"
+            : daysSinceLastOrder > Math.max(30, avgIntervalDays)
+              ? "MEDIUM"
+              : "LOW",
       };
     })
     .filter(Boolean)

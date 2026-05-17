@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { calculateCustomerMetrics } from "@/lib/customer-metrics";
 import { SectionCard } from "@/components/ui/SectionCard";
 
 export const dynamic = "force-dynamic";
@@ -58,6 +59,8 @@ export default async function AdminAnalyticsPage() {
     paymentCounts,
     topCustomers,
     recentSyncJobs,
+    openInvoices,
+    approvedCustomers,
   ] = await Promise.all([
     prisma.order.count({ where: { createdAt: { gte: todayStart } } }),
     prisma.order.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
@@ -104,6 +107,21 @@ export default async function AdminAnalyticsPage() {
         errorMessage: true,
       },
     }),
+    prisma.invoice.findMany({
+      where: { status: { in: ["SENT", "PARTIAL", "OVERDUE"] } },
+      select: { amount: true, dueDate: true, status: true },
+    }),
+    prisma.customer.findMany({
+      where: { accountStatus: "APPROVED" },
+      select: {
+        id: true,
+        businessName: true,
+        tier: true,
+        orders: {
+          select: { createdAt: true, grandTotal: true, paymentStatus: true },
+        },
+      },
+    }),
   ]);
 
   const typedStatusCounts = statusCounts as StatusCountRow[];
@@ -123,6 +141,41 @@ export default async function AdminAnalyticsPage() {
   const customerNameById = new Map(typedCustomerMap.map((c) => [c.id, c.businessName]));
 
   const recentFailures = typedRecentSyncJobs.filter((j) => j.status === "FAILED").length;
+  const invoiceAging = {
+    current: 0,
+    oneToFifteen: 0,
+    sixteenToThirty: 0,
+    thirtyOneToSixty: 0,
+    sixtyPlus: 0,
+  };
+  let openInvoiceAmount = 0;
+  for (const invoice of openInvoices) {
+    const amount = Number(invoice.amount || 0);
+    openInvoiceAmount += amount;
+    if (!invoice.dueDate) {
+      invoiceAging.current += amount;
+      continue;
+    }
+    const daysPastDue = Math.floor((todayStart.getTime() - new Date(invoice.dueDate).getTime()) / 86_400_000);
+    if (daysPastDue <= 0) invoiceAging.current += amount;
+    else if (daysPastDue <= 15) invoiceAging.oneToFifteen += amount;
+    else if (daysPastDue <= 30) invoiceAging.sixteenToThirty += amount;
+    else if (daysPastDue <= 60) invoiceAging.thirtyOneToSixty += amount;
+    else invoiceAging.sixtyPlus += amount;
+  }
+
+  const customerHealth = approvedCustomers.map((customer) => ({
+    id: customer.id,
+    businessName: customer.businessName,
+    metrics: calculateCustomerMetrics(customer.orders, customer.tier),
+  }));
+  const atRiskCustomers = customerHealth.filter((customer) => customer.metrics.healthLabel === "At Risk");
+  const watchCustomers = customerHealth.filter((customer) => customer.metrics.healthLabel === "Watch");
+  const highReorderRisk = customerHealth.filter((customer) => customer.metrics.reorderRisk === "HIGH");
+  const topAtRisk = [...customerHealth]
+    .filter((customer) => customer.metrics.daysSinceLastOrder !== null)
+    .sort((a, b) => (a.metrics.healthScore - b.metrics.healthScore))
+    .slice(0, 5);
 
   return (
     <div className="space-y-6">
@@ -194,6 +247,63 @@ export default async function AdminAnalyticsPage() {
             </div>
             <Link href="/admin/sync-status" className="inline-block text-xs font-semibold text-[#1d4b43] hover:underline">
               Open sync status details →
+            </Link>
+          </div>
+        </SectionCard>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <SectionCard title="Customer Health">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded border border-[#e7e4dc] bg-[#fcfbf9] p-3">
+              <p className="text-xs uppercase text-[#4b5563]">At risk</p>
+              <p className="mt-1 text-2xl font-bold text-red-700">{atRiskCustomers.length}</p>
+            </div>
+            <div className="rounded border border-[#e7e4dc] bg-[#fcfbf9] p-3">
+              <p className="text-xs uppercase text-[#4b5563]">Watch</p>
+              <p className="mt-1 text-2xl font-bold text-amber-700">{watchCustomers.length}</p>
+            </div>
+            <div className="rounded border border-[#e7e4dc] bg-[#fcfbf9] p-3">
+              <p className="text-xs uppercase text-[#4b5563]">High reorder risk</p>
+              <p className="mt-1 text-2xl font-bold text-red-700">{highReorderRisk.length}</p>
+            </div>
+          </div>
+          <div className="mt-4 space-y-2 text-sm">
+            {topAtRisk.map((customer) => (
+              <div key={customer.id} className="flex items-center justify-between rounded border border-[#e7e4dc] bg-[#fcfbf9] p-3">
+                <div>
+                  <p className="font-semibold text-[#111827]">{customer.businessName}</p>
+                  <p className="text-xs text-[#6b7280]">
+                    {customer.metrics.daysSinceLastOrder} days since last order · {customer.metrics.nextTierHint}
+                  </p>
+                </div>
+                <p className="font-semibold text-[#1d4b43]">{customer.metrics.healthScore}</p>
+              </div>
+            ))}
+            {topAtRisk.length === 0 && <p className="text-[#4b5563]">No customer health risks yet.</p>}
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Invoice Aging">
+          <div className="rounded border border-[#e7e4dc] bg-[#fcfbf9] p-3">
+            <p className="text-xs uppercase text-[#4b5563]">Open receivables</p>
+            <p className="mt-1 text-2xl font-bold text-[#1d4b43]">${openInvoiceAmount.toFixed(2)}</p>
+          </div>
+          <div className="mt-4 space-y-2 text-sm">
+            {[
+              ["Current", invoiceAging.current],
+              ["1-15 days", invoiceAging.oneToFifteen],
+              ["16-30 days", invoiceAging.sixteenToThirty],
+              ["31-60 days", invoiceAging.thirtyOneToSixty],
+              ["60+ days", invoiceAging.sixtyPlus],
+            ].map(([label, amount]) => (
+              <div key={String(label)} className="flex items-center justify-between rounded border border-[#e7e4dc] bg-[#fcfbf9] p-3">
+                <span className="text-[#111827]">{label}</span>
+                <span className="font-semibold text-[#1d4b43]">${Number(amount).toFixed(2)}</span>
+              </div>
+            ))}
+            <Link href="/admin/invoices" className="inline-block text-xs font-semibold text-[#1d4b43] hover:underline">
+              Open invoice queue →
             </Link>
           </div>
         </SectionCard>

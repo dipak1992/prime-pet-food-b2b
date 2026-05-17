@@ -11,11 +11,15 @@ function daysAgo(date: Date): string {
   return `${diff} days ago`;
 }
 
+function daysUntil(date: Date): number {
+  return Math.ceil((date.getTime() - Date.now()) / 86_400_000);
+}
+
 export default async function DashboardPage() {
   const profile = await requireApprovedBuyer();
   const customerId = profile.customerId;
 
-  const [orderCount, activeCount, recentOrder, topItem, cart, latestInvoice] = await Promise.all([
+  const [orderCount, activeCount, recentOrder, topItem, cart, latestInvoice, customer, latestPrediction] = await Promise.all([
     customerId
       ? prisma.order.count({ where: { customerId } })
       : Promise.resolve(0),
@@ -52,6 +56,25 @@ export default async function DashboardPage() {
           select: { id: true, invoiceNumber: true, amount: true, status: true, dueDate: true },
         })
       : Promise.resolve(null),
+    customerId
+      ? prisma.customer.findUnique({
+          where: { id: customerId },
+          select: { businessName: true, tier: true, freeShippingThreshold: true },
+        })
+      : Promise.resolve(null),
+    customerId
+      ? prisma.reorderPrediction.findFirst({
+          where: { customerId, status: { in: ["pending", "notified"] } },
+          orderBy: [{ predictedDate: "asc" }, { createdAt: "desc" }],
+          select: {
+            predictedDate: true,
+            confidence: true,
+            reasoning: true,
+            suggestedProducts: true,
+            estimatedOrderValue: true,
+          },
+        })
+      : Promise.resolve(null),
   ]);
 
   const lastOrderLabel = recentOrder
@@ -62,8 +85,14 @@ export default async function DashboardPage() {
     ["Last order", lastOrderLabel],
     ["Total orders", String(orderCount)],
     ["Active orders", String(activeCount)],
-    ["Top product", topItem?.productTitleSnapshot ?? "—"],
+    ["Account tier", customer?.tier ?? "—"],
   ];
+
+  const predictedDate = latestPrediction ? new Date(latestPrediction.predictedDate) : null;
+  const daysUntilPredicted = predictedDate ? daysUntil(predictedDate) : null;
+  const suggestedProducts = Array.isArray(latestPrediction?.suggestedProducts)
+    ? latestPrediction.suggestedProducts.filter((item): item is string => typeof item === "string").slice(0, 3)
+    : [];
 
   const quickActions = [
     { label: "Quick order", href: "/quick-order" },
@@ -74,7 +103,10 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <SectionCard title="Welcome back" description="Here's a quick overview of your account.">
+      <SectionCard
+        title={customer?.businessName ? `Welcome back, ${customer.businessName}` : "Welcome back"}
+        description="Here's the fastest path to your next wholesale order."
+      >
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {stats.map(([label, value]) => (
             <div key={label} className="rounded-xl border border-[#e7e4dc] bg-[#fcfbf9] p-3">
@@ -100,9 +132,30 @@ export default async function DashboardPage() {
       </SectionCard>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <SectionCard title="Reorder module" description="Keep fast-moving chews in stock.">
+        <SectionCard title="Smart reorder" description="Keep fast-moving chews in stock.">
           {recentOrder ? (
             <div className="space-y-3">
+              {latestPrediction ? (
+                <div className="rounded-xl border border-[#f59e0b]/30 bg-[#fffbeb] p-3">
+                  <p className="text-sm font-semibold text-[#92400e]">
+                    {daysUntilPredicted == null
+                      ? "Reorder window available"
+                      : daysUntilPredicted <= 0
+                        ? "You may be due to reorder"
+                        : `Estimated reorder window in ${daysUntilPredicted} day${daysUntilPredicted === 1 ? "" : "s"}`}
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-[#92400e]">
+                    {suggestedProducts.length > 0
+                      ? `Suggested: ${suggestedProducts.join(", ")}`
+                      : latestPrediction.reasoning || "Based on your previous ordering cadence."}
+                  </p>
+                  {latestPrediction.estimatedOrderValue ? (
+                    <p className="mt-1 text-xs font-semibold text-[#92400e]">
+                      Estimated replenishment: ${Number(latestPrediction.estimatedOrderValue).toFixed(2)}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
               <div className="rounded-xl border border-[#e7e4dc] bg-[#fcfbf9] p-3">
                 <p className="text-sm font-semibold text-[#111827]">Last order #{recentOrder.orderNumber}</p>
                 <p className="mt-1 text-xs text-[#6b7280]">
@@ -158,6 +211,27 @@ export default async function DashboardPage() {
           )}
         </SectionCard>
       </div>
+
+      <SectionCard title="Account planning">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-xl border border-[#e7e4dc] bg-[#fcfbf9] p-3">
+            <p className="text-xs uppercase tracking-wide text-[#6b7280]">Top ordered item</p>
+            <p className="mt-1 text-sm font-semibold text-[#111827]">{topItem?.productTitleSnapshot ?? "No order history yet"}</p>
+          </div>
+          <div className="rounded-xl border border-[#e7e4dc] bg-[#fcfbf9] p-3">
+            <p className="text-xs uppercase tracking-wide text-[#6b7280]">Free shipping target</p>
+            <p className="mt-1 text-sm font-semibold text-[#111827]">
+              ${Number(customer?.freeShippingThreshold ?? 500).toFixed(0)} cart subtotal
+            </p>
+          </div>
+          <div className="rounded-xl border border-[#e7e4dc] bg-[#fcfbf9] p-3">
+            <p className="text-xs uppercase tracking-wide text-[#6b7280]">Best next action</p>
+            <p className="mt-1 text-sm font-semibold text-[#111827]">
+              {cart && cart.items.length > 0 ? "Finish open cart" : recentOrder ? "Review reorder" : "Build starter order"}
+            </p>
+          </div>
+        </div>
+      </SectionCard>
 
       {recentOrder && (
         <SectionCard title="Recent order">

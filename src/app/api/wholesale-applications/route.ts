@@ -48,6 +48,35 @@ export async function POST(request: Request) {
       },
     });
 
+    const matchedLead = await tx.lead.findFirst({
+      where: {
+        OR: [
+          { email: { equals: email, mode: "insensitive" } },
+          { businessName: { equals: parsed.data.businessName, mode: "insensitive" } },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (matchedLead) {
+      await tx.lead.update({
+        where: { id: matchedLead.id },
+        data: {
+          status: matchedLead.status === "CONVERTED" ? "CONVERTED" : "QUALIFIED",
+          contactedAt: matchedLead.contactedAt ?? new Date(),
+        },
+      });
+
+      await tx.leadActivity.create({
+        data: {
+          leadId: matchedLead.id,
+          type: "APPLICATION",
+          title: "Wholesale application submitted",
+          detail: `${parsed.data.businessName} applied for wholesale access using ${email}.`,
+        },
+      });
+    }
+
     return created;
   });
 

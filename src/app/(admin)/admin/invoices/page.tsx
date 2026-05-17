@@ -19,6 +19,10 @@ type Invoice = {
   };
 };
 
+function getDaysPastDue(dueDate: string) {
+  return Math.floor((Date.now() - new Date(dueDate).getTime()) / 86_400_000);
+}
+
 export default function AdminInvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [statusFilter, setStatusFilter] = useState("");
@@ -80,10 +84,41 @@ export default function AdminInvoicesPage() {
   }
 
   const filtered = invoices.filter((inv) => !statusFilter || inv.status === statusFilter);
+  const openInvoices = invoices.filter((inv) => ["SENT", "PARTIAL", "OVERDUE"].includes(inv.status));
+  const aging = openInvoices.reduce(
+    (acc, invoice) => {
+      const amount = invoice.amount;
+      if (!invoice.dueDate) {
+        acc.current += amount;
+        return acc;
+      }
+      const daysPastDue = getDaysPastDue(invoice.dueDate);
+      if (daysPastDue <= 0) acc.current += amount;
+      else if (daysPastDue <= 15) acc.oneToFifteen += amount;
+      else if (daysPastDue <= 30) acc.sixteenToThirty += amount;
+      else acc.thirtyPlus += amount;
+      return acc;
+    },
+    { current: 0, oneToFifteen: 0, sixteenToThirty: 0, thirtyPlus: 0 },
+  );
 
   return (
     <SectionCard title="Invoices" description="Track invoice status and collections.">
       <div className="space-y-4">
+        <div className="grid gap-3 md:grid-cols-4">
+          {[
+            ["Current", aging.current],
+            ["1-15 days", aging.oneToFifteen],
+            ["16-30 days", aging.sixteenToThirty],
+            ["30+ days", aging.thirtyPlus],
+          ].map(([label, value]) => (
+            <div key={String(label)} className="rounded-lg border border-[#e7e4dc] bg-[#fcfbf9] p-3">
+              <p className="text-xs uppercase tracking-wide text-[#6b7280]">{label}</p>
+              <p className="mt-1 text-xl font-bold text-[#1d4b43]">${Number(value).toFixed(2)}</p>
+            </div>
+          ))}
+        </div>
+
         <div className="flex items-center gap-3">
           <select
             value={statusFilter}
