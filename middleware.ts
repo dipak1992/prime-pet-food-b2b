@@ -24,13 +24,7 @@ const protectedPrefixes = [
   "/api/support",
 ];
 
-const publicPaths = ["/admin/login"];
-
 function isProtectedPath(pathname: string): boolean {
-  if (publicPaths.includes(pathname)) {
-    return false;
-  }
-
   return protectedPrefixes.some((prefix) => pathname.startsWith(prefix));
 }
 
