@@ -29,8 +29,10 @@ export async function GET(request: Request) {
   const issuedAtParam = url.searchParams.get("issuedAt");
   const origin = url.origin;
 
-  const issuedAt = issuedAtParam ? Number(issuedAtParam) : NaN;
-  const isExpired = Number.isNaN(issuedAt) || Date.now() - issuedAt > MAX_MAGIC_LINK_AGE_MS;
+  const issuedAt = issuedAtParam ? Number(issuedAtParam) : null;
+  const isExpired =
+    issuedAt !== null && (Number.isNaN(issuedAt) || Date.now() - issuedAt > MAX_MAGIC_LINK_AGE_MS);
+  const isRecoveryFlow = next === "/reset-password" || url.searchParams.get("type") === "recovery";
 
   if (isExpired) {
     return NextResponse.redirect(`${origin}/login?status=expired`);
@@ -56,6 +58,10 @@ export async function GET(request: Request) {
   }
 
   const email = authUser.email.toLowerCase();
+
+  if (isRecoveryFlow) {
+    return NextResponse.redirect(`${origin}/reset-password`);
+  }
 
   if (ADMIN_EMAILS.has(email)) {
     await prisma.user.upsert({

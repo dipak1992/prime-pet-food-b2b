@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,9 +12,44 @@ export default function ResetPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isVerifyingLink, setIsVerifyingLink] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function exchangeRecoveryCode() {
+      const code = new URLSearchParams(window.location.search).get("code");
+
+      if (!code) {
+        setIsVerifyingLink(false);
+        return;
+      }
+
+      const supabase = createSupabaseBrowserClient();
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (exchangeError) {
+        setError("This reset link is expired or invalid. Please request a new password reset email.");
+      } else {
+        window.history.replaceState({}, "", "/reset-password");
+      }
+
+      setIsVerifyingLink(false);
+    }
+
+    exchangeRecoveryCode();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -82,7 +117,7 @@ export default function ResetPasswordPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               className="rounded-xl border border-[#d6d3cc] px-3 py-2 outline-none ring-[#1d4b43] focus:ring-2"
-              disabled={isLoading}
+              disabled={isLoading || isVerifyingLink}
             />
           </label>
 
@@ -102,7 +137,7 @@ export default function ResetPasswordPage() {
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
               className="rounded-xl border border-[#d6d3cc] px-3 py-2 outline-none ring-[#1d4b43] focus:ring-2"
-              disabled={isLoading}
+              disabled={isLoading || isVerifyingLink}
             />
           </label>
 
@@ -116,10 +151,10 @@ export default function ResetPasswordPage() {
 
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || isVerifyingLink}
             className="inline-flex w-full items-center justify-center rounded-xl bg-[#ea580c] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
           >
-            {isLoading ? "Updating..." : "Update password"}
+            {isVerifyingLink ? "Verifying link..." : isLoading ? "Updating..." : "Update password"}
           </button>
         </form>
 
