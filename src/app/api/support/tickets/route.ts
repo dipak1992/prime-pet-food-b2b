@@ -1,6 +1,9 @@
 import { requireApprovedBuyer } from "@/lib/auth/guards";
+import { trackAttributionEvent } from "@/lib/attribution";
 import { sendEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
+import { buildQuoteRequestData, isQuotePipelineRequest } from "@/lib/quote-pipeline";
+import { calculateDueAt } from "@/lib/sla";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
@@ -24,6 +27,7 @@ export async function GET() {
         priority: "normal",
         status: t.status,
         message: t.message,
+        dueAt: t.dueAt,
         createdAt: t.createdAt,
         updatedAt: t.updatedAt,
         responses: [],
@@ -42,7 +46,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Customer profile not found." }, { status: 400 });
     }
 
-    const { subject, category, priority, message } = await req.json();
+    const { subject, category, priority, message, source, campaign, page } = await req.json();
 
     const normalizedCategory = String(category || "GENERAL").toUpperCase();
     const type =
@@ -53,17 +57,56 @@ export async function POST(req: NextRequest) {
           : normalizedCategory === "SALES_REP" || normalizedCategory === "SALES"
             ? "SALES_REP"
             : "GENERAL";
+    const dueAt = await calculateDueAt(
+      isQuotePipelineRequest(normalizedCategory) ? "QUOTE_REQUEST" : "SUPPORT_REQUEST",
+      type,
+      priority,
+    );
 
-    const ticket = await prisma.supportRequest.create({
-      data: {
-        customerId: profile.customerId,
-        type,
-        subject,
-        message,
-      },
+    const ticket = await prisma.$transaction(async (tx) => {
+      const created = await tx.supportRequest.create({
+        data: {
+          customerId: profile.customerId!,
+          type,
+          subject,
+          message,
+          dueAt,
+        },
+      });
+
+      if (isQuotePipelineRequest(normalizedCategory)) {
+        await tx.quoteRequest.create({
+          data: await buildQuoteRequestData({
+            customerId: profile.customerId!,
+            supportRequestId: created.id,
+            requestType: normalizedCategory,
+            message,
+            dueAt,
+          }),
+        });
+      }
+
+      return created;
     });
 
     const ticketNumber = `TKT-${ticket.id.slice(0, 8).toUpperCase()}`;
+
+    await trackAttributionEvent({
+      email: profile.email,
+      customerId: profile.customerId,
+      source: source || "portal",
+      medium: "buyer_portal",
+      campaign: campaign || null,
+      page: page || "/quote",
+      eventType: isQuotePipelineRequest(normalizedCategory) ? "quote_request" : "support_request",
+      metadata: {
+        requestType: normalizedCategory,
+        supportRequestId: ticket.id,
+        priority: priority || "normal",
+      },
+    }).catch((error) => {
+      console.error("Failed to track support attribution:", error);
+    });
 
     if (profile.email) {
       try {

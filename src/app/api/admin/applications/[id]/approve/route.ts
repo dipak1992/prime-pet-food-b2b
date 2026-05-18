@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/guards";
+import { trackAttributionEvent } from "@/lib/attribution";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 import { ensureAuthUser, generateSetPasswordLink } from "@/lib/supabase/admin";
@@ -129,6 +130,24 @@ export async function POST(
     }
 
     return application;
+  });
+
+  const customer = await prisma.customer.findFirst({
+    where: { user: { email } },
+    select: { id: true },
+  });
+
+  await trackAttributionEvent({
+    email,
+    businessName: application.businessName,
+    customerId: customer?.id,
+    source: "admin_approval",
+    medium: "admin",
+    page: "/admin/applications",
+    eventType: "customer_approved",
+    metadata: { applicationId: application.id },
+  }).catch((error) => {
+    console.error("Failed to track approval attribution:", error);
   });
 
   await sendEmail({

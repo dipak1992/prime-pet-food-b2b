@@ -70,6 +70,17 @@ enum SupportStatus {
   CLOSED
 }
 
+enum QuoteStage {
+  NEW
+  QUALIFYING
+  SAMPLE_SENT
+  QUOTE_DRAFTED
+  QUOTE_SENT
+  NEGOTIATION
+  WON
+  LOST
+}
+
 model User {
   id                   String                 @id @default(uuid())
   authUserId           String?                @unique
@@ -135,6 +146,8 @@ model Customer {
   orders                Order[]
   carts                 Cart[]
   supportRequests       SupportRequest[]
+  quoteRequests         QuoteRequest[]
+  attributionEvents     AttributionEvent[]
   favorites             Favorite[]
   priceOverrides        CustomerPriceOverride[]
 }
@@ -343,9 +356,37 @@ model SupportRequest {
   message      String
   status       SupportStatus @default(OPEN)
   assignedToId String?
+  dueAt        DateTime?
+  slaBreachedAt DateTime?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   customer     Customer      @relation(fields: [customerId], references: [id])
+  quoteRequest QuoteRequest?
+}
+
+model QuoteRequest {
+  id               String        @id @default(uuid())
+  customerId       String
+  supportRequestId String?       @unique
+  stage            QuoteStage    @default(NEW)
+  requestType      String
+  expectedVolume   String?
+  targetSkus       String?
+  timeline         String?
+  shippingZip      String?
+  estimatedValue   Decimal?      @db.Decimal(12, 2)
+  lossReason       String?
+  nextFollowUpAt   DateTime?
+  dueAt            DateTime?
+  assignedToId     String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  customer         Customer      @relation(fields: [customerId], references: [id])
+  supportRequest   SupportRequest? @relation(fields: [supportRequestId], references: [id], onDelete: SetNull)
+
+  @@index([customerId])
+  @@index([stage])
+  @@index([dueAt])
 }
 
 model Asset {
@@ -406,6 +447,33 @@ model Lead {
   deals                   LeadDeal[]
   samples                 LeadSample[]
   sequences               LeadFollowUpSequence[]
+  attributionEvents       AttributionEvent[]
+}
+
+model AttributionEvent {
+  id           String   @id @default(uuid())
+  email        String?
+  businessName String?
+  leadId       String?
+  customerId   String?
+  sessionId    String?
+  source       String
+  medium       String?
+  campaign     String?
+  content      String?
+  term         String?
+  page         String?
+  eventType    String
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  lead         Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  customer     Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([email])
+  @@index([leadId])
+  @@index([customerId])
+  @@index([source])
+  @@index([eventType])
 }
 
 model OutreachEmail {
@@ -481,6 +549,21 @@ model Setting {
   key       String   @id
   value     String
   updatedAt DateTime @updatedAt
+}
+
+model SlaRule {
+  id          String   @id @default(uuid())
+  workflow    String
+  priority    String?
+  requestType String?
+  hours       Int
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([workflow])
+  @@index([requestType])
+  @@index([isActive])
 }
 
 // ─── AI MULTI-AGENT SYSTEM ───────────────────────────────────────────────────

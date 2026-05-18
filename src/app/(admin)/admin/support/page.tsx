@@ -10,7 +10,20 @@ type SupportRequest = {
   message: string;
   status: string;
   assignedToId: string | null;
+  dueAt: string | null;
   createdAt: string;
+  quoteRequest: {
+    id: string;
+    stage: string;
+    requestType: string;
+    expectedVolume: string | null;
+    targetSkus: string | null;
+    timeline: string | null;
+    shippingZip: string | null;
+    estimatedValue: number | null;
+    nextFollowUpAt: string | null;
+    dueAt: string | null;
+  } | null;
   customer: {
     id: string;
     businessName: string;
@@ -20,10 +33,7 @@ type SupportRequest = {
 
 const STATUSES = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"];
 const REQUEST_TYPES = ["SAMPLE_REQUEST", "CUSTOM_PRICING", "SALES_REP", "GENERAL"];
-
-function daysOpen(createdAt: string) {
-  return Math.floor((Date.now() - new Date(createdAt).getTime()) / 86_400_000);
-}
+const QUOTE_STAGES = ["NEW", "QUALIFYING", "SAMPLE_SENT", "QUOTE_DRAFTED", "QUOTE_SENT", "NEGOTIATION", "WON", "LOST"];
 
 function getPipelineLabel(type: string) {
   const requestType = type.toUpperCase();
@@ -38,10 +48,12 @@ function getPipelineLabel(type: string) {
 
 function getSlaStatus(req: SupportRequest) {
   if (req.status === "RESOLVED" || req.status === "CLOSED") return { label: "Done", className: "bg-green-100 text-green-700" };
-  const age = daysOpen(req.createdAt);
-  if (age >= 2) return { label: "Over SLA", className: "bg-red-100 text-red-700" };
-  if (age >= 1) return { label: "Due today", className: "bg-amber-100 text-amber-700" };
-  return { label: "New", className: "bg-blue-100 text-blue-700" };
+  const dueAt = req.quoteRequest?.dueAt || req.dueAt;
+  if (!dueAt) return { label: "No SLA", className: "bg-gray-100 text-gray-700" };
+  const msUntilDue = new Date(dueAt).getTime() - Date.now();
+  if (msUntilDue < 0) return { label: "Over SLA", className: "bg-red-100 text-red-700" };
+  if (msUntilDue <= 6 * 60 * 60 * 1000) return { label: "Due soon", className: "bg-amber-100 text-amber-700" };
+  return { label: "On track", className: "bg-blue-100 text-blue-700" };
 }
 
 function extractLine(message: string, label: string) {
@@ -97,7 +109,16 @@ export default function AdminSupportPage() {
     if (res.ok) await fetchData();
   }
 
-  const quoteRows = rows.filter((r) => ["SAMPLE_REQUEST", "CUSTOM_PRICING", "SALES_REP"].includes(r.type));
+  async function updateQuoteStage(id: string, quoteStage: string) {
+    const res = await fetch(`/api/admin/support/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ quoteStage }),
+    });
+    if (res.ok) await fetchData();
+  }
+
+  const quoteRows = rows.filter((r) => r.quoteRequest);
   const filtered = rows.filter((r) => {
     const matchesStatus = !statusFilter || r.status === statusFilter;
     const matchesType = !typeFilter || r.type === typeFilter;
@@ -188,7 +209,7 @@ export default function AdminSupportPage() {
                       ))}
                     </div>
                     <p className="mt-3 whitespace-pre-wrap text-sm text-[#4b5563]">{req.message}</p>
-                    {["SAMPLE_REQUEST", "CUSTOM_PRICING", "SALES_REP"].includes(req.type) ? (
+                    {req.quoteRequest ? (
                       <div className="mt-3 grid gap-3 lg:grid-cols-2">
                         <div className="rounded-lg border border-[#dbeafe] bg-blue-50 p-3">
                           <p className="text-xs font-semibold uppercase tracking-wide text-blue-800">AI-style summary</p>
@@ -208,6 +229,19 @@ export default function AdminSupportPage() {
                     <span className={`block rounded-full px-2 py-0.5 text-center text-xs font-semibold ${getSlaStatus(req).className}`}>
                       {getSlaStatus(req).label}
                     </span>
+                    {req.quoteRequest ? (
+                      <select
+                        value={req.quoteRequest.stage}
+                        onChange={(e) => updateQuoteStage(req.id, e.target.value)}
+                        className="block rounded border border-[#e7e4dc] px-2 py-1 text-xs"
+                      >
+                        {QUOTE_STAGES.map((stage) => (
+                          <option key={stage} value={stage}>
+                            {stage}
+                          </option>
+                        ))}
+                      </select>
+                    ) : null}
                     <select
                       value={req.status}
                       onChange={(e) => updateStatus(req.id, e.target.value)}

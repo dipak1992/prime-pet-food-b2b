@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { trackAttributionEvent } from "@/lib/attribution";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
@@ -10,30 +11,41 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "email and businessName are required" }, { status: 400 });
     }
 
-    // Only create if email doesn't already exist as a lead
     const existing = await prisma.lead.findFirst({ where: { email } });
 
-    if (!existing) {
-      const noteParts = [
-        intentType ? `Intent: ${intentType}` : null,
-        location ? `Location: ${location}` : null,
-        sourcePage ? `Source page: ${sourcePage}` : null,
-        businessType ? `Business type: ${businessType}` : null,
-      ].filter(Boolean);
-
-      await prisma.lead.create({
+    const lead =
+      existing ||
+      (await prisma.lead.create({
         data: {
           email,
           businessName: businessName ?? "",
-          contactName: businessName ?? "", // required field — use businessName as fallback
+          contactName: businessName ?? "",
           source: sourcePage ?? "seo",
           status: "NEW",
-          leadScore: 30, // base score for SEO lead
+          leadScore: 30,
           leadType: businessType ?? null,
-          notes: noteParts.length > 0 ? noteParts.join(" | ") : null,
+          notes:
+            [
+              intentType ? `Intent: ${intentType}` : null,
+              location ? `Location: ${location}` : null,
+              sourcePage ? `Source page: ${sourcePage}` : null,
+              businessType ? `Business type: ${businessType}` : null,
+            ]
+              .filter(Boolean)
+              .join(" | ") || null,
         },
-      });
-    }
+      }));
+
+    await trackAttributionEvent({
+      email,
+      businessName,
+      leadId: lead.id,
+      source: sourcePage ?? "seo",
+      medium: "organic",
+      page: sourcePage ?? null,
+      eventType: "seo_lead_capture",
+      metadata: { intentType, location, businessType },
+    });
 
     return NextResponse.json({ ok: true });
   } catch (err) {

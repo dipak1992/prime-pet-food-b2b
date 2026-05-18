@@ -63,7 +63,8 @@ export default async function AdminAnalyticsPage() {
     approvedCustomers,
     productVelocity,
     activeProducts,
-    leadSourceRows,
+    attributionSourceRows,
+    attributionEventRows,
   ] = await Promise.all([
     prisma.order.count({ where: { createdAt: { gte: todayStart } } }),
     prisma.order.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
@@ -137,10 +138,16 @@ export default async function AdminAnalyticsPage() {
       where: { isActive: true },
       select: { id: true, title: true, sku: true, inventoryQty: true, stockStatus: true },
     }),
-    prisma.lead.groupBy({
+    prisma.attributionEvent.groupBy({
       by: ["source"],
       _count: { _all: true },
       orderBy: { _count: { source: "desc" } },
+      take: 8,
+    }),
+    prisma.attributionEvent.groupBy({
+      by: ["eventType"],
+      _count: { _all: true },
+      orderBy: { _count: { eventType: "desc" } },
       take: 8,
     }),
   ]);
@@ -380,15 +387,28 @@ export default async function AdminAnalyticsPage() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Campaign & Source Reporting">
+        <SectionCard title="Multi-Touch Attribution">
           <div className="space-y-2 text-sm">
-            {leadSourceRows.map((row) => (
+            {attributionSourceRows.map((row) => (
               <div key={row.source} className="flex items-center justify-between rounded border border-[#e7e4dc] bg-[#fcfbf9] p-3">
                 <span className="font-semibold text-[#111827]">{row.source || "unknown"}</span>
-                <span className="font-semibold text-[#1d4b43]">{row._count._all} leads</span>
+                <span className="font-semibold text-[#1d4b43]">{row._count._all} touches</span>
               </div>
             ))}
-            {leadSourceRows.length === 0 && <p className="text-[#4b5563]">No source attribution yet.</p>}
+            {attributionEventRows.length > 0 ? (
+              <div className="mt-3 rounded border border-[#e7e4dc] bg-white p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">Top conversion events</p>
+                <div className="mt-2 space-y-1">
+                  {attributionEventRows.map((row) => (
+                    <div key={row.eventType} className="flex justify-between text-xs">
+                      <span>{row.eventType}</span>
+                      <span className="font-semibold">{row._count._all}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            {attributionSourceRows.length === 0 && <p className="text-[#4b5563]">No source attribution yet.</p>}
             <Link href="/admin/outreach" className="inline-block text-xs font-semibold text-[#1d4b43] hover:underline">
               Open outreach pipeline →
             </Link>

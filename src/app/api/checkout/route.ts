@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireApprovedBuyer } from "@/lib/auth/guards";
+import { trackAttributionEvent } from "@/lib/attribution";
 import { sendEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import {
@@ -170,6 +171,22 @@ export async function POST(request: Request) {
       console.error("Failed to send order confirmation email:", error);
     }
   }
+
+  await trackAttributionEvent({
+    email: profile.email,
+    customerId: profile.customerId,
+    source: "buyer_portal",
+    medium: "portal",
+    page: "/checkout",
+    eventType: "order_submitted",
+    metadata: {
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      amount: Number(order.grandTotal),
+    },
+  }).catch((error) => {
+    console.error("Failed to track order attribution:", error);
+  });
 
   return NextResponse.json({
     order: {

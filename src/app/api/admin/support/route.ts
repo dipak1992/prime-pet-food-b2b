@@ -16,6 +16,7 @@ export async function GET() {
           user: { select: { email: true, name: true } },
         },
       },
+      quoteRequest: true,
     },
   });
 

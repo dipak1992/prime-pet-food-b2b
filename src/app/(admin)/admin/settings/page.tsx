@@ -4,6 +4,14 @@ import { FormEvent, useEffect, useState } from "react";
 import { SectionCard } from "@/components/ui/SectionCard";
 
 type Setting = { key: string; value: string; updatedAt: string };
+type SlaRule = {
+  id: string;
+  workflow: string;
+  requestType: string | null;
+  priority: string | null;
+  hours: number;
+  isActive: boolean;
+};
 
 type ProvisioningForm = {
   email: string;
@@ -14,8 +22,14 @@ type ProvisioningForm = {
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<Setting[]>([]);
+  const [slaRules, setSlaRules] = useState<SlaRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ key: "", value: "" });
+  const [slaForm, setSlaForm] = useState({
+    workflow: "QUOTE_REQUEST",
+    requestType: "CUSTOM_PRICING",
+    hours: "24",
+  });
   const [integrationForm, setIntegrationForm] = useState({
     quickbooksCompanyId: "",
     quickbooksInvoicePrefix: "PPF-",
@@ -35,6 +49,7 @@ export default function AdminSettingsPage() {
 
   useEffect(() => {
     fetchSettings();
+    fetchSlaRules();
   }, []);
 
   async function fetchSettings() {
@@ -57,6 +72,13 @@ export default function AdminSettingsPage() {
       ),
     });
     setLoading(false);
+  }
+
+  async function fetchSlaRules() {
+    const res = await fetch("/api/admin/sla-rules");
+    if (!res.ok) return;
+    const data = await res.json();
+    setSlaRules(data.rules || []);
   }
 
   async function saveSetting(e: FormEvent) {
@@ -92,6 +114,32 @@ export default function AdminSettingsPage() {
       )
     );
     await fetchSettings();
+  }
+
+  async function saveSlaRule(e: FormEvent) {
+    e.preventDefault();
+    const res = await fetch("/api/admin/sla-rules", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        workflow: slaForm.workflow,
+        requestType: slaForm.requestType || null,
+        hours: Number(slaForm.hours),
+      }),
+    });
+    if (res.ok) {
+      setSlaForm({ workflow: "QUOTE_REQUEST", requestType: "CUSTOM_PRICING", hours: "24" });
+      await fetchSlaRules();
+    }
+  }
+
+  async function updateSlaRule(id: string, patch: Partial<SlaRule>) {
+    const res = await fetch("/api/admin/sla-rules", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, ...patch }),
+    });
+    if (res.ok) await fetchSlaRules();
   }
 
   async function provisionAdminUser(e: FormEvent) {
@@ -254,6 +302,78 @@ export default function AdminSettingsPage() {
             Save
           </button>
         </form>
+      </SectionCard>
+
+      <SectionCard title="SLA Rules" description="Configure due dates for applications, quotes, invoices, tracking, and collections.">
+        <div className="space-y-4">
+          <form onSubmit={saveSlaRule} className="grid gap-3 md:grid-cols-4">
+            <input
+              value={slaForm.workflow}
+              onChange={(e) => setSlaForm((f) => ({ ...f, workflow: e.target.value }))}
+              placeholder="QUOTE_REQUEST"
+              className="rounded border border-[#e7e4dc] px-3 py-2 text-sm"
+              required
+            />
+            <input
+              value={slaForm.requestType}
+              onChange={(e) => setSlaForm((f) => ({ ...f, requestType: e.target.value }))}
+              placeholder="CUSTOM_PRICING"
+              className="rounded border border-[#e7e4dc] px-3 py-2 text-sm"
+            />
+            <input
+              type="number"
+              min={1}
+              value={slaForm.hours}
+              onChange={(e) => setSlaForm((f) => ({ ...f, hours: e.target.value }))}
+              placeholder="24"
+              className="rounded border border-[#e7e4dc] px-3 py-2 text-sm"
+              required
+            />
+            <button
+              type="submit"
+              className="rounded bg-[#1d4b43] px-4 py-2 text-sm font-semibold text-white hover:bg-[#163836]"
+            >
+              Add SLA Rule
+            </button>
+          </form>
+
+          <div className="overflow-x-auto rounded-lg border border-[#e7e4dc]">
+            <table className="w-full text-sm">
+              <thead className="bg-[#fcfbf9] text-xs uppercase tracking-wide text-[#6b7280]">
+                <tr>
+                  <th className="px-3 py-2 text-left">Workflow</th>
+                  <th className="px-3 py-2 text-left">Request type</th>
+                  <th className="px-3 py-2 text-right">Hours</th>
+                  <th className="px-3 py-2 text-right">Active</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#e7e4dc] bg-white">
+                {slaRules.map((rule) => (
+                  <tr key={rule.id}>
+                    <td className="px-3 py-2 font-semibold text-[#111827]">{rule.workflow}</td>
+                    <td className="px-3 py-2 text-[#4b5563]">{rule.requestType || "Any"}</td>
+                    <td className="px-3 py-2 text-right">
+                      <input
+                        type="number"
+                        min={1}
+                        value={rule.hours}
+                        onChange={(e) => updateSlaRule(rule.id, { hours: Number(e.target.value) })}
+                        className="w-20 rounded border border-[#e7e4dc] px-2 py-1 text-right"
+                      />
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      <input
+                        type="checkbox"
+                        checked={rule.isActive}
+                        onChange={(e) => updateSlaRule(rule.id, { isActive: e.target.checked })}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </SectionCard>
 
       <SectionCard title="QuickBooks & ACH Workflow" description="Export invoice payloads and standardize buyer payment instructions.">

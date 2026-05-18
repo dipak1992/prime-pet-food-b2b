@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { trackAttributionEvent } from "@/lib/attribution";
 import { sendEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { wholesaleApplicationSchema } from "@/lib/validations/wholesaleApplication";
@@ -79,6 +80,27 @@ export async function POST(request: Request) {
     }
 
     return created;
+  });
+
+  await trackAttributionEvent({
+    email,
+    businessName: application.businessName,
+    source: typeof body.source === "string" ? body.source : "wholesale_application",
+    medium: typeof body.medium === "string" ? body.medium : "public_site",
+    campaign: typeof body.campaign === "string" ? body.campaign : null,
+    content: typeof body.content === "string" ? body.content : null,
+    term: typeof body.term === "string" ? body.term : null,
+    page: typeof body.page === "string" ? body.page : "/apply",
+    eventType: "wholesale_application",
+    metadata: {
+      applicationId: application.id,
+      businessType: application.businessType,
+      monthlyOrderEstimate: application.monthlyOrderEstimate
+        ? Number(application.monthlyOrderEstimate)
+        : null,
+    },
+  }).catch((error) => {
+    console.error("Failed to track application attribution:", error);
   });
 
   await sendEmail({
