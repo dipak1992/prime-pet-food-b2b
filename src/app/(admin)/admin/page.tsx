@@ -294,6 +294,29 @@ export default async function AdminHomePage() {
         </SectionCard>
       </div>
 
+      <SectionCard title="AI outreach automation" description="Lead discovery, scoring, and outbound email workflow.">
+        <div className="grid gap-3 md:grid-cols-4">
+          {[
+            ["1", "Enable agents", "Lead Finder, Lead Qualifier, Outreach Drafter", "/admin/ai/settings"],
+            ["2", "Find leads", "Pull prospects from Google Places", "/admin/ai/leads"],
+            ["3", "Qualify leads", "Score and prioritize new prospects", "/admin/ai/leads"],
+            ["4", "Generate drafts", "Create outreach emails for qualified leads", "/admin/ai/outreach"],
+          ].map(([step, label, detail, href]) => (
+            <Link
+              key={String(label)}
+              href={String(href)}
+              className="rounded-xl border border-[#e7e4dc] bg-[#fcfbf9] p-4 hover:border-[#1d4b43] hover:bg-white"
+            >
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#1d4b43] text-xs font-bold text-white">
+                {step}
+              </span>
+              <p className="mt-3 text-sm font-semibold text-[#111827]">{label}</p>
+              <p className="mt-1 text-xs leading-5 text-[#6b7280]">{detail}</p>
+            </Link>
+          ))}
+        </div>
+      </SectionCard>
+
       {/* Quick Actions */}
       <SectionCard title="Quick Actions">
         <div className="grid gap-3 grid-cols-2 md:grid-cols-5">

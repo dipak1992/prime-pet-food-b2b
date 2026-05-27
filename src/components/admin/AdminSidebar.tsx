@@ -16,9 +16,11 @@ const navItems = [
   { label: "Analytics", href: "/admin/analytics", icon: "📊" },
   { label: "Reorders", href: "/admin/reorders", icon: "🔄" },
   { label: "Outreach", href: "/admin/outreach", icon: "📣" },
+  { label: "AI Growth", href: "/admin/ai", icon: "⚡" },
+  { label: "AI Settings", href: "/admin/ai/settings", icon: "⚙" },
   { label: "Support", href: "/admin/support", icon: "💬" },
   { label: "Assets", href: "/admin/assets", icon: "🗂" },
-  { label: "Settings", href: "/admin/settings", icon: "⚙️" },
+  { label: "Store Settings", href: "/admin/settings", icon: "⚙" },
 ];
 
 export default function AdminSidebar() {
@@ -42,8 +44,13 @@ export default function AdminSidebar() {
     router.refresh();
   };
 
-  const isActive = (href: string) =>
-    href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+  const isActive = (href: string) => {
+    if (href === "/admin") return pathname === "/admin";
+    if (href === "/admin/ai") {
+      return pathname === "/admin/ai" || (pathname.startsWith("/admin/ai/") && pathname !== "/admin/ai/settings");
+    }
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
 
   const handleViewAsBuyer = () => {
     const newState = !viewAsBuyer;
