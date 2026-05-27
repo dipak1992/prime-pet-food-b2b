@@ -10,7 +10,7 @@ export async function GET() {
   try {
     const profile = await requireApprovedBuyer();
     if (!profile.customerId) {
-      return NextResponse.json({ error: "Customer profile not found." }, { status: 400 });
+      return NextResponse.json({ tickets: [] });
     }
 
     const tickets = await prisma.supportRequest.findMany({

@@ -15,13 +15,15 @@ interface AgentConfig {
   schedule: string;
   maxRunsPerDay: number;
   requiresApproval: boolean;
-  lastRun: string | null;
+  lastRunAt: string | null;
 }
 
 interface GlobalConfig {
   provider: string;
   model: string;
   maxEmailsPerDay: number;
+  maxLeadsPerRun: number;
+  autoSendOutreach: boolean;
   businessHoursOnly: boolean;
   dedupWindowHours: number;
 }
@@ -29,7 +31,7 @@ interface GlobalConfig {
 interface SettingsData {
   config: GlobalConfig;
   agents: AgentConfig[];
-  runsToday: number;
+  totalRunsToday: number;
 }
 
 /* ------------------------------------------------------------------ */
@@ -193,7 +195,7 @@ export default function SettingsPage() {
                   Runs Today
                 </span>
                 <p className="mt-1 text-sm font-semibold text-[#1d4b43]">
-                  {data.runsToday}
+                  {data.totalRunsToday}
                 </p>
               </div>
 
@@ -204,6 +206,15 @@ export default function SettingsPage() {
                 </span>
                 <p className="mt-1 text-sm font-semibold text-[#1d4b43]">
                   {data.config.maxEmailsPerDay}
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-[#e7e4dc] bg-[#f7f7fb] p-4">
+                <span className="text-xs font-medium uppercase tracking-wide text-[#4b5563]">
+                  Auto-send Outreach
+                </span>
+                <p className="mt-1 text-sm font-semibold text-[#1d4b43]">
+                  {data.config.autoSendOutreach ? "Yes" : "No"}
                 </p>
               </div>
 
@@ -284,7 +295,7 @@ export default function SettingsPage() {
                         </div>
                         <div>
                           <span className="font-medium">Last Run:</span>{" "}
-                          {formatLastRun(agent.lastRun)}
+                          {formatLastRun(agent.lastRunAt)}
                         </div>
                       </div>
                     </div>

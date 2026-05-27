@@ -4,11 +4,13 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/auth/guards";
 import { prisma } from "@/lib/prisma";
 import { getAiConfig, type AgentId } from "@/lib/ai/config";
 
 export async function GET() {
   try {
+    await requireAdmin();
     const config = getAiConfig();
 
     // Get agent configs from database (or fall back to defaults)
@@ -50,6 +52,8 @@ export async function GET() {
         provider: config.provider,
         model: config.model,
         maxEmailsPerDay: config.safetyLimits.maxEmailsPerDay,
+        maxLeadsPerRun: config.safetyLimits.maxLeadsPerRun,
+        autoSendOutreach: process.env.AI_OUTREACH_AUTO_SEND === "true",
         businessHoursOnly: config.safetyLimits.businessHoursOnly,
         dedupWindowHours: config.safetyLimits.deduplicationWindowHours,
         safetyLimits: config.safetyLimits,
@@ -69,6 +73,7 @@ export async function GET() {
 
 export async function PATCH(request: NextRequest) {
   try {
+    await requireAdmin();
     const body = await request.json();
     const { agentId, enabled } = body as {
       agentId: string;

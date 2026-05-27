@@ -80,6 +80,49 @@ async function getPlaceDetails(placeId: string): Promise<Partial<PlaceResult>> {
   return data.result || {};
 }
 
+function extractEmailFromText(text: string): string | null {
+  const matches = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g);
+  const email = matches?.find((candidate) => {
+    const lower = candidate.toLowerCase();
+    return !lower.endsWith(".png") && !lower.endsWith(".jpg") && !lower.endsWith(".jpeg") && !lower.includes("example.com");
+  });
+
+  return email ?? null;
+}
+
+async function discoverWebsiteEmail(website: string | null | undefined): Promise<string | null> {
+  if (!website) return null;
+
+  try {
+    const baseUrl = new URL(website);
+    const paths = ["", "/contact", "/contact-us", "/about", "/about-us"];
+
+    for (const path of paths) {
+      const url = new URL(path, baseUrl);
+      const response = await fetch(url.toString(), {
+        signal: AbortSignal.timeout(5000),
+        headers: {
+          "user-agent": "PrimePetWholesaleLeadFinder/1.0",
+        },
+      });
+
+      if (!response.ok) continue;
+
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.includes("text/html") && !contentType.includes("text/plain")) continue;
+
+      const html = await response.text();
+      const mailtoEmail = html.match(/mailto:([^"'?#\s>]+)/i)?.[1];
+      const email = mailtoEmail || extractEmailFromText(html);
+      if (email) return decodeURIComponent(email).trim();
+    }
+  } catch (error) {
+    console.warn(`Unable to discover email from ${website}:`, error);
+  }
+
+  return null;
+}
+
 async function leadFinderAgent(context: AgentContext): Promise<AgentRunResult> {
   const config = getAiConfig();
   const maxLeads = config.safetyLimits.maxLeadsPerRun;
@@ -118,6 +161,8 @@ async function leadFinderAgent(context: AgentContext): Promise<AgentRunResult> {
       if (place.place_id) {
         details = await getPlaceDetails(place.place_id);
       }
+      const website = details.website || place.website || null;
+      const discoveredEmail = await discoverWebsiteEmail(website);
 
       // Parse city/state from address
       const addressParts = (place.formatted_address || "").split(",").map((s) => s.trim());
@@ -130,16 +175,18 @@ async function leadFinderAgent(context: AgentContext): Promise<AgentRunResult> {
         data: {
           businessName: place.name,
           contactName: "Owner/Manager",
-          email: "",
+          email: discoveredEmail || "",
           address: place.formatted_address || null,
           city: city || null,
           state: state || null,
           phone: details.formatted_phone_number || null,
-          website: details.website || null,
+          website,
           source: "AI_LEAD_FINDER",
           status: "NEW",
           leadScore: 0,
           notes: JSON.stringify({
+            discoveredEmail,
+            discoveredByRun: context.runId,
             googlePlaceId: place.place_id,
             rating: place.rating,
             reviewCount: place.user_ratings_total,

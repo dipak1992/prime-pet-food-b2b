@@ -79,6 +79,11 @@ export async function runAgent(
     },
   });
 
+  await prisma.aiAgentConfig.updateMany({
+    where: { agentId },
+    data: { lastRunAt: run.startedAt },
+  });
+
   const context: AgentContext = {
     runId: run.id,
     agentId,

@@ -4,10 +4,17 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/auth/guards";
+import { sendRawEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
+
+function isValidEmail(value: string | null | undefined): value is string {
+  return Boolean(value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value));
+}
 
 export async function GET(request: NextRequest) {
   try {
+    await requireAdmin();
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") || "pending";
 
@@ -62,6 +69,7 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    await requireAdmin();
     const body = await request.json();
     const { taskId, action, editedContent } = body as {
       taskId: string;
@@ -85,20 +93,53 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (action === "approve") {
+      let recipientEmail: string | null | undefined = null;
+      if (task.leadId) {
+        const lead = await prisma.lead.findUnique({
+          where: { id: task.leadId },
+          select: { email: true },
+        });
+        recipientEmail = lead?.email;
+      } else if (task.customerId) {
+        const customer = await prisma.customer.findUnique({
+          where: { id: task.customerId },
+          select: { user: { select: { email: true } } },
+        });
+        recipientEmail = customer?.user.email;
+      }
+
+      const finalContent = editedContent?.trim() || task.draftContent || "";
+
+      if (!isValidEmail(recipientEmail)) {
+        return NextResponse.json({ error: "No valid recipient email address" }, { status: 400 });
+      }
+
+      const sendResult = await sendRawEmail({
+        to: recipientEmail,
+        subject: task.subject || "Following up from Prime Pet Food",
+        text: finalContent,
+      });
+
+      if (sendResult.skipped) {
+        return NextResponse.json({ error: sendResult.reason }, { status: 500 });
+      }
+
       await prisma.followUpTask.update({
         where: { id: taskId },
         data: {
           status: "sent",
-          finalContent: editedContent || task.draftContent,
+          finalContent,
           approvedAt: new Date(),
           approvedBy: "admin",
           sentAt: new Date(),
+          metadata: {
+            ...(typeof task.metadata === "object" && task.metadata && !Array.isArray(task.metadata)
+              ? task.metadata
+              : {}),
+            providerId: sendResult.providerId,
+          },
         },
       });
-
-      // TODO: Actually send via Resend when ready
-      // const recipientEmail = task.leadId ? lead.email : customer.user.email;
-      // await sendFollowUpEmail(recipientEmail, task.subject, editedContent || task.draftContent);
 
       return NextResponse.json({ success: true, message: "Follow-up approved and sent" });
     } else {

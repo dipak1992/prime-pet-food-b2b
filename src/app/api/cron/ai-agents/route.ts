@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from "next/server";
 import "@/lib/ai/agents"; // ensure all agents are registered
 import { runAgent } from "@/lib/ai/runner";
 import { getAiConfig, type AgentId } from "@/lib/ai/config";
+import { prisma } from "@/lib/prisma";
 
 /**
  * Simple cron schedule checker.
@@ -83,12 +84,19 @@ export async function GET(request: NextRequest) {
 
   // Check each agent
   const agentIds = Object.keys(config.agents) as AgentId[];
+  const dbAgentConfigs = await prisma.aiAgentConfig.findMany({
+    select: { agentId: true, enabled: true },
+  });
+  const enabledByAgent = new Map(dbAgentConfigs.map((agent) => [agent.agentId, agent.enabled]));
 
   for (const agentId of agentIds) {
     const agentConfig = config.agents[agentId];
+    const enabled = enabledByAgent.has(agentId)
+      ? enabledByAgent.get(agentId)
+      : agentConfig.enabled;
 
     // Skip disabled agents
-    if (!agentConfig.enabled) {
+    if (!enabled) {
       continue;
     }
 

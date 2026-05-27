@@ -4,10 +4,17 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/auth/guards";
+import { sendRawEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
+
+function isValidEmail(value: string | null | undefined): value is string {
+  return Boolean(value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value));
+}
 
 export async function GET(request: NextRequest) {
   try {
+    await requireAdmin();
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") || "DRAFT";
 
@@ -41,6 +48,7 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    await requireAdmin();
     const body = await request.json();
     const { emailId, action, editedSubject, editedBody } = body as {
       emailId: string;
@@ -66,27 +74,66 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (action === "approve") {
-      // Update with edited content and mark as sent
-      await prisma.outreachEmail.update({
-        where: { id: emailId },
-        data: {
-          subject: editedSubject || email.subject,
-          body: editedBody || email.body,
-          status: "SENT",
-          sentAt: new Date(),
-        },
+      const subject = editedSubject?.trim() || email.subject;
+      const body = editedBody?.trim() || email.body;
+
+      if (!isValidEmail(email.lead.email)) {
+        return NextResponse.json({ error: "Lead has no valid recipient email" }, { status: 400 });
+      }
+
+      const sendResult = await sendRawEmail({
+        to: email.lead.email,
+        subject,
+        text: body,
       });
 
-      // TODO: Actually send via Resend when ready
-      // await sendOutreachEmail(email.lead.email, editedSubject || email.subject, editedBody || email.body);
+      if (sendResult.skipped) {
+        return NextResponse.json({ error: sendResult.reason }, { status: 500 });
+      }
 
-      return NextResponse.json({ success: true, message: "Email approved and marked as sent" });
+      await prisma.$transaction([
+        prisma.outreachEmail.update({
+          where: { id: emailId },
+          data: {
+            subject,
+            body,
+            status: "SENT",
+            sentAt: new Date(),
+          },
+        }),
+        prisma.lead.update({
+          where: { id: email.leadId },
+          data: {
+            status: "CONTACTED",
+            contactedAt: new Date(),
+          },
+        }),
+        prisma.leadActivity.create({
+          data: {
+            leadId: email.leadId,
+            type: "EMAIL_SENT",
+            title: `Sent AI outreach: ${subject}`,
+            detail: sendResult.providerId ? `Resend message ID: ${sendResult.providerId}` : null,
+          },
+        }),
+      ]);
+
+      return NextResponse.json({ success: true, message: "Email approved and sent" });
     } else {
       // Reject
-      await prisma.outreachEmail.update({
-        where: { id: emailId },
-        data: { status: "FAILED" },
-      });
+      await prisma.$transaction([
+        prisma.outreachEmail.update({
+          where: { id: emailId },
+          data: { status: "FAILED" },
+        }),
+        prisma.leadActivity.create({
+          data: {
+            leadId: email.leadId,
+            type: "EMAIL_REJECTED",
+            title: `Rejected AI outreach: ${email.subject}`,
+          },
+        }),
+      ]);
 
       return NextResponse.json({ success: true, message: "Email rejected" });
     }
