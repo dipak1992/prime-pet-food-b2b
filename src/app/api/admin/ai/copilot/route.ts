@@ -4,10 +4,12 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/auth/guards";
 import { handleCopilotQuery } from "@/lib/ai/agents/salesCopilot";
 
 export async function POST(request: NextRequest) {
   try {
+    await requireAdmin();
     const body = await request.json();
     const { message } = body as { message: string };
 

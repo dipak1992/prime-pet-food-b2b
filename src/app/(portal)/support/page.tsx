@@ -52,6 +52,7 @@ export default function SupportPage() {
       if (!res.ok) throw new Error("Failed to load tickets");
       const data: TicketsResponse = await res.json();
       setTickets(data.tickets);
+      setError("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error loading tickets");
     } finally {

@@ -46,7 +46,7 @@ function statusBadge(status: string) {
     CONTACTED: "bg-blue-100 text-blue-700",
     QUALIFIED: "bg-green-100 text-green-700",
     CONVERTED: "bg-emerald-100 text-emerald-800",
-    LOST: "bg-gray-100 text-gray-500",
+    ARCHIVED: "bg-gray-100 text-gray-500",
   };
   const cls = map[status] ?? "bg-gray-100 text-gray-500";
   return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${cls}`}>{status}</span>;
@@ -171,7 +171,7 @@ export default function LeadsPage() {
           <option value="CONTACTED">Contacted</option>
           <option value="QUALIFIED">Qualified</option>
           <option value="CONVERTED">Converted</option>
-          <option value="LOST">Lost</option>
+          <option value="ARCHIVED">Archived</option>
         </select>
 
         <select
@@ -180,7 +180,7 @@ export default function LeadsPage() {
           className="rounded border border-[#e7e4dc] bg-white px-3 py-2 text-sm text-[#4b5563]"
         >
           <option value="">All Sources</option>
-          <option value="ai_lead_finder">AI Lead Finder</option>
+          <option value="AI_LEAD_FINDER">AI Lead Finder</option>
           <option value="manual">Manual</option>
           <option value="website">Website</option>
         </select>

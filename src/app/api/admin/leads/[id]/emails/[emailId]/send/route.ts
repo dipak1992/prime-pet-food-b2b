@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/guards";
+import { sendRawEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
-import { Resend } from "resend";
 
 type Ctx = { params: Promise<{ id: string; emailId: string }> };
 
@@ -23,21 +23,16 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     return NextResponse.json({ error: "No recipient email address" }, { status: 400 });
   }
 
-  const resendKey = process.env.RESEND_API_KEY;
-  if (!resendKey) {
-    return NextResponse.json({ error: "RESEND_API_KEY not configured" }, { status: 500 });
-  }
-
   try {
-    const resend = new Resend(resendKey);
-    const from = process.env.FROM_EMAIL || "outreach@theprimepetfood.com";
-
-    await resend.emails.send({
-      from,
+    const sendResult = await sendRawEmail({
       to: recipientEmail,
       subject: emailRecord.subject,
       text: emailRecord.body,
     });
+
+    if (sendResult.skipped) {
+      return NextResponse.json({ error: sendResult.reason }, { status: 500 });
+    }
 
     // Mark as sent + update lead
     await Promise.all([
@@ -57,6 +52,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
           leadId: id,
           type: "EMAIL_SENT",
           title: `Sent email: "${emailRecord.subject}"`,
+          detail: sendResult.providerId ? `Resend message ID: ${sendResult.providerId}` : null,
         },
       }),
     ]);

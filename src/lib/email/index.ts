@@ -1,3 +1,5 @@
+import { Resend } from "resend";
+
 export type EmailTemplate = 
   | "application-received"
   | "application-approved"
@@ -36,6 +38,54 @@ function textToHtml(text: string) {
     .filter(Boolean)
     .map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\n/g, "<br />")}</p>`)
     .join("");
+}
+
+const DEFAULT_FROM_EMAIL = "Prime Pet Food Wholesale Team <wholesale@theprimepetfood.com>";
+
+export function getSenderEmail(raw: string | undefined): string {
+  if (!raw) {
+    return DEFAULT_FROM_EMAIL;
+  }
+
+  const trimmed = raw.trim();
+  const angleEmailMatch = trimmed.match(/<([^\s<>@]+@[^\s<>@]+\.[^\s<>@]+)>/);
+  if (angleEmailMatch) {
+    return trimmed;
+  }
+
+  const plainEmailMatch = trimmed.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+  if (plainEmailMatch?.[1]) {
+    return `Prime Pet Food Wholesale Team <${plainEmailMatch[1]}>`;
+  }
+
+  return DEFAULT_FROM_EMAIL;
+}
+
+export async function sendRawEmail(input: {
+  to: string;
+  subject: string;
+  text: string;
+  html?: string;
+}) {
+  if (!process.env.RESEND_API_KEY) {
+    return { skipped: true, reason: "RESEND_API_KEY not configured" };
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const sendResult = await resend.emails.send({
+    from: getSenderEmail(process.env.FROM_EMAIL),
+    to: [input.to],
+    subject: input.subject,
+    text: input.text,
+    html: input.html,
+  });
+
+  if (sendResult.error) {
+    console.error("Resend send error", sendResult.error);
+    throw new Error("Email delivery failed");
+  }
+
+  return { success: true, providerId: sendResult.data?.id };
 }
 
 export function renderEmailBody(payload: EmailPayload): { subject: string; text: string; html: string } {

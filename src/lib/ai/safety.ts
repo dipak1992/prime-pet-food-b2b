@@ -25,7 +25,13 @@ export async function checkAgentSafety(agentId: AgentId): Promise<SafetyCheckRes
 
   // Agent-specific check
   const agentConfig = config.agents[agentId];
-  if (!agentConfig?.enabled) {
+  const dbAgentConfig = await prisma.aiAgentConfig.findUnique({
+    where: { agentId },
+    select: { enabled: true },
+  });
+  const enabled = dbAgentConfig ? dbAgentConfig.enabled : agentConfig?.enabled;
+
+  if (!enabled) {
     return { allowed: false, reason: `Agent ${agentId} is disabled` };
   }
 

@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import "@/lib/ai/agents"; // ensure all agents are registered
+import { requireAdmin } from "@/lib/auth/guards";
 import { runAgent } from "@/lib/ai/runner";
 import type { AgentId } from "@/lib/ai/config";
 
@@ -20,6 +21,7 @@ const VALID_AGENTS: AgentId[] = [
 
 export async function POST(request: NextRequest) {
   try {
+    await requireAdmin();
     const body = await request.json();
     const { agentId } = body as { agentId: string };
 

@@ -5,9 +5,11 @@
  */
 
 import { prisma } from "@/lib/prisma";
+import { sendRawEmail } from "@/lib/email";
 import { llmJson } from "../llm";
 import { OUTREACH_SYSTEM_PROMPT, OUTREACH_USER_PROMPT } from "../prompts/outreach";
 import { registerAgent, type AgentContext, type AgentRunResult } from "../runner";
+import { checkEmailSafety } from "../safety";
 
 interface OutreachDraft {
   subject: string;
@@ -18,11 +20,14 @@ interface OutreachDraft {
 }
 
 async function outreachDrafterAgent(context: AgentContext): Promise<AgentRunResult> {
+  const autoSend = process.env.AI_OUTREACH_AUTO_SEND === "true";
+
   // Find qualified leads that haven't been contacted yet
   const leads = await prisma.lead.findMany({
     where: {
       status: { in: ["QUALIFIED"] },
       leadScore: { gte: 50 },
+      email: { not: "" },
       emails: { none: {} },
     },
     take: 5,
@@ -38,6 +43,7 @@ async function outreachDrafterAgent(context: AgentContext): Promise<AgentRunResu
   }
 
   let drafted = 0;
+  let sent = 0;
   const drafts: Array<{ leadName: string; subject: string }> = [];
 
   for (const lead of leads) {
@@ -68,20 +74,13 @@ async function outreachDrafterAgent(context: AgentContext): Promise<AgentRunResu
         { temperature: 0.8 }
       );
 
-      // Store as outreach email draft (pending approval)
-      await prisma.outreachEmail.create({
+      const emailRecord = await prisma.outreachEmail.create({
         data: {
           leadId: lead.id,
           subject: draft.subject,
           body: draft.body,
-          status: "DRAFT",
+          status: autoSend ? "QUEUED" : "DRAFT",
         },
-      });
-
-      // Update lead status
-      await prisma.lead.update({
-        where: { id: lead.id },
-        data: { status: "CONTACTED" },
       });
 
       // Log activity
@@ -96,6 +95,85 @@ async function outreachDrafterAgent(context: AgentContext): Promise<AgentRunResu
 
       drafted++;
       drafts.push({ leadName: lead.businessName, subject: draft.subject });
+
+      if (autoSend) {
+        const safety = await checkEmailSafety("outreach_drafter", lead.email);
+        if (!safety.allowed) {
+          await prisma.outreachEmail.update({
+            where: { id: emailRecord.id },
+            data: { status: "DRAFT" },
+          });
+          await prisma.leadActivity.create({
+            data: {
+              leadId: lead.id,
+              type: "EMAIL_SEND_SKIPPED",
+              title: "AI outreach held for review",
+              detail: safety.reason,
+            },
+          });
+          continue;
+        }
+
+        const sendResult = await sendRawEmail({
+          to: lead.email,
+          subject: draft.subject,
+          text: draft.body,
+        }).catch(async (error) => {
+          await prisma.outreachEmail.update({
+            where: { id: emailRecord.id },
+            data: { status: "FAILED" },
+          });
+          await prisma.leadActivity.create({
+            data: {
+              leadId: lead.id,
+              type: "EMAIL_SEND_FAILED",
+              title: `Failed to send AI outreach: ${draft.subject}`,
+              detail: error instanceof Error ? error.message : "Unknown send error",
+            },
+          });
+          return null;
+        });
+
+        if (!sendResult) {
+          continue;
+        }
+
+        if (sendResult.skipped) {
+          await prisma.outreachEmail.update({
+            where: { id: emailRecord.id },
+            data: { status: "DRAFT" },
+          });
+          await prisma.leadActivity.create({
+            data: {
+              leadId: lead.id,
+              type: "EMAIL_SEND_SKIPPED",
+              title: "AI outreach held for review",
+              detail: sendResult.reason,
+            },
+          });
+          continue;
+        }
+
+        await prisma.$transaction([
+          prisma.outreachEmail.update({
+            where: { id: emailRecord.id },
+            data: { status: "SENT", sentAt: new Date() },
+          }),
+          prisma.lead.update({
+            where: { id: lead.id },
+            data: { status: "CONTACTED", contactedAt: new Date() },
+          }),
+          prisma.leadActivity.create({
+            data: {
+              leadId: lead.id,
+              type: "EMAIL_SENT",
+              title: `Sent AI outreach: ${draft.subject}`,
+              detail: sendResult.providerId ? `Resend message ID: ${sendResult.providerId}` : null,
+            },
+          }),
+        ]);
+        sent++;
+      }
     } catch (error) {
       console.error(`Failed to draft outreach for ${lead.businessName}:`, error);
     }
@@ -103,9 +181,12 @@ async function outreachDrafterAgent(context: AgentContext): Promise<AgentRunResu
 
   return {
     success: true,
-    message: `Drafted ${drafted} outreach emails awaiting approval`,
+    message: autoSend
+      ? `Drafted ${drafted} outreach emails and sent ${sent}`
+      : `Drafted ${drafted} outreach emails awaiting approval`,
     data: {
       drafted,
+      sent,
       drafts,
     },
     recommendations: drafted > 0
